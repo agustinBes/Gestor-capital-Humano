@@ -9,6 +9,8 @@ import com.practical.consultora_rrhh.modelo.clases.Factor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
+
 @Service
 public class ServiceFactor implements IserviceFactor {
 private final IFactorDao dao;
@@ -70,5 +72,10 @@ public ServiceFactor(IFactorDao dao, IserviceCompetencia service) {
     @Override
     public void validarEntidad(Long aLong) {
 
+    }
+
+    @Override
+    public List<factorDto> obtenerPorNombre(String nombre) {
+        return List.of();
     }
 }

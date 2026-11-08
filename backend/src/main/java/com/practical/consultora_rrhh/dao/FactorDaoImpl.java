@@ -44,8 +44,7 @@ public class FactorDaoImpl implements IFactorDao {
 
     }
 
-    @Override
     public boolean validarCompetencia(Long id, Long idCompetencia) {
-        return repository.existByIdAndCompetencia_Id(id, idCompetencia);
+        return repository.existsByIdAndCompetencia_Id(id, idCompetencia);
     }
 }

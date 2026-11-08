@@ -24,12 +24,14 @@ public class PreguntaValidators   {
     private final IPreguntaDao dao;
     private final IserviceFactor serviceFactor;
     private final IserviceOpcionRespuesta serviceOpcionRespuesta;
+    private final PonderacionValidators ponderacionValidators;
 
-    public PreguntaValidators(IPreguntaDao dao, IserviceFactor serviceFactor, IserviceOpcionRespuesta serviceOpcionRespuesta) {
+    public PreguntaValidators(IPreguntaDao dao, IserviceFactor serviceFactor, IserviceOpcionRespuesta serviceOpcionRespuesta, PonderacionValidators ponderacionValidators) {
 
         this.dao = dao;
     this.serviceFactor = serviceFactor;
         this.serviceOpcionRespuesta = serviceOpcionRespuesta;
+        this.ponderacionValidators = ponderacionValidators;
     }
 //---------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------
@@ -46,24 +48,30 @@ public class PreguntaValidators   {
         normalizado.put("titulo", dto.titulo());
         this.existePregunta(dto);
         normalizado.put("pregunta", dto.pregunta());
-        this.ValidarPuntaje(dto.ponderaciones());
+        ponderacionValidators.ValidarPuntaje(dto.ponderaciones());
         return normalizado;
     }
 //---------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------
 public Map<String,String> validarModificacion(Pregunta actual, preguntaDtoCreate dto){
 Map<String,String> modificacion=new HashMap<>();
+
         this.validarFactor(actual,dto.factor().id());
-        this.validarCompetencia(actual,dto.factor().competencia().id());
-        OpcionRespuesta aux=this.validarOpcionRespuesta(actual,dto);
+        this.validarCompetencia(actual.getFactor(),dto.factor().competencia().id());
 
    String nombreNormalizado = TextoUtils.normalizar(dto.titulo());
     String preguntaNormalizada = TextoUtils.normalizar(dto.pregunta());
 
     if (!TextoUtils.comparar(actual.getNombre(), nombreNormalizado)) {
-
+        this.existeNombre(dto);
+modificacion.put("nombre", dto.titulo());    }
+    if(!TextoUtils.comparar(actual.getPregunta(), preguntaNormalizada)) {
+        this.existePregunta(dto);
+        modificacion.put("pregunta", dto.pregunta());}
+    if(!TextoUtils.comparar(actual.getDescripcion(), dto.descripcion())) {
+        modificacion.put("descripcion", dto.descripcion());
     }
-    return  false;
+return modificacion;
 
 }
 
@@ -73,7 +81,7 @@ Map<String,String> modificacion=new HashMap<>();
 //---------------------------------------------------------------------------------
 
     /**
-     * Validar que el factor asociado a la entidad persistida en la bdd
+     * Validar que el factor asociado a la Pregunta persistida en la bdd
      * sea el mismo que el recibido
      */
     public void validarFactor(Pregunta actual,Long idFactor){
@@ -82,7 +90,7 @@ throw  new IntegridadComprometidaException("Problemas de integridad no se puede 
        }}
  //----------------------------------------------------------------------------------
     /**
-     * Validar que el id recibido sea el mismo asociado a la entidad persistida en la bdd
+     * Validar que el id recibido exista y sea el mismo asociado al factor persistido
       */
     public void validarCompetencia(Factor f, Long idCompetencia) {
         if (f.getCompetencia() == null) {
@@ -107,17 +115,11 @@ throw  new IntegridadComprometidaException("Problemas de integridad no se puede 
             if(nueva.getOpciones().size()!=dto.ponderaciones().size()){
                 throw new CantidadOpcionesInvalidException("La cantidad de ponderaciones recibida no coincide con la nueva Opciond de Respuesta elegida");
             }
-            this.ValidarPuntaje(dto.ponderaciones());
-
-                   return nueva;}
+            return nueva;}
         if(actual.getOpcionRespuesta().getOpciones().size()!=dto.ponderaciones().size()){
             throw new CantidadOpcionesInvalidException("La cantidad de ponderaciones recibida no coincide con la nueva Opciond de Respuesta elegida");
-
         }
-        this.ValidarPuntaje(dto.ponderaciones());
-
         return  null;}
-
     //---------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------
     public void existeNombre(preguntaDtoCreate dto) {
@@ -136,27 +138,5 @@ throw  new IntegridadComprometidaException("Problemas de integridad no se puede 
                 dto.factor().competencia().id());
     }
 //---------------------------------------------------------------------------------
-    public void ValidarPuntaje(List<Short> ponderacion) {
-int sum=0;
-      for(Short puntaje : ponderacion) {
-        sum=sum+puntaje;}
-      if(sum!=10){
-            throw new SumaPonderacionesInvalidException("La suma de las ponderaciones en total debe ser 10");}
-    }
-//---------------------------------------------------------------------------------
 
-    /**Funcion auxiliar  para simplificar la logica del servicio
-     * Encargada de construir las ponderaciones entre la opcion y el puntaje a persistir
-     */
-    public List<Ponderacion> construirPonderaciones(List<Short> ponderacion,List<Opcion> opciones,Long idopcionRespuesta) {
-        List<Ponderacion> ponderaciones=new ArrayList<>();
-
-        for (int i = 0; i < opciones.size(); i++) {
-            ponderaciones.add(
-                     Ponderacion.builder()
-                             .fila(opciones.get(i).getFila())
-                             .puntaje(ponderacion.get(i))
-                             .opcionRespuesta(idopcionRespuesta)
-                             .build());}
-        return ponderaciones;}
 }
