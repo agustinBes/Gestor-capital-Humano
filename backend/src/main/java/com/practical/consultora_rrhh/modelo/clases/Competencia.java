@@ -1,11 +1,9 @@
 package com.practical.consultora_rrhh.modelo.clases;
 
+import com.practical.consultora_rrhh.dto.response.competenciaDto;
 import com.practical.consultora_rrhh.modelo.enums.tipoCompetencia;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
 
@@ -27,6 +25,7 @@ import java.util.List;
 @NoArgsConstructor // Genera el constructor vacío
 @AllArgsConstructor
 @Entity()
+@Builder
 @Table(name = "competencia")
 public class Competencia {
     @Id
@@ -43,4 +42,7 @@ public class Competencia {
     @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(name = "tipo")
     private tipoCompetencia tipoCompetencia;
+
+
+
 }

@@ -1,10 +1,8 @@
 package com.practical.consultora_rrhh.modelo.clases;
 
+import com.practical.consultora_rrhh.dto.request.preguntaDtoCreate;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 
 import java.util.List;
@@ -25,29 +23,43 @@ import java.util.List;
 @Setter
 @NoArgsConstructor // Genera el constructor vacío
 @AllArgsConstructor
+@Builder
 @Entity(name = "pregunta")
 public class Pregunta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-private Long id;
+    private Long id;
     @ManyToOne()
     @JoinColumn(name = "id_factor", referencedColumnName = "id")
     private Factor factor;
-@Column()
+    @Column()
     private String nombre;
     @Column()
-private String pregunta;
+    private String pregunta;
     @Column()
     private String descripcion;
     @Column()
     private Boolean eliminacion;
     @ManyToOne()
-    @JoinColumn(name = "id_opcion_respuesta",referencedColumnName="id")
+    @JoinColumn(name = "id_opcion_respuesta", referencedColumnName = "id")
     private OpcionRespuesta opcionRespuesta;
     @ElementCollection
     @CollectionTable(
-name = "Ponderacion_Opcion",joinColumns = @JoinColumn(name = "id_pregunta",referencedColumnName = "id"))
+            name = "Ponderacion_Opcion", joinColumns = @JoinColumn(name = "id_pregunta", referencedColumnName = "id"))
 
     List<Ponderacion> ponderaciones;
 
+
+    public static Pregunta crear(String titulo,String pregunta,preguntaDtoCreate dto, OpcionRespuesta opcion, Factor factor,List<Ponderacion> ponderaciones) {
+        return Pregunta.builder()
+                .id(null)
+                .nombre(titulo)
+                .pregunta(pregunta)
+                .descripcion(dto.descripcion())
+                .opcionRespuesta(opcion)
+                .factor(factor)
+                .ponderaciones(ponderaciones)
+                .eliminacion(false)
+                .build();
+    }
 }

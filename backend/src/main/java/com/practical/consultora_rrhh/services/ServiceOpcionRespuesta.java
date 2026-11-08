@@ -1,17 +1,24 @@
 package com.practical.consultora_rrhh.services;
 
 import com.practical.consultora_rrhh.Util.TextoUtils;
+import com.practical.consultora_rrhh.dto.request.auditoriaDtoCreate;
 import com.practical.consultora_rrhh.dto.request.opcionRespuestaDtoCreate;
+import com.practical.consultora_rrhh.dto.response.auditoriaDto;
 import com.practical.consultora_rrhh.dto.response.opcionDto;
 import com.practical.consultora_rrhh.dto.response.opcionRespuestaDto;
-import com.practical.consultora_rrhh.excepciones.genericas.CollectionNotFoundException;
+import com.practical.consultora_rrhh.excepciones.genericas.ColeccionNotFoundException;
+import com.practical.consultora_rrhh.excepciones.genericas.EntidadEnUsoException;
 import com.practical.consultora_rrhh.interfaces.dao.IOpcionRespuestaDao;
 import com.practical.consultora_rrhh.interfaces.services.IserviceOpcionRespuesta;
+import com.practical.consultora_rrhh.interfaces.services.IservicePregunta;
 import com.practical.consultora_rrhh.modelo.clases.Opcion;
 import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
+import com.practical.consultora_rrhh.modelo.enums.tipoAuditoria;
 import com.practical.consultora_rrhh.validaciones.OpcionRespuestaValidators;
 import org.springframework.stereotype.Service;
 
+import javax.swing.plaf.basic.BasicGraphicsUtils;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -36,10 +43,14 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
 
      private final IOpcionRespuestaDao dao;
     private final OpcionRespuestaValidators validators;
+    private final ServiceAuditoria serviceAuditoria;
+    private final IservicePregunta servicePregunta;
 
-    public ServiceOpcionRespuesta(IOpcionRespuestaDao dao, OpcionRespuestaValidators validators) {
+    public ServiceOpcionRespuesta(IOpcionRespuestaDao dao, OpcionRespuestaValidators validators, ServiceAuditoria serviceAuditoria, IservicePregunta servicePregunta) {
         this.dao = dao;
         this.validators = validators;
+        this.serviceAuditoria = serviceAuditoria;
+        this.servicePregunta = servicePregunta;
     }
     //--------------------------------------------------------------------------------
 
@@ -74,7 +85,7 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
 
     public opcionRespuestaDto actualizar(Long id, opcionRespuestaDtoCreate dto) {
 
-        OpcionRespuesta actual = validators.validarOpcionRespuesta(id);
+        OpcionRespuesta actual = dao.obtenerPorId(id);
 
        boolean descripcion=validators.validarFormatoModificaciones(id,actual,dto);
 
@@ -103,7 +114,7 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
                 .map(opcionRespuestaDto::new)
                 .toList();
         if (lista.isEmpty()) {
-            throw new CollectionNotFoundException("No se encontraron resultados de busquda");
+            throw new ColeccionNotFoundException("No se encontraron resultados de busquda");
         }
         return lista;
     }
@@ -115,7 +126,12 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
      */
 
     public void eliminar(Long id) {
-        OpcionRespuesta aux = validators.validarOpcionRespuesta(id);
+        OpcionRespuesta aux = dao.obtenerPorId(id);
+if(servicePregunta.existeOpcionRespuestaEnUso(id)){
+    throw new EntidadEnUsoException("La opcion de respuesta esta siendo usada por una pregunta por lo tanto no puede ser eliminada");
+    }
+auditoriaDtoCreate dto = new auditoriaDtoCreate(null,aux.getNombre(), tipoAuditoria.OPCION_RESPUESTA, LocalDateTime.now(),"pepe Juan");
+serviceAuditoria.crearAuditoria(dto);
         dao.eliminar(aux);
     }
 
@@ -125,7 +141,7 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
 
     public opcionRespuestaDto obtenerPorId(Long id) {
 
-        OpcionRespuesta aux = validators.validarOpcionRespuesta(id);
+        OpcionRespuesta aux = dao.obtenerPorId(id);
 
         return new opcionRespuestaDto(aux);
     }
@@ -147,11 +163,21 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
                 .map(opcionRespuestaDto::new)
                 .toList();
         if (lista.isEmpty()) {
-             throw new CollectionNotFoundException("No se encontraron resultados de busquda");
+             throw new ColeccionNotFoundException("No se encontraron resultados de busquda");
         }
         return lista;
     }
 
 //--------------------------------------------------------------
+//---------------------Consultas entre servicio-------------------------
 
+    @Override
+    public OpcionRespuesta obtenerEntidad(Long id) {
+        return  dao.obtenerPorId(id);
+    }
+
+    @Override
+    public void validarEntidad(Long id) {
+        dao.existePorId(id);
+    }
 }

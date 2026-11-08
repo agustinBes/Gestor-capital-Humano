@@ -1,5 +1,8 @@
 package com.practical.consultora_rrhh.dto.response;
 
+import com.practical.consultora_rrhh.modelo.clases.Competencia;
+import com.practical.consultora_rrhh.modelo.enums.tipoCompetencia;
+
 import java.util.List;
 
 public record competenciaDto(
@@ -10,4 +13,16 @@ public record competenciaDto(
         String descripcion,
         String tipo
 ) {
+public competenciaDto(Competencia x,boolean factores){
+    this(
+            x.getId(),
+            x.getCodigo(),
+          factores?  x.getFactores().stream()
+                    .map(factorDto::new)
+                    .toList():null,
+            x.getNombre(),
+            x.getDescripcion(),
+            tipoCompetencia.desdeTipo(x.getTipoCompetencia())
+    );
+}
 }

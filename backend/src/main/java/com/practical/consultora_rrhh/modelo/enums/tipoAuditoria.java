@@ -4,7 +4,8 @@ public enum tipoAuditoria {
     FACTOR,
     PUESTO,
     COMPETENCIA,
-    PREGUNTA;
+    PREGUNTA,
+    OPCION_RESPUESTA;
 
     public static tipoAuditoria desdeString(String valor) {
         return tipoAuditoria.valueOf(valor.toUpperCase());

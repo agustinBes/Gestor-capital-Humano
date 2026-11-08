@@ -1,7 +1,7 @@
 package com.practical.consultora_rrhh.excepciones;
 
-import com.practical.consultora_rrhh.excepciones.genericas.AtributoInvalidException;
-import com.practical.consultora_rrhh.excepciones.genericas.DuplicatedException;
+import com.practical.consultora_rrhh.excepciones.especializadas.atributos.SumaPonderacionesInvalidException;
+import com.practical.consultora_rrhh.excepciones.genericas.DuplicadoException;
 import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**Controlador de excepciones globales de excepciones genericas para poder gestionar excepciones de multiples clases
  * aprovecha la generacion de excepciones especializadas que heredan de estas genericas
@@ -23,20 +23,50 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(DuplicatedException.class)
-    public ResponseEntity<String> manejarDuplicado(
-            DuplicatedException e) {
+    @ExceptionHandler(DuplicadoException.class)
+    public ResponseEntity<Map<String,String>> manejarDuplicado(
+            DuplicadoException e) {
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(e.getMessage());
+                .body(Map.of(
+                        "status", "409",
+                        "error", HttpStatus.CONFLICT.getReasonPhrase(),
+                        "message", e.getMessage()
+                ));
     }
-
-    @ExceptionHandler(AtributoInvalidException.class)
-    public ResponseEntity<String> manejarAtributoInvalido(AtributoInvalidException e) {
+    @ExceptionHandler(SumaPonderacionesInvalidException.class)
+    public ResponseEntity<Map<String,String>> manejarSumaPonderacionesInvalid(SumaPonderacionesInvalidException e) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(e.getMessage());
+                  .body(Map.of(
+                        "status", "404",
+                        "error", HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                        "message", e.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<String> manejarAtributoInvalido(
+            MethodArgumentNotValidException e) {
+
+        String mensaje = e.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+
+        String respuesta = """
+            {
+                "status": 400,
+                "error": "Bad Request",
+                "message": "%s"
+            }
+            """.formatted(mensaje);
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(respuesta);
     }
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<String> manejarObjectNotFound(EntityNotFoundException e) {
@@ -52,18 +82,7 @@ public class GlobalExceptionHandler {
                 .body("El parámetro '" + e.getName()
                         + "' no corresponde con el tipo de dato solicitado.");
     }
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> manejarValidacion(
-            MethodArgumentNotValidException ex) {
 
-        Map<String, String> errores = new HashMap<>();
-
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                errores.put(error.getField(), error.getDefaultMessage())
-        );
-
-        return ResponseEntity.badRequest().body(errores);
-    }
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<String> manejarNumberFormat(HttpMessageNotReadableException e) {
 

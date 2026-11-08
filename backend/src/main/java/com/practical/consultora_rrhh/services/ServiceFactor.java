@@ -1,27 +1,30 @@
 package com.practical.consultora_rrhh.services;
 
-import com.practical.consultora_rrhh.dto.request.preguntaDtoCreate;
+import com.practical.consultora_rrhh.dto.request.factorDtoCreate;
 import com.practical.consultora_rrhh.dto.response.factorDto;
 import com.practical.consultora_rrhh.interfaces.dao.IFactorDao;
+import com.practical.consultora_rrhh.interfaces.services.IserviceCompetencia;
 import com.practical.consultora_rrhh.interfaces.services.IserviceFactor;
-import jakarta.persistence.Id;
+import com.practical.consultora_rrhh.modelo.clases.Factor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 @Service
 public class ServiceFactor implements IserviceFactor {
 private final IFactorDao dao;
-public ServiceFactor(IFactorDao dao) {
+private final IserviceCompetencia serviceCompetencia;
+public ServiceFactor(IFactorDao dao, IserviceCompetencia service) {
         this.dao = dao;
+        this.serviceCompetencia = service;
 }
 
     @Override
-    public factorDto guardar(preguntaDtoCreate dto) {
+    public factorDto guardar(factorDtoCreate dto) {
         return null;
     }
 
     @Override
-    public factorDto actualizar(Id id, preguntaDtoCreate dto) {
+    public factorDto actualizar(Long aLong, factorDtoCreate dto) {
         return null;
     }
 
@@ -31,16 +34,15 @@ public ServiceFactor(IFactorDao dao) {
     }
 
     @Override
-    public void eliminar(Id id) {
+    public void eliminar(Long aLong) {
 
     }
 
     @Override
-    public factorDto obtenerPorId(Id id) {
+    public factorDto obtenerPorId(Long aLong) {
         return null;
     }
 
-    @Override
     public boolean validarExistencia(Long id) {
         return false;
     }
@@ -55,5 +57,18 @@ public ServiceFactor(IFactorDao dao) {
 
     }
 
+    @Override
+    public Factor obtenerEntidad(Long id) {
+    return dao.obtenerPorId(id);
+    }
 
+    @Override
+    public void validarConsistencia(Long id, Long idCompetencia) {
+         dao.validarCompetencia(id,idCompetencia);
+    }
+
+    @Override
+    public void validarEntidad(Long aLong) {
+
+    }
 }

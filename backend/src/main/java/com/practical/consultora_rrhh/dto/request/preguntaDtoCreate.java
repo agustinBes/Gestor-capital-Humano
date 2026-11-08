@@ -1,13 +1,9 @@
 package com.practical.consultora_rrhh.dto.request;
 
+import com.practical.consultora_rrhh.Util.TextoUtils;
 import com.practical.consultora_rrhh.dto.response.factorDto;
-import com.practical.consultora_rrhh.dto.response.opcionRespuestaDto;
-import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.util.List;
 
@@ -26,22 +22,21 @@ public record preguntaDtoCreate(
         factorDto factor,
 
         @NotBlank(message = "Se requiere un título para guardar la pregunta")
-        @Size(max = 30, message = "Longitud del título excedida")
-        String titulo,
+        @Size(max = 80, message = "Longitud del título excedida")
+         String titulo,
 
         @NotBlank(message = "Se requiere una pregunta")
-        @Size(max = 70, message = "Longitud de la pregunta excedida")
+        @Size(max = 150, message = "Longitud de la pregunta excedida")
         String pregunta,
 
-        @NotBlank(message = "Se requiere una descripción para orientar al usuario")
+        @Size(max=300, message = "La longitud de la descripcion no puede exceder los 300 caracteres")
         String descripcion,
 
         @NotNull(message = "Se requiere una configuración de opciones")
-        Long opcionRespuesta,
+        Long id_opcionRespuesta,
 
         @NotEmpty(message = "Se requiere al menos una ponderación")
-        List<@Valid ponderacionDtoCreate> ponderaciones
-
+        List<@Positive(message = "Las ponderaciones deben ser mayores a cero") Short> ponderaciones
 ) {
 
 

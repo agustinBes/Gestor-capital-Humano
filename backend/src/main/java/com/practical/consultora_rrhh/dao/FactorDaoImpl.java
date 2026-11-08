@@ -10,42 +10,42 @@ import java.util.List;
 
 @Repository
 public class FactorDaoImpl implements IFactorDao {
-  private final factorRepository repository;
-  public  FactorDaoImpl(factorRepository rep){
-      repository = rep;
-  }
-    @Override
+    private final factorRepository repository;
+
+    public FactorDaoImpl(factorRepository rep) {
+        repository = rep;
+    }
+
     public boolean existePorNombreInsensible(String nombre) {
         return false;
     }
 
-    @Override
     public boolean existeCodigoInsensible(String codigo) {
         return false;
     }
 
-    @Override
     public Factor guardar(Factor factor) {
         return null;
     }
 
-    @Override
     public List<Factor> obtenerTodos() {
         return List.of();
     }
 
-    @Override
     public void eliminar(Factor factor) {
 
     }
 
-    @Override
-    public Factor obtenerPorId(Long aLong) {
-        return null;
+    public Factor obtenerPorId(Long id) {
+        return repository.findByIdOrThrow(id, "el factor");
+    }
+
+    public void existePorId(Long aLong) {
+
     }
 
     @Override
-    public void existePorId(Long aLong) {
-
+    public boolean validarCompetencia(Long id, Long idCompetencia) {
+        return repository.existByIdAndCompetencia_Id(id, idCompetencia);
     }
 }

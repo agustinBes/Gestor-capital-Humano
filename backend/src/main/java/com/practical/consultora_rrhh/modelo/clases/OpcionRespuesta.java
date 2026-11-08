@@ -64,4 +64,15 @@ public class OpcionRespuesta {
                         .toList()
         );
     }
+    public  OpcionRespuesta(opcionRespuestaDto dto) {
+        this.id = dto.id();
+        this.nombre = dto.nombre();
+        this.descripcion = dto.descripcion();
+        this.opciones.addAll(
+                dto.opciones().stream()
+                        .map(Opcion::new)
+                        .toList()
+        );
+        this.activo=true;
+    }
 }

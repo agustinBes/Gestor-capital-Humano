@@ -4,4 +4,5 @@ import com.practical.consultora_rrhh.interfaces.auxiliares.IvalidarNombreCodigoD
 import com.practical.consultora_rrhh.modelo.clases.Factor;
 
 public interface IFactorDao extends IDaoBase<Long, Factor>, IvalidarNombreCodigoDao {
+    boolean validarCompetencia(Long id, Long idCompetencia);
 }

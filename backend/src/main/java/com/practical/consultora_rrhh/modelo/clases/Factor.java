@@ -1,10 +1,9 @@
 package com.practical.consultora_rrhh.modelo.clases;
 
+import com.practical.consultora_rrhh.dto.response.factorDto;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
 /**
 *  Representa un factor o aspecto específico de una competencia
 * requerida para un puesto de trabajo.
@@ -30,6 +29,7 @@ import lombok.Setter;
 @NoArgsConstructor // Genera el constructor vacío
 @AllArgsConstructor
 @Entity()
+@Builder
 @Table(name = "factor")
 public class Factor {
     @Id
@@ -48,4 +48,15 @@ private String descripcion;
     private short orden;
 @Column()
     private boolean eliminacion;
+
+public static Factor crear(factorDto dto,Competencia competencia){
+    return  Factor.builder()
+            .id(dto.id())
+            .codigo(dto.codigo())
+            .competencia(competencia)
+            .descripcion(dto.descripcion())
+            .eliminacion(dto.eliminacion())
+            .orden(dto.orden())
+            .build();
+}
 }

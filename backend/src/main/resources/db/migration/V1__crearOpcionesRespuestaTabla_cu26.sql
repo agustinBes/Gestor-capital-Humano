@@ -1,6 +1,6 @@
 CREATE TABLE opcion_respuesta (
                                   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                                  nombre      VARCHAR(30) NOT NULL ,
+                                  nombre      VARCHAR(50) NOT NULL ,
                                   descripcion VARCHAR(300),
                                     activo boolean NOT NULL  DEFAULT true);
 CREATE TABLE opcion (

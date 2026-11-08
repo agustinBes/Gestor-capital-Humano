@@ -8,5 +8,4 @@ DtoResponse actualizar(Id id,DtoRequest dto);
 List<DtoResponse>  obtenerTodos();
 void eliminar(Id id);
 DtoResponse obtenerPorId(Id id);
-boolean validarExistencia(Long id);
 }

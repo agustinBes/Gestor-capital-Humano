@@ -6,7 +6,7 @@ import com.practical.consultora_rrhh.dto.request.opcionDtoCreate;
 import com.practical.consultora_rrhh.dto.request.opcionRespuestaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.opcionDto;
 import com.practical.consultora_rrhh.excepciones.especializadas.atributos.CantidadOpcionesInvalidException;
-import com.practical.consultora_rrhh.excepciones.especializadas.atributos.DescripcionDuplicatedException;
+import com.practical.consultora_rrhh.excepciones.especializadas.atributos.DescripcionDuplicadaException;
 import com.practical.consultora_rrhh.excepciones.especializadas.atributos.OrdenNoConsecutivoException;
 import com.practical.consultora_rrhh.modelo.clases.Opcion;
 import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
@@ -37,14 +37,6 @@ public class OpcionRespuestaValidators  {
         this.dao= dao;
         this.opcionValidators = opcionValidators;
     }
-
-    /**
-     * Verificar existencia de la entidad persistida que se desea modificar         *
-     */
-    public OpcionRespuesta validarOpcionRespuesta(Long id) {
-return  dao.obtenerPorId(id);}
-
-
 //----------------------------------------------------------
 
 
@@ -73,7 +65,7 @@ existeNombre(nuevo);
 
         if (!opcionValidators.descripcionUnica(opcion)) {
             throw
-new DescripcionDuplicatedException("La descripciones recibida ya existe en el sistema");
+new DescripcionDuplicadaException("La descripciones recibida ya existe en el sistema");
         }
     }
     /*

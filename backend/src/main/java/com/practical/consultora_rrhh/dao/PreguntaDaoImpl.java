@@ -22,10 +22,10 @@ public class PreguntaDaoImpl  implements IPreguntaDao {
     }
 //-----------------------------------------------------------------------------------------------
     public boolean existeNombrePorFactorInsensible(String nombre,Long idFactor,Long idCompetencia) {
-return  repository.existsByNombreIgnoreCaseAndFactor_IdAndFactor_Competencia(nombre,idFactor,idCompetencia);
+return  repository.existeNombrePorFactorCompetenciaInsensible(nombre,idFactor,idCompetencia);
     }
 public boolean existePreguntaPorFactorInsensible(String nombre, Long idFactor, Long competencia) {
-        return repository.existsByPreguntaIgnoreCaseAndFactor_IdAndFactor_Competencia_Id(nombre,idFactor,competencia);}
+        return repository.existePreguntaPorFactorCompetenciaInsensible(nombre,idFactor,competencia);}
 
 
     public Pregunta guardar(Pregunta pregunta) {
@@ -43,6 +43,8 @@ repository.delete(pregunta);}
         return repository.findByIdOrThrow(id,"la pregunta");}
     public void existePorId(Long id) {repository.existsByIdOrThrow(id,"la pregunta");}
 
-
+    public boolean existeOpcionRespuestaEnuso(Long id) {
+        return repository.existsByOpcionRespuesta_Id(id);
+    }
 }
 

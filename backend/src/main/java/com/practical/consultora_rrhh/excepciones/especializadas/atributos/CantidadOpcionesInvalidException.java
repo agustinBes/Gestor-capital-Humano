@@ -1,8 +1,8 @@
 package com.practical.consultora_rrhh.excepciones.especializadas.atributos;
 
-import com.practical.consultora_rrhh.excepciones.genericas.AtributoInvalidException;
+import com.practical.consultora_rrhh.excepciones.genericas.AtributoInvalidoException;
 
-public class CantidadOpcionesInvalidException extends AtributoInvalidException {
+public class CantidadOpcionesInvalidException extends AtributoInvalidoException {
     public CantidadOpcionesInvalidException(String message) {
         super(message);
     }

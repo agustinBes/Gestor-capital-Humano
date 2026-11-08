@@ -1,10 +1,7 @@
 package com.practical.consultora_rrhh.dto.request;
 
 import com.practical.consultora_rrhh.modelo.clases.Opcion;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 
 /**
  * Usado para transferir informacion ademas de la gestion de creacion y modificacion
@@ -25,6 +22,7 @@ public record opcionDtoCreate(
         short orden,
 
             @NotBlank(message = "Se requiere al menos una oración que describa la opción")
+        @Size(max=100, message = "Longitud excedida")
         String descripcion
 
 ) {

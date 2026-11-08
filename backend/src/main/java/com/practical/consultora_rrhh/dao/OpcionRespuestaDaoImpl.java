@@ -63,8 +63,9 @@ public class OpcionRespuestaDaoImpl implements IOpcionRespuestaDao {
     public List<OpcionRespuesta> obtenerTodos() {
         return repository.findAll();
     }
-
-    public void eliminar(OpcionRespuesta opcionRespuesta) {repository.delete(opcionRespuesta);}
+@Transactional
+    public void eliminar(OpcionRespuesta opcionRespuesta) {
+   opcionRespuesta.setActivo(false);}
     /**
      * Busca registros por coincidencia parcial
      */

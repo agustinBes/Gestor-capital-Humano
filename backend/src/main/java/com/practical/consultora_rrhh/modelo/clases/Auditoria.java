@@ -1,5 +1,6 @@
 package com.practical.consultora_rrhh.modelo.clases;
 
+import com.practical.consultora_rrhh.dto.request.auditoriaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.auditoriaDto;
 import com.practical.consultora_rrhh.modelo.enums.tipoAuditoria;
 import jakarta.persistence.*;
@@ -41,6 +42,13 @@ public Auditoria(auditoriaDto dto){
     auditoria=tipoAuditoria.valueOf(dto.tipo());
     fecha=dto.fecha();
     responsible =new Consultor();
+}
+public Auditoria(auditoriaDtoCreate dto){
+    id=null;
+    RegistroEliminado=dto.registro();
+    auditoria=dto.tipoAuditoria();
+    fecha=dto.fecha();
+    responsible =null;
 }
 
 

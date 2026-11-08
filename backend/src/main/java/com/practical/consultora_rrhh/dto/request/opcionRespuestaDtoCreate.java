@@ -18,9 +18,11 @@ import java.util.List;
 public record opcionRespuestaDtoCreate(
 
         @NotBlank(message = "El nombre es obligatorio")
+        @Size(max=50, message = "Longitud excedida")
         String nombre,
 
         @NotBlank(message = "La descripción es obligatoria")
+        @Size(max=300, message = "Longitud excedida")
         String descripcion,
 
         @NotEmpty(message = "Se requieren opciones de respueta")
