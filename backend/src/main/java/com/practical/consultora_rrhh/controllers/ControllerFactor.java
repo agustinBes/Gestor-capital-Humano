@@ -1,12 +1,12 @@
 package com.practical.consultora_rrhh.controllers;
 
+import com.practical.consultora_rrhh.dto.FiltrosBusqueda.factorFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.factorDtoCreate;
 import com.practical.consultora_rrhh.dto.request.factorDtoCreate;
 import com.practical.consultora_rrhh.dto.response.factorDto;
 import com.practical.consultora_rrhh.dto.response.factorDto;
 import com.practical.consultora_rrhh.interfaces.controllers.IcontrollerFactor;
 import com.practical.consultora_rrhh.interfaces.services.IserviceFactor;
-import jakarta.persistence.MapsId;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+/** Controlador de Factores responde a la creacion,modificacion y eliminacion
+ * Tiene funciones de listar todas y filtros de busqueda para obtener por nombre
+ * o recuperar una sola en base a su ID
+ *
+ * @author  Besigniano Agustin
+ * @since 1.0
+ */
 @Controller
 @RestController
 @RequestMapping("/factores")
@@ -45,7 +51,7 @@ public class ControllerFactor implements IcontrollerFactor {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> eliminar(@PathVariable Long id) {
         service.eliminar(id);
-        return ResponseEntity.ok("Opción de respuesta eliminada correctamente.");
+        return ResponseEntity.ok("Factor eliminado correctamente.");
     }
 
     @GetMapping("/lista")
@@ -58,8 +64,9 @@ public class ControllerFactor implements IcontrollerFactor {
         return ResponseEntity.ok(service.obtenerPorId(id));
     }
 
-    @GetMapping("/nombre/{nombre}")
-    public ResponseEntity<List<factorDto>> obtenerPorNombre(@PathVariable String nombre) {
-        return ResponseEntity.ok(service.obtenerPorNombre(nombre));
+    @GetMapping("/buscar")
+
+    public ResponseEntity<List<factorDto>> buscar(@ModelAttribute factorFiltrosDto dto) {
+        return ResponseEntity.ok(service.buscar(dto));
     }
 }

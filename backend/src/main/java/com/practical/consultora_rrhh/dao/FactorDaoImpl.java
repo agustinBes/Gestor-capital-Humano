@@ -1,5 +1,6 @@
 package com.practical.consultora_rrhh.dao;
 
+import com.practical.consultora_rrhh.dto.FiltrosBusqueda.factorFiltrosDto;
 import com.practical.consultora_rrhh.interfaces.dao.IFactorDao;
 import com.practical.consultora_rrhh.interfaces.repositorio.factorRepository;
 import com.practical.consultora_rrhh.interfaces.services.IserviceFactor;
@@ -16,12 +17,10 @@ public class FactorDaoImpl implements IFactorDao {
         repository = rep;
     }
 
-    public boolean existePorNombreInsensible(String nombre) {
-        return false;
+    public void existePorNombreInsensible(String nombre) {
     }
 
-    public boolean existeCodigoInsensible(String codigo) {
-        return false;
+    public void existeCodigoInsensible(String codigo) {
     }
 
     public Factor guardar(Factor factor) {
@@ -47,4 +46,19 @@ public class FactorDaoImpl implements IFactorDao {
     public boolean validarCompetencia(Long id, Long idCompetencia) {
         return repository.existsByIdAndCompetencia_Id(id, idCompetencia);
     }
-}
+
+    @Override
+    public List<Factor> buscar(String factor,String competencia) {
+        if(factor!=null && competencia!=null) {
+            return repository.findByNombreIgnoreCaseAndCompetencia_NombreIgnoreCase(factor, competencia);
+        }
+        else {
+            if (factor != null) {
+                return repository.findByNombreIgnoreCase(factor);
+            }
+        }
+        return repository.findByCompetencia_NombreIgnoreCase(competencia);
+
+        }
+
+    }

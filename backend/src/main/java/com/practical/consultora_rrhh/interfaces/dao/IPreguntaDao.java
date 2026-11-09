@@ -1,19 +1,18 @@
 package com.practical.consultora_rrhh.interfaces.dao;
 
-import com.practical.consultora_rrhh.dto.FiltrosBusqueda.PreguntaFiltrosDto;
+import com.practical.consultora_rrhh.dto.FiltrosBusqueda.preguntaFiltrosDto;
 import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
 import com.practical.consultora_rrhh.modelo.clases.Ponderacion;
 import com.practical.consultora_rrhh.modelo.clases.Pregunta;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
 
 public interface IPreguntaDao extends IDaoBase<Long, Pregunta>  {
-    List<Pregunta> buscar(PreguntaFiltrosDto filtros);
+    List<Pregunta> buscar(preguntaFiltrosDto filtros);
 
-    boolean existeNombrePorFactorInsensible(String nombre,Long idFactor,Long competencia);
-    boolean existePreguntaPorFactorInsensible(String nombre,Long idFactor,Long competencia);
+    void existeNombrePorFactorInsensible(String nombre,Long idFactor,Long competencia);
+    void existePreguntaPorFactorInsensible(String nombre,Long idFactor,Long competencia);
 boolean existeOpcionRespuestaEnuso(Long id);
 
 Pregunta actualizar(Pregunta pregunta, Map<String,String> modificaciones, OpcionRespuesta respuesta,List<Ponderacion> ponderaciones);

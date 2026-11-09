@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,9 +15,6 @@ import java.util.List;
 /** Controlador de opciones de respuesta responde a la creacion,modificacion y eliminacion
  * Tiene funciones de listar todas y filtros de busqueda para obtener por nombre
  * o recuperar una sola en base a su ID
- *
- *
- *
  *
  * @author  Besigniano Agustin
  * @since 1.0

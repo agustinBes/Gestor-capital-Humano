@@ -1,11 +1,13 @@
 package com.practical.consultora_rrhh.services;
 
+import com.practical.consultora_rrhh.dto.FiltrosBusqueda.factorFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.factorDtoCreate;
 import com.practical.consultora_rrhh.dto.response.factorDto;
 import com.practical.consultora_rrhh.interfaces.dao.IFactorDao;
 import com.practical.consultora_rrhh.interfaces.services.IserviceCompetencia;
 import com.practical.consultora_rrhh.interfaces.services.IserviceFactor;
 import com.practical.consultora_rrhh.modelo.clases.Factor;
+import com.practical.consultora_rrhh.validaciones.FactorValidators;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,9 +17,11 @@ import java.util.List;
 public class ServiceFactor implements IserviceFactor {
 private final IFactorDao dao;
 private final IserviceCompetencia serviceCompetencia;
-public ServiceFactor(IFactorDao dao, IserviceCompetencia service) {
+private final FactorValidators validators;
+public ServiceFactor(IFactorDao dao, IserviceCompetencia service, FactorValidators validators) {
         this.dao = dao;
         this.serviceCompetencia = service;
+    this.validators = validators;
 }
 
     @Override
@@ -49,33 +53,34 @@ public ServiceFactor(IFactorDao dao, IserviceCompetencia service) {
         return false;
     }
 
-    @Override
     public void existePorNombreInsensible(String nombre) {
 
     }
 
-    @Override
     public void existeCodigoInsensible(String codigo) {
 
     }
 
-    @Override
     public Factor obtenerEntidad(Long id) {
     return dao.obtenerPorId(id);
     }
 
-    @Override
     public void validarConsistencia(Long id, Long idCompetencia) {
          dao.validarCompetencia(id,idCompetencia);
     }
 
-    @Override
     public void validarEntidad(Long aLong) {
 
     }
 
-    @Override
-    public List<factorDto> obtenerPorNombre(String nombre) {
-        return List.of();
-    }
+    public List<factorDto> buscar(factorFiltrosDto dto) {
+    validators.validarCriterios(dto);
+
+    return dao.buscar(dto.factor(), dto.competencia())
+                .stream().map(factorDto::new)
+                .toList();
+
+
+}
+
 }

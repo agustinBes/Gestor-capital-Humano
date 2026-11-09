@@ -17,4 +17,8 @@ public final class TextoUtils {
 
         return normalizar(texto1).equalsIgnoreCase(normalizar(texto2));
     }
+    public static boolean tieneContenido(String valor) {
+
+        return valor != null && !valor.isBlank();
+    }
 }

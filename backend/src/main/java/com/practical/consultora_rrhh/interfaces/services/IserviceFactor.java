@@ -1,5 +1,6 @@
 package com.practical.consultora_rrhh.interfaces.services;
 
+import com.practical.consultora_rrhh.dto.FiltrosBusqueda.factorFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.factorDtoCreate;
 import com.practical.consultora_rrhh.dto.response.factorDto;
 import com.practical.consultora_rrhh.modelo.clases.Factor;
@@ -11,5 +12,5 @@ import java.util.List;
 public interface IserviceFactor extends IserviceCRUD<Long, factorDto, factorDtoCreate>, InternalService<Factor,Long>,IvalidarExistenciaNombreCodigoService<factorDto> {
 
 void validarConsistencia(Long id,Long idCompetencia);
-List<factorDto> obtenerPorNombre(String nombre);
+List<factorDto> buscar(factorFiltrosDto nombre);
 }

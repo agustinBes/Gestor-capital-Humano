@@ -1,6 +1,6 @@
 package com.practical.consultora_rrhh.controllers;
 
-import com.practical.consultora_rrhh.dto.FiltrosBusqueda.PreguntaFiltrosDto;
+import com.practical.consultora_rrhh.dto.FiltrosBusqueda.preguntaFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.preguntaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.preguntaDto;
 import com.practical.consultora_rrhh.interfaces.controllers.IcontrollerPregunta;
@@ -45,7 +45,7 @@ private final IservicePregunta service;
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> eliminar(@PathVariable Long id) {
         service.eliminar(id);
-        return ResponseEntity.ok("Opción de respuesta eliminada correctamente.");
+        return ResponseEntity.ok("Pregunta eliminada correctamente.");
     }
 
     @Override
@@ -62,7 +62,7 @@ private final IservicePregunta service;
 
     @Override()
 @GetMapping("/buscar/")
-    public ResponseEntity<List<preguntaDto>> buscar(@ModelAttribute PreguntaFiltrosDto dto) {
+    public ResponseEntity<List<preguntaDto>> buscar(@ModelAttribute preguntaFiltrosDto dto) {
         return ResponseEntity.ok(service.buscar(dto));
     }
 }

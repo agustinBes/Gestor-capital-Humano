@@ -63,7 +63,11 @@ public class OpcionRespuestaDaoImpl implements IOpcionRespuestaDao {
     public List<OpcionRespuesta> obtenerTodos() {
         return repository.findAll();
     }
-@Transactional
+
+    /**
+     * ELiminacion logica de La entidad
+     */
+    @Transactional
     public void eliminar(OpcionRespuesta opcionRespuesta) {
    opcionRespuesta.setActivo(false);}
     /**

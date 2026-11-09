@@ -13,11 +13,23 @@ public record factorDto(
 
 ) {
 
-    public factorDto(Factor x){
+    public factorDto(Factor x,boolean competencia){
         this(
                 x.getId(),
                 x.getCodigo(),
-             new competenciaDto(x.getCompetencia(),false),
+             new competenciaDto(x.getCompetencia(),competencia),
+                x.getNombre(),
+                x.getDescripcion(),
+                x.getOrden(),
+                x.isEliminacion()
+        );
+    }
+
+
+    public factorDto(Factor x) {
+       this(         x.getId(),
+                x.getCodigo(),
+                new competenciaDto(x.getCompetencia(),false),
                 x.getNombre(),
                 x.getDescripcion(),
                 x.getOrden(),

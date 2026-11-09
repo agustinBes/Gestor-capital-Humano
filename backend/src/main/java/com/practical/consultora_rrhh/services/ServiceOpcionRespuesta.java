@@ -3,7 +3,6 @@ package com.practical.consultora_rrhh.services;
 import com.practical.consultora_rrhh.Util.TextoUtils;
 import com.practical.consultora_rrhh.dto.request.auditoriaDtoCreate;
 import com.practical.consultora_rrhh.dto.request.opcionRespuestaDtoCreate;
-import com.practical.consultora_rrhh.dto.response.auditoriaDto;
 import com.practical.consultora_rrhh.dto.response.opcionDto;
 import com.practical.consultora_rrhh.dto.response.opcionRespuestaDto;
 import com.practical.consultora_rrhh.excepciones.genericas.ColeccionNotFoundException;
@@ -16,8 +15,6 @@ import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
 import com.practical.consultora_rrhh.modelo.enums.tipoAuditoria;
 import com.practical.consultora_rrhh.validaciones.OpcionRespuestaValidators;
 import org.springframework.stereotype.Service;
-
-import javax.swing.plaf.basic.BasicGraphicsUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -36,7 +33,7 @@ import java.util.List;
  * código organizado y facilitar su mantenimiento.</p>
  *
  * @author  Besigniano Agustin
- * @Since 1.0
+ * @since 1.0
  */
 @Service
 public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
@@ -80,7 +77,6 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
      * La siguiente funcion se encarga de actualizar(parcialmente) la entidad persistida en la bdd.
      *
      * @param id Identificador de la entidad persistida en la bdd a modificar. Verificamos existencia como primer validacion
-     * @return
      */
 
     public opcionRespuestaDto actualizar(Long id, opcionRespuestaDtoCreate dto) {
@@ -122,7 +118,6 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
     /**
      * Validar existencia de la entidad en la BDD y eliminarla
      *Implementar: Generar registro de auditoria
-     * @param id
      */
 
     public void eliminar(Long id) {

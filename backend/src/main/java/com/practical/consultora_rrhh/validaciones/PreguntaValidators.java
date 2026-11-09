@@ -1,9 +1,10 @@
 package com.practical.consultora_rrhh.validaciones;
 
 import com.practical.consultora_rrhh.Util.TextoUtils;
+import com.practical.consultora_rrhh.dto.FiltrosBusqueda.preguntaFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.preguntaDtoCreate;
 import com.practical.consultora_rrhh.excepciones.especializadas.atributos.CantidadOpcionesInvalidException;
-import com.practical.consultora_rrhh.excepciones.especializadas.atributos.SumaPonderacionesInvalidException;
+import com.practical.consultora_rrhh.excepciones.genericas.FiltroVacioException;
 import com.practical.consultora_rrhh.excepciones.genericas.IntegridadComprometidaException;
 import com.practical.consultora_rrhh.interfaces.dao.IPreguntaDao;
 import com.practical.consultora_rrhh.interfaces.services.IserviceFactor;
@@ -138,5 +139,15 @@ throw  new IntegridadComprometidaException("Problemas de integridad no se puede 
                 dto.factor().competencia().id());
     }
 //---------------------------------------------------------------------------------
+public void validarCriterio(preguntaFiltrosDto dto) {
 
+    if (!TextoUtils.tieneContenido(dto.pregunta()) &&
+            !TextoUtils.tieneContenido(dto.competencia()) &&
+            !TextoUtils.tieneContenido(dto.factor())) {
+
+        throw new FiltroVacioException(
+                "Se requiere completar al menos uno de los campos"
+        );
+    }
+}
 }

@@ -18,7 +18,7 @@ public competenciaDto(Competencia x,boolean factores){
             x.getId(),
             x.getCodigo(),
           factores?  x.getFactores().stream()
-                    .map(factorDto::new)
+                    .map(o->new factorDto(o,factores))
                     .toList():null,
             x.getNombre(),
             x.getDescripcion(),

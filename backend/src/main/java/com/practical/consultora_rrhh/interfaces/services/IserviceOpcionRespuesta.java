@@ -6,6 +6,10 @@ import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
 
 import java.util.List;
 
+/**
+ *  Garantizamos metodos basicos
+ */
+
 public interface IserviceOpcionRespuesta extends IserviceCRUD<Long, opcionRespuestaDto, opcionRespuestaDtoCreate> , InternalService<OpcionRespuesta,Long> {
 
     public List<opcionRespuestaDto> obtenerPorNombre(String nombre);
