@@ -12,6 +12,6 @@ CREATE TABLE puesto_competencia(
     FOREIGN KEY (id_puesto) REFERENCES puesto(id),
     FOREIGN KEY (id_competencia) REFERENCES  competencia(id),
     CONSTRAINT uq_pregunta_competencia
-        UNIQUE(id_puesto,id_competencia)
+        UNIQUE(id_puesto,id_competencia),
     ponderacion SMALLINT NOT NULL
 );
