@@ -84,12 +84,11 @@ public class OpcionRespuestaDaoImpl implements IOpcionRespuestaDao {
     public boolean existePorNombreInsensible(String nombre) {
         return repository.existsByNombreIgnoreCase(nombre);
     }
-    public OpcionRespuesta obtenerPorId(Long id) {
-        return repository.findByIdOrThrow(id,"la opcion de respuesta");
+    public Optional<OpcionRespuesta> obtenerPorId(Long id) {
+        return repository.findById(id);
     }
 
-
-    public void existePorId(Long id) {
-        repository.existsByIdOrThrow(id,"la opcion de respuesta");
+    public boolean existePorId(Long id) {
+    return     repository.existsById(id);
     }
 }

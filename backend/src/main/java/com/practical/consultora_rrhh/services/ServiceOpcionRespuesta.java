@@ -7,13 +7,16 @@ import com.practical.consultora_rrhh.dto.response.opcionDto;
 import com.practical.consultora_rrhh.dto.response.opcionRespuestaDto;
 import com.practical.consultora_rrhh.excepciones.genericas.ColeccionNotFoundException;
 import com.practical.consultora_rrhh.excepciones.genericas.EntidadEnUsoException;
+import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
 import com.practical.consultora_rrhh.interfaces.dao.IOpcionRespuestaDao;
 import com.practical.consultora_rrhh.interfaces.services.IserviceOpcionRespuesta;
-import com.practical.consultora_rrhh.interfaces.services.IservicePregunta;
 import com.practical.consultora_rrhh.modelo.clases.Opcion;
 import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
 import com.practical.consultora_rrhh.modelo.enums.tipoAuditoria;
+import com.practical.consultora_rrhh.modelo.enums.tipo_campo_duplicado;
+import com.practical.consultora_rrhh.services.mediator.PreguntaOpcionRMediator;
 import com.practical.consultora_rrhh.validaciones.OpcionRespuestaValidators;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,14 +43,25 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
 
      private final IOpcionRespuestaDao dao;
     private final OpcionRespuestaValidators validators;
+    private final PreguntaOpcionRMediator mediador;
     private final ServiceAuditoria serviceAuditoria;
-    private final IservicePregunta servicePregunta;
 
-    public ServiceOpcionRespuesta(IOpcionRespuestaDao dao, OpcionRespuestaValidators validators, ServiceAuditoria serviceAuditoria, IservicePregunta servicePregunta) {
+    public ServiceOpcionRespuesta(IOpcionRespuestaDao dao, OpcionRespuestaValidators validators, ServiceAuditoria serviceAuditoria, PreguntaOpcionRMediator mediador) {
         this.dao = dao;
         this.validators = validators;
         this.serviceAuditoria = serviceAuditoria;
-        this.servicePregunta = servicePregunta;
+        this.mediador = mediador;
+    }
+    @PostConstruct
+    public void init() {
+        mediador.registrarServicioB(this);
+    }
+    @Override
+    public OpcionRespuesta obtenerEntidad(Long id) {
+
+        return    dao.obtenerPorId(id).orElseThrow(() ->
+                new EntityNotFoundException("No se encontró la entidad con el id: "+id+" en el sistema"));
+
     }
     //--------------------------------------------------------------------------------
 
@@ -59,10 +73,13 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
      * correspondientes. Si las validaciones son satisfactorias, registra una
      * nueva {@link OpcionRespuesta} junto con su lista de {@link Opcion}.</p>
      */
-
+@Override
     public opcionRespuestaDto guardar(opcionRespuestaDtoCreate dto) {
 
-        validators.existeNombre(TextoUtils.normalizar(dto.nombre()));
+    String nombreNormalizado=TextoUtils.normalizar(dto.nombre());
+    boolean aux=dao.existePorNombreInsensible(nombreNormalizado);
+    validators.validarCampoDuplicado(nombreNormalizado,aux, tipo_campo_duplicado.NOMBRE);
+
         validators.validarFormatoOpciones(dto.opciones());
 
         OpcionRespuesta entidad = new OpcionRespuesta(dto);
@@ -78,10 +95,10 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
      *
      * @param id Identificador de la entidad persistida en la bdd a modificar. Verificamos existencia como primer validacion
      */
-
+    @Override
     public opcionRespuestaDto actualizar(Long id, opcionRespuestaDtoCreate dto) {
 
-        OpcionRespuesta actual = dao.obtenerPorId(id);
+        OpcionRespuesta actual = this.obtenerEntidad(id);
 
        boolean descripcion=validators.validarFormatoModificaciones(id,actual,dto);
 
@@ -92,17 +109,13 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
             nueva = dao.actualizar(descripcion ? dto.descripcion() : null, actual, aux);
             return new opcionRespuestaDto(nueva);
         }
-        return new opcionRespuestaDto(actual);
-
-        }
-
-    //----------------------------------------------------------
-
-    /**
+        return new opcionRespuestaDto(actual);}
+//-------------------------------------------------------------------------------------------------------
+/**
      * Listar todas las opciones de respuesta existentes de la Base de datos
      * @return Puede contener elementos o representar la lista vacia
      */
-
+    @Override
     public List<opcionRespuestaDto> obtenerTodos() {
         List<opcionRespuestaDto> lista;
         lista = dao.obtenerTodos()
@@ -119,10 +132,10 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
      * Validar existencia de la entidad en la BDD y eliminarla
      *Implementar: Generar registro de auditoria
      */
-
+    @Override
     public void eliminar(Long id) {
-        OpcionRespuesta aux = dao.obtenerPorId(id);
-if(servicePregunta.existeOpcionRespuestaEnUso(id)){
+        OpcionRespuesta aux = this.obtenerEntidad(id);
+if(mediador.opcionRespuestaEnUso(id)){
     throw new EntidadEnUsoException("La opcion de respuesta esta siendo usada por una pregunta por lo tanto no puede ser eliminada");
     }
 auditoriaDtoCreate dto = new auditoriaDtoCreate(null,aux.getNombre(), tipoAuditoria.OPCION_RESPUESTA, LocalDateTime.now(),"pepe Juan");
@@ -133,14 +146,13 @@ serviceAuditoria.crearAuditoria(dto);
     /**
      * Obtener una opcion de respuesta o lanzar mensaje si no existe
      */
-
+    @Override
     public opcionRespuestaDto obtenerPorId(Long id) {
 
-        OpcionRespuesta aux = dao.obtenerPorId(id);
+        OpcionRespuesta aux = this.obtenerEntidad(id);
 
         return new opcionRespuestaDto(aux);
     }
-
     public boolean validarExistencia(Long id) {
         dao.existePorId(id);
         return true;  }
@@ -151,6 +163,7 @@ serviceAuditoria.crearAuditoria(dto);
      *
      * @param nombre texto utilizado como filtro de búsqueda por coincidencia parcial.
      */
+    @Override
     public List<opcionRespuestaDto> obtenerPorNombre(String nombre) {
         List<opcionRespuestaDto> lista;
         lista = dao.obtenerPorNombreParcial(nombre)
@@ -165,12 +178,6 @@ serviceAuditoria.crearAuditoria(dto);
 
 //--------------------------------------------------------------
 //---------------------Consultas entre servicio-------------------------
-
-    @Override
-    public OpcionRespuesta obtenerEntidad(Long id) {
-        return  dao.obtenerPorId(id);
-    }
-
     @Override
     public void validarEntidad(Long id) {
         dao.existePorId(id);

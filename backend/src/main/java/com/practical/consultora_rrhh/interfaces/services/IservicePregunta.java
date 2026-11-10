@@ -14,6 +14,7 @@ public interface IservicePregunta extends IserviceCRUD<Long,preguntaDto, pregunt
 
 
     List<preguntaDto> buscar(preguntaFiltrosDto dto);
+    void eliminarPorFactor(Long id);
 
     /**
      * Consulta particular para el servicio de OpcionRespuesta para ver si permite la eliminacion de una Entidad

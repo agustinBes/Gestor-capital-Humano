@@ -5,7 +5,7 @@ import com.practical.consultora_rrhh.modelo.clases.Factor;
 public record factorDto(
         Long id,
         String codigo,
-        competenciaDto competencia,
+        competenciaDtoSinFactores competencia,
         String nombre,
         String descripcion,
         short orden,
@@ -13,23 +13,10 @@ public record factorDto(
 
 ) {
 
-    public factorDto(Factor x,boolean competencia){
-        this(
-                x.getId(),
-                x.getCodigo(),
-             new competenciaDto(x.getCompetencia(),competencia),
-                x.getNombre(),
-                x.getDescripcion(),
-                x.getOrden(),
-                x.isEliminacion()
-        );
-    }
-
-
-    public factorDto(Factor x) {
+     public factorDto(Factor x) {
        this(         x.getId(),
                 x.getCodigo(),
-                new competenciaDto(x.getCompetencia(),false),
+                new competenciaDtoSinFactores(x.getCompetencia()),
                 x.getNombre(),
                 x.getDescripcion(),
                 x.getOrden(),

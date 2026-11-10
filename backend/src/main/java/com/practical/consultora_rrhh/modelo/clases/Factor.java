@@ -49,14 +49,5 @@ private String descripcion;
 @Column()
     private boolean eliminacion;
 
-public static Factor crear(factorDto dto,Competencia competencia){
-    return  Factor.builder()
-            .id(dto.id())
-            .codigo(dto.codigo())
-            .competencia(competencia)
-            .descripcion(dto.descripcion())
-            .eliminacion(dto.eliminacion())
-            .orden(dto.orden())
-            .build();
-}
+
 }

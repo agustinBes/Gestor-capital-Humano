@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  Implementación de la interfaz DAO para operaciones CRUD y consultas
@@ -56,8 +57,8 @@ public class PreguntaDaoImpl  implements IPreguntaDao {
      * asociado a un factor y una competencia determinados.
      * Lanzar una excepción en caso de detectar una coincidencia.
      */
-    public void existeNombrePorFactorInsensible(String nombre, Long idFactor, Long idCompetencia) {
-        repository.existeNombrePorFactorCompetenciaInsensible(nombre, idFactor, idCompetencia);
+    public boolean existeNombrePorFactorInsensible(String nombre, Long idFactor, Long idCompetencia) {
+        return  repository.existsByNombreIgnoreCaseAndFactor_IdAndFactor_Competencia_Id(nombre,idFactor,idCompetencia);
     }
 
     /**
@@ -65,8 +66,8 @@ public class PreguntaDaoImpl  implements IPreguntaDao {
      * asociado a un factor y una competencia determinados.
      * Lanzar una excepción en caso de detectar una coincidencia.
      */
-    public void existePreguntaPorFactorInsensible(String nombre, Long idFactor, Long competencia) {
-         repository.existePreguntaPorFactorCompetenciaInsensible(nombre, idFactor, competencia);
+    public boolean existePreguntaPorFactorInsensible(String nombre, Long idFactor, Long competencia) {
+        return  repository.existsByPreguntaIgnoreCaseAndFactor_IdAndFactor_Competencia_Id(nombre,idFactor,competencia);
     }
 
 
@@ -115,16 +116,21 @@ return repository.save(pregunta);
         pregunta.setEliminacion(true);
 }
         //-----------------------------------------------------------------------------------
-        public Pregunta obtenerPorId(Long id) {
-        return repository.findByIdOrThrow(id,"la pregunta");}
-    public void existePorId(Long id) {repository.existsByIdOrThrow(id,"la pregunta");}
+        public Optional<Pregunta> obtenerPorId(Long id) {
+        return repository.findById(id);}
+    public boolean existePorId(Long id) {
+        return repository.existsById(id);
+    }
 
     /**
-     * Validar si alguna pregunta esta utilizando una opcion de respuesta x
-     * {@link OpcionRespuesta}
+     * Validar si alguna pregunta esta utilizando una opcion de respuesta
+     * * {@link OpcionRespuesta}
      */
     public boolean existeOpcionRespuestaEnuso(Long id) {
-        return repository.existsByOpcionRespuesta_Id(id);
+              return repository.existsByOpcionRespuesta_Id(id);
     }
+public List<Pregunta> obtenerPorFactor(Long id) {
+        return  repository.findByFactor_Id(id);
+}
 }
 

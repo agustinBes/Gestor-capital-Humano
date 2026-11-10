@@ -23,5 +23,6 @@ public interface InternalService <Entity,Id>{
 
     Entity obtenerEntidad(Id id);
     void validarEntidad(Id id);
+    default void validarEntidadEnUso(Id id){};
 
 }

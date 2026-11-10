@@ -18,8 +18,9 @@ import java.util.List;
  * @since 1.0
  */
 
-public interface IcontrollerFactor extends IControllerCRUD<factorDto, factorDtoCreate> {
-    /**
+public interface IcontrollerFactor extends IControllerCRUD<factorDto,factorDtoCreate> {
+
+   /**
      * Permite realizar búsquedas combinadas mediante los siguientes filtros:
      * <ul>
      *     <li>Factor: búsqueda por nombre.</li>
@@ -28,5 +29,8 @@ public interface IcontrollerFactor extends IControllerCRUD<factorDto, factorDtoC
      *
      * <p>Los filtros son opcionales y pueden combinarse entre sí.
      *     */
+
+
+
     ResponseEntity<List<factorDto>> buscar(factorFiltrosDto dto);
 }

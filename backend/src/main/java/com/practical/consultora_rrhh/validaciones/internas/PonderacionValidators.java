@@ -1,4 +1,4 @@
-package com.practical.consultora_rrhh.validaciones;
+package com.practical.consultora_rrhh.validaciones.internas;
 
 import com.practical.consultora_rrhh.excepciones.especializadas.atributos.SumaPonderacionesInvalidException;
 import com.practical.consultora_rrhh.modelo.clases.Opcion;

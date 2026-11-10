@@ -1,6 +1,7 @@
 package com.practical.consultora_rrhh.interfaces.dao;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IDaoBase<Id, Entity> {
 
@@ -10,7 +11,7 @@ public interface IDaoBase<Id, Entity> {
 
     void eliminar(Entity entity);
 
-    Entity obtenerPorId(Id id);
+   Optional<Entity> obtenerPorId(Id id);
 
-    void  existePorId(Id id);
+    boolean existePorId(Id id);
 }

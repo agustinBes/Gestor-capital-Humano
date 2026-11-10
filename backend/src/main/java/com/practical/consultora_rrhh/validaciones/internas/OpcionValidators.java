@@ -1,8 +1,7 @@
-package com.practical.consultora_rrhh.validaciones;
+package com.practical.consultora_rrhh.validaciones.internas;
 
 import com.practical.consultora_rrhh.Util.TextoUtils;
 import com.practical.consultora_rrhh.dto.request.opcionDtoCreate;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 /**
  * Clase para validar atributos de la lista de opciones garantizando

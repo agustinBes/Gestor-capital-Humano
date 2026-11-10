@@ -11,8 +11,9 @@ import java.util.Map;
 public interface IPreguntaDao extends IDaoBase<Long, Pregunta>  {
     List<Pregunta> buscar(preguntaFiltrosDto filtros);
 
-    void existeNombrePorFactorInsensible(String nombre,Long idFactor,Long competencia);
-    void existePreguntaPorFactorInsensible(String nombre,Long idFactor,Long competencia);
+    List<Pregunta>    obtenerPorFactor(Long id);
+    boolean existeNombrePorFactorInsensible(String nombre,Long idFactor,Long competencia);
+    boolean existePreguntaPorFactorInsensible(String nombre,Long idFactor,Long competencia);
 boolean existeOpcionRespuestaEnuso(Long id);
 
 Pregunta actualizar(Pregunta pregunta, Map<String,String> modificaciones, OpcionRespuesta respuesta,List<Ponderacion> ponderaciones);

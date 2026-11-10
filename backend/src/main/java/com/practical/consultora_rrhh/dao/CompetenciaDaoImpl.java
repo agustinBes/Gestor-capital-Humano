@@ -6,6 +6,7 @@ import com.practical.consultora_rrhh.modelo.clases.Competencia;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class CompetenciaDaoImpl implements ICompetenciaDao {
@@ -19,12 +20,13 @@ public class CompetenciaDaoImpl implements ICompetenciaDao {
         return repository.findByNombreIgnoreCaseContaining(nombre);
     }
 
-    public void existePorNombreInsensible(String nombre) {
-      repository.existePorNombreOrThrow(nombre);
+    public boolean existePorNombreInsensible(String nombre) {
+      return  repository.existsByNombreIgnoreCase(nombre);
     }
 
-    public void existeCodigoInsensible(String codigo) {
-        repository.existePorCodigoOrThrow(codigo);
+    public boolean existePorCodigoInsensible(String codigo) {
+
+      return  repository.existsByCodigo(codigo);
     }
 
     public Competencia guardar(Competencia competencia) {
@@ -39,11 +41,10 @@ public class CompetenciaDaoImpl implements ICompetenciaDao {
 
     }
 
-    public Competencia obtenerPorId(Long aLong) {
-        return null;
-    }
+    public Optional<Competencia> obtenerPorId(Long id) {
+        return repository.findById(id);}
 
-    public void existePorId(Long aLong) {
-
+    public boolean existePorId(Long id) {
+return true;
     }
 }

@@ -8,18 +8,18 @@ import java.util.List;
 public record competenciaDto(
         Long id,
         String codigo,
-        List<factorDto> competencia,
+        List<factorDtoSinCompetencia> factores,
         String nombre,
         String descripcion,
         String tipo
 ) {
-public competenciaDto(Competencia x,boolean factores){
+public competenciaDto(Competencia x){
     this(
             x.getId(),
             x.getCodigo(),
-          factores?  x.getFactores().stream()
-                    .map(o->new factorDto(o,factores))
-                    .toList():null,
+  x.getFactores().stream()
+                    .map(factorDtoSinCompetencia::new)
+                    .toList(),
             x.getNombre(),
             x.getDescripcion(),
             tipoCompetencia.desdeTipo(x.getTipoCompetencia())

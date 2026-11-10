@@ -3,6 +3,7 @@ package com.practical.consultora_rrhh.services;
 import com.practical.consultora_rrhh.Util.TextoUtils;
 import com.practical.consultora_rrhh.dto.request.competenciaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.competenciaDto;
+import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
 import com.practical.consultora_rrhh.interfaces.dao.ICompetenciaDao;
 import com.practical.consultora_rrhh.interfaces.services.IserviceCompetencia;
 import com.practical.consultora_rrhh.modelo.clases.Competencia;
@@ -16,15 +17,10 @@ public class ServiceCompetencia implements IserviceCompetencia {
     public ServiceCompetencia(ICompetenciaDao competenciaDao) {
         this.dao = competenciaDao;
     }
-    public Competencia obtenerEntidad(Long aLong) {
-        return null;
-    }
-
-    public void validarEntidad(Long aLong) {
-
-    }
 
     public competenciaDto guardar(competenciaDtoCreate dto) {
+
+
         return null;
     }
 
@@ -36,7 +32,7 @@ public class ServiceCompetencia implements IserviceCompetencia {
 
         return dao.obtenerTodos()
                 .stream()
-                .map(o->new competenciaDto(o,true))
+                .map(competenciaDto::new)
                 .toList();
     }
 
@@ -47,7 +43,7 @@ public class ServiceCompetencia implements IserviceCompetencia {
            String normalizar= TextoUtils.normalizar(nombre);
 return  dao.obtenerPorNombreInsensible(normalizar)
         .stream()
-        .map(o -> new competenciaDto(o,false))
+        .map(competenciaDto::new)
         .toList();
        }
 
@@ -58,4 +54,16 @@ return  dao.obtenerPorNombreInsensible(normalizar)
     public competenciaDto obtenerPorId(Long id) {
         return null;
     }
+
+//-------------------------------------------------------------------
+    public Competencia obtenerEntidad(Long id){
+     return    dao.obtenerPorId(id).orElseThrow(() ->
+            new EntityNotFoundException("No se encontró la entidad con el id: "+id+" en el sistema"));
+
+}
+
+    public void validarEntidad(Long aLong) {
+
+    }
+
 }

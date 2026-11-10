@@ -10,6 +10,8 @@ import com.practical.consultora_rrhh.excepciones.especializadas.atributos.Descri
 import com.practical.consultora_rrhh.excepciones.especializadas.atributos.OrdenNoConsecutivoException;
 import com.practical.consultora_rrhh.modelo.clases.Opcion;
 import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
+import com.practical.consultora_rrhh.validaciones.comunes.DuplicadoValidators;
+import com.practical.consultora_rrhh.validaciones.internas.OpcionValidators;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -28,7 +30,7 @@ import java.util.*;
  @since 1.0
  */
 @Service
-public class OpcionRespuestaValidators  {
+public class OpcionRespuestaValidators  extends DuplicadoValidators {
     private final OpcionRespuestaDaoImpl dao;
     private final OpcionValidators opcionValidators;
 
@@ -39,18 +41,10 @@ public class OpcionRespuestaValidators  {
     }
 //----------------------------------------------------------
 
-
-    public void existeNombre(String nombre) {
-       dao.existePorNombreInsensible(nombre);
-    }
-
-  // comprobar la disponibilidad del nombre y texto para modificacion
+  // comprobar la disponibilidad del  texto para modificacion
 public boolean validarAlteracionTexto(String actual, String nuevo) {
-        boolean coinciden= TextoUtils.comparar(actual,nuevo);
-        if(coinciden){return false;}
-existeNombre(nuevo);
-            return true;}
-
+    boolean coinciden = TextoUtils.comparar(actual, nuevo);
+    return coinciden ? false : true;}
 
 
 //-------------------------------------------------------------------------
@@ -68,10 +62,9 @@ existeNombre(nuevo);
 new DescripcionDuplicadaException("La descripciones recibida ya existe en el sistema");
         }
     }
-    /*
-    * */
+
 public void validarAlteracionCantidadOpciones(Integer actual, List<opcionDtoCreate> modificacion) {
-        if(actual!=opcionValidators.cantidadOpciones(modificacion)){
+        if(!actual.equals(opcionValidators.cantidadOpciones(modificacion))){
             throw
         new CantidadOpcionesInvalidException("No esta permitido agregar ni eliminar opciones de las que ya existian");}
 
