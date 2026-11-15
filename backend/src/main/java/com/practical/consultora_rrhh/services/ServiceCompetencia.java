@@ -1,31 +1,76 @@
 package com.practical.consultora_rrhh.services;
 
 import com.practical.consultora_rrhh.Util.TextoUtils;
+import com.practical.consultora_rrhh.dto.request.auditoriaDtoCreate;
 import com.practical.consultora_rrhh.dto.request.competenciaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.competenciaDto;
+import com.practical.consultora_rrhh.excepciones.genericas.EntidadEnUsoException;
 import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
 import com.practical.consultora_rrhh.interfaces.dao.ICompetenciaDao;
+import com.practical.consultora_rrhh.interfaces.dao.IpuestoCompetenciaDao;
+import com.practical.consultora_rrhh.interfaces.services.IserviceAuditoria;
 import com.practical.consultora_rrhh.interfaces.services.IserviceCompetencia;
 import com.practical.consultora_rrhh.modelo.clases.Competencia;
+import com.practical.consultora_rrhh.modelo.enums.tipoAuditoria;
+import com.practical.consultora_rrhh.services.mediator.CompetenciaPuestoMediator;
+import com.practical.consultora_rrhh.services.mediator.FactorCompetenciaMediator;
+import com.practical.consultora_rrhh.validaciones.CompetenciaValidators;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
-
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+
 @Service
 public class ServiceCompetencia implements IserviceCompetencia {
 
     private final ICompetenciaDao dao;
-    public ServiceCompetencia(ICompetenciaDao competenciaDao) {
+    private final IpuestoCompetenciaDao puestoCompetenciaDao;
+    private final FactorCompetenciaMediator mediatorFactor;
+    private final CompetenciaPuestoMediator mediatorPuesto;
+    private final CompetenciaValidators validators;
+    private final IserviceAuditoria auditoria;
+    public ServiceCompetencia(ICompetenciaDao competenciaDao, IpuestoCompetenciaDao puestoCompetenciaDao, FactorCompetenciaMediator mediatorFactor, CompetenciaPuestoMediator mediatorPuesto, CompetenciaValidators validators, IserviceAuditoria auditoria) {
         this.dao = competenciaDao;
+        this.puestoCompetenciaDao = puestoCompetenciaDao;
+        this.mediatorFactor = mediatorFactor;
+        this.mediatorPuesto = mediatorPuesto;
+        this.validators = validators;
+        this.auditoria = auditoria;
     }
+@PostConstruct
+public void init(){
+        mediatorFactor.registrarServicioB(this);
+        mediatorPuesto.registrarServicioA(this);
+}
 
     public competenciaDto guardar(competenciaDtoCreate dto) {
+        Map<String,String> map = validators.validarCreacion(dto);
 
+        Competencia competencia = Competencia.builder()
+                .id(null)
+                .nombre(map.get("nombre"))
+                .codigo(map.get("codigo"))
+                .descripcion(map.get("descripcion"))
+                .tipoCompetencia(dto.tipo())
+                .eliminacion(false)
+                .build();
 
-        return null;
+        Competencia guardada=dao.guardar(competencia);
+        return new competenciaDto(guardada);
     }
 
-    public competenciaDto actualizar(Long aLong, competenciaDtoCreate dto) {
-        return null;
+    public competenciaDto actualizar(Long id, competenciaDtoCreate dto) {
+       Competencia actual=this.obtenerEntidad(id);
+        Map<String,String> modificacion=validators.validarModificacion(dto,actual);
+        boolean nombre,descripcion;
+        if(modificacion!=null){
+nombre= modificacion.containsKey("nombre");
+descripcion=modificacion.containsKey("descripcion");
+    dao.actualizar(actual,nombre? modificacion.get("nombre"):null,
+            descripcion? modificacion.get("descripcion"):null);
+        }
+return   new competenciaDto(actual);
     }
 
     public List<competenciaDto> obtenerTodos() {
@@ -41,29 +86,43 @@ public class ServiceCompetencia implements IserviceCompetencia {
        if(nombre==null || nombre.isEmpty()){
            return  this.obtenerTodos();}
            String normalizar= TextoUtils.normalizar(nombre);
-return  dao.obtenerPorNombreInsensible(normalizar)
+return  dao.buscar(normalizar)
         .stream()
         .map(competenciaDto::new)
         .toList();
        }
 
 
-    public void eliminar(Long aLong) {
-    }
+    public String eliminar(Long id) {
+        Competencia  competencia=this.obtenerEntidad(id);
+       if(mediatorFactor.competenciaEnUso(id) ||
+puestoCompetenciaDao.existeCompetenciaEnUso(id)) {
+           throw new EntidadEnUsoException("La competencia no puede ser eliminada dado que otros recursos del sistema la estan usando");
+       }
+       auditoriaDtoCreate aux=new auditoriaDtoCreate(null,competencia.getNombre(), tipoAuditoria.COMPETENCIA, LocalDateTime.now(),"juan pepe");
+auditoria.crearAuditoria(aux);
+String respuesta="Los datos de la Competencia: "+competencia.getNombre()+" han sido eliminados del sistema";
+    dao.eliminar(competencia);
+    return respuesta;}
+
+//-------------------------------------------------------------------
 
     public competenciaDto obtenerPorId(Long id) {
-        return null;
-    }
+        Competencia entidad=this.obtenerEntidad(id);
+        return new  competenciaDto(entidad);}
 
 //-------------------------------------------------------------------
     public Competencia obtenerEntidad(Long id){
      return    dao.obtenerPorId(id).orElseThrow(() ->
-            new EntityNotFoundException("No se encontró la entidad con el id: "+id+" en el sistema"));
-
+            new EntityNotFoundException("No se encontró la competencia con el id: "+id+" en el sistema"));
 }
+//-------------------------------------------------------------------
 
-    public void validarEntidad(Long aLong) {
-
+    public void validarEntidad(Long id) {
+boolean aux=dao.existePorId(id);
+if(!aux){
+     throw new EntityNotFoundException("No se encontró la competencia con el id: "+id+" en el sistema");
+}
     }
 
 }

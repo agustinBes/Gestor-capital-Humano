@@ -3,8 +3,9 @@ CREATE TABLE puesto(
     codigo VARCHAR(30) NOT NULL UNIQUE,
     nombre VARCHAR(30) NOT NULL ,
     descripcion VARCHAR(300),
-    empresa VARCHAR(50)
-);
+    empresa VARCHAR(50),
+    eliminacion Bool NOT NULL DEFAULT  FALSE);
+
 CREATE TABLE puesto_competencia(
     id_puesto BIGINT NOT NULL,
     id_competencia BIGINT NOT NULL,
@@ -13,5 +14,6 @@ CREATE TABLE puesto_competencia(
     FOREIGN KEY (id_competencia) REFERENCES  competencia(id),
     CONSTRAINT uq_pregunta_competencia
         UNIQUE(id_puesto,id_competencia),
-    ponderacion SMALLINT NOT NULL
-);
+    ponderacion SMALLINT NOT NULL,
+    eliminacion Bool NOT NULL DEFAULT  FALSE);
+

@@ -7,6 +7,7 @@ import lombok.*;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
 
+import java.util.ArrayList;
 import java.util.List;
 /**
  * Representa una cualidad a evaluar cuando se aplica a un puesto de trabajo
@@ -42,7 +43,6 @@ public class Competencia {
     @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(name = "tipo")
     private tipoCompetencia tipoCompetencia;
-
-
-
-}
+    @Column (name="eliminacion")
+    private Boolean eliminacion;
+  }

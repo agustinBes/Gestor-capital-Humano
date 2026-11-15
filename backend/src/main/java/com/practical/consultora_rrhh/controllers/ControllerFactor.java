@@ -50,8 +50,8 @@ public class ControllerFactor implements IcontrollerFactor {
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> eliminar(@PathVariable Long id) {
-        service.eliminar(id);
-        return ResponseEntity.ok("Factor eliminado correctamente.");
+        String respuesta=  service.eliminar(id);
+        return ResponseEntity.ok(respuesta);
     }
 
     @GetMapping("/lista")

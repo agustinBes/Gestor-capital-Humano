@@ -9,6 +9,7 @@ import com.practical.consultora_rrhh.excepciones.genericas.ColeccionNotFoundExce
 import com.practical.consultora_rrhh.excepciones.genericas.EntidadEnUsoException;
 import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
 import com.practical.consultora_rrhh.interfaces.dao.IOpcionRespuestaDao;
+import com.practical.consultora_rrhh.interfaces.services.IserviceAuditoria;
 import com.practical.consultora_rrhh.interfaces.services.IserviceOpcionRespuesta;
 import com.practical.consultora_rrhh.modelo.clases.Opcion;
 import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
@@ -44,12 +45,12 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
      private final IOpcionRespuestaDao dao;
     private final OpcionRespuestaValidators validators;
     private final PreguntaOpcionRMediator mediador;
-    private final ServiceAuditoria serviceAuditoria;
+    private final IserviceAuditoria auditoria;
 
-    public ServiceOpcionRespuesta(IOpcionRespuestaDao dao, OpcionRespuestaValidators validators, ServiceAuditoria serviceAuditoria, PreguntaOpcionRMediator mediador) {
+    public ServiceOpcionRespuesta(IOpcionRespuestaDao dao, OpcionRespuestaValidators validators, IserviceAuditoria serviceAuditoria, PreguntaOpcionRMediator mediador) {
         this.dao = dao;
         this.validators = validators;
-        this.serviceAuditoria = serviceAuditoria;
+        this.auditoria = serviceAuditoria;
         this.mediador = mediador;
     }
     @PostConstruct
@@ -130,18 +131,22 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
 
     /**
      * Validar existencia de la entidad en la BDD y eliminarla
-     *Implementar: Generar registro de auditoria
+     * Implementar: Generar registro de auditoria
+     *
+     * @return
      */
     @Override
-    public void eliminar(Long id) {
+    public String eliminar(Long id) {
         OpcionRespuesta aux = this.obtenerEntidad(id);
 if(mediador.opcionRespuestaEnUso(id)){
     throw new EntidadEnUsoException("La opcion de respuesta esta siendo usada por una pregunta por lo tanto no puede ser eliminada");
     }
 auditoriaDtoCreate dto = new auditoriaDtoCreate(null,aux.getNombre(), tipoAuditoria.OPCION_RESPUESTA, LocalDateTime.now(),"pepe Juan");
-serviceAuditoria.crearAuditoria(dto);
+auditoria.crearAuditoria(dto);
+
+String respuesta= "los datos de la Opcion de Respuesta:  "+aux.getNombre()+" han sido eliminados del sistema";
         dao.eliminar(aux);
-    }
+    return respuesta;}
 
     /**
      * Obtener una opcion de respuesta o lanzar mensaje si no existe
@@ -153,9 +158,7 @@ serviceAuditoria.crearAuditoria(dto);
 
         return new opcionRespuestaDto(aux);
     }
-    public boolean validarExistencia(Long id) {
-        dao.existePorId(id);
-        return true;  }
+
 
     /**
      * Obtiene una lista de opciones de respuesta cuyo nombre coincide parcialmente

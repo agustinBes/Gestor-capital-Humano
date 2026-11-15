@@ -1,10 +1,8 @@
 package com.practical.consultora_rrhh.services.mediator;
 
-import com.practical.consultora_rrhh.interfaces.auxiliares.InternalMediator;
 import com.practical.consultora_rrhh.interfaces.services.IserviceOpcionRespuesta;
 import com.practical.consultora_rrhh.interfaces.services.IservicePregunta;
 import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
-import com.practical.consultora_rrhh.modelo.clases.Pregunta;
 import com.practical.consultora_rrhh.services.ServiceOpcionRespuesta;
 import com.practical.consultora_rrhh.services.ServicePregunta;
 import org.springframework.stereotype.Component;
@@ -21,7 +19,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class PreguntaOpcionRMediator extends GenericMediator<IservicePregunta,IserviceOpcionRespuesta>  {
 
-protected IservicePregunta ServicioPregunta(){
+    @Override
+    public void registrarServicioA(IservicePregunta iservicePregunta) {
+        super.registrarServicioA(iservicePregunta);
+    }
+
+    @Override
+    public void registrarServicioB(IserviceOpcionRespuesta iserviceOpcionRespuesta) {
+        super.registrarServicioB(iserviceOpcionRespuesta);
+    }
+
+    protected IservicePregunta ServicioPregunta(){
     return this.servicioA;
 };
 protected IserviceOpcionRespuesta ServicioOpcionRespuesta(){

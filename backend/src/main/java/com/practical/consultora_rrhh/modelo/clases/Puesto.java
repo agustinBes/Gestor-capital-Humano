@@ -1,10 +1,10 @@
 package com.practical.consultora_rrhh.modelo.clases;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *  Representa una Puesto de trabajo al que van a aplicar los candidatos
@@ -19,6 +19,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor // Genera el constructor vacío
 @AllArgsConstructor
+@Builder
 @Entity
 @Table(name="puesto")
 public class Puesto {
@@ -33,4 +34,7 @@ private String nombre;
 private String descripcion;
 @Column()
 private String empresa;
+@Column()
+    private boolean eliminacion;
+
 }

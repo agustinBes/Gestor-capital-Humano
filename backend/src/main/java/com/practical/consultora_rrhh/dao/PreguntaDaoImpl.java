@@ -122,12 +122,14 @@ return repository.save(pregunta);
         return repository.existsById(id);
     }
 
+
+
     /**
      * Validar si alguna pregunta esta utilizando una opcion de respuesta
      * * {@link OpcionRespuesta}
      */
     public boolean existeOpcionRespuestaEnuso(Long id) {
-              return repository.existsByOpcionRespuesta_Id(id);
+              return repository.existsByOpcionRespuesta_IdAndEliminacionIsFalse(id);
     }
 public List<Pregunta> obtenerPorFactor(Long id) {
         return  repository.findByFactor_Id(id);

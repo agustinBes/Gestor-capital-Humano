@@ -13,16 +13,4 @@ public class PuestoCompetenciaId implements Serializable {
     private Long idPuesto;
 
      public PuestoCompetenciaId() {}
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        PuestoCompetenciaId that = (PuestoCompetenciaId) o;
-        return Objects.equals(idCompetencia, that.idCompetencia) && Objects.equals(idPuesto, that.idPuesto);
     }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(idCompetencia, idPuesto);
-    }
-}

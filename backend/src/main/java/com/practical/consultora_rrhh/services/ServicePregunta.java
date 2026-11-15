@@ -7,6 +7,7 @@ import com.practical.consultora_rrhh.dto.request.preguntaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.preguntaDto;
 import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
 import com.practical.consultora_rrhh.interfaces.dao.IPreguntaDao;
+import com.practical.consultora_rrhh.interfaces.services.IserviceAuditoria;
 import com.practical.consultora_rrhh.interfaces.services.IserviceFactor;
 import com.practical.consultora_rrhh.interfaces.services.IservicePregunta;
 import com.practical.consultora_rrhh.modelo.clases.*;
@@ -16,7 +17,6 @@ import com.practical.consultora_rrhh.validaciones.internas.PonderacionValidators
 import com.practical.consultora_rrhh.validaciones.PreguntaValidators;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -45,9 +45,9 @@ public class ServicePregunta implements IservicePregunta {
     private final IPreguntaDao dao;
     private final IserviceFactor serviceFactor;
     private final PreguntaOpcionRMediator mediador;
-    private final ServiceAuditoria auditoria;
+    private final IserviceAuditoria auditoria;
 
-    public ServicePregunta(PreguntaValidators validators, PonderacionValidators ponderacionValidators, IPreguntaDao dao, IserviceFactor serviceFactor, PreguntaOpcionRMediator mediador, ServiceAuditoria auditoria) {
+    public ServicePregunta(PreguntaValidators validators, PonderacionValidators ponderacionValidators, IPreguntaDao dao, IserviceFactor serviceFactor, PreguntaOpcionRMediator mediador, IserviceAuditoria auditoria) {
         this.validators = validators;
         this.ponderacionValidators = ponderacionValidators;
         this.dao = dao;
@@ -187,27 +187,21 @@ public class ServicePregunta implements IservicePregunta {
         List<Pregunta> preguntas=dao.obtenerPorFactor(id);
         preguntas.forEach(pregunta ->
                 {
-                    //añadir logica que valide si alguna de las preguntas esta en uso para lanzar una excepcion
-                });
-        preguntas.forEach(pregunta ->
-        {
-            Long idPregunta=pregunta.getId();
-            this.eliminar(idPregunta);
-        });
-
-        }
+                    auditoriaDtoCreate aux=new auditoriaDtoCreate(null, pregunta.getNombre(),tipoAuditoria.PREGUNTA, LocalDateTime.now(),"juan pepe");
+auditoria.crearAuditoria(aux);
+                    dao.eliminar(pregunta);
+                });}
 
 
-
-
-
-    public void eliminar(Long id) {
+    public String eliminar(Long id) {
         Pregunta eliminar = this.obtenerEntidad(id);
         LocalDateTime fecha = LocalDateTime.now();
         auditoriaDtoCreate aux = new auditoriaDtoCreate(null, eliminar.getNombre(), tipoAuditoria.PREGUNTA, fecha, "Juan pepe");
         auditoria.crearAuditoria(aux);
+        String respuesta="Los datos de la Pregunta: "+eliminar.getNombre()+" han sido eliminados del sistema";
         dao.eliminar(eliminar);
-    }
+
+    return respuesta;}
 //---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
 
@@ -223,7 +217,7 @@ public class ServicePregunta implements IservicePregunta {
      */
     public Pregunta obtenerEntidad(Long id) {
             return    dao.obtenerPorId(id).orElseThrow(() ->
-                    new EntityNotFoundException("No se encontró la entidad con el id: "+id+" en el sistema"));
+                    new EntityNotFoundException("No se encontró la pregunta con el id: "+id+" en el sistema"));
 
         }
 

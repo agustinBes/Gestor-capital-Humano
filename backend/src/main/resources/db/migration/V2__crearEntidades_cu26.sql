@@ -5,7 +5,8 @@ CREATE TABLE competencia(
                             codigo VARCHAR(30) NOT NULL UNIQUE,
                             nombre VARCHAR(50) NOT NULL  ,
                             descripcion VARCHAR(300),
-                            tipo tipo_competencia NOT NULL
+                            tipo tipo_competencia NOT NULL,
+                            eliminacion Bool NOT NULL DEFAULT  FALSE
 );
 CREATE TABLE factor(
                        id  BIGINT GENERATED ALWAYS AS IDENTITY  PRIMARY KEY,

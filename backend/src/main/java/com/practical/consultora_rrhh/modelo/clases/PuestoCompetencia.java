@@ -21,10 +21,14 @@ public class PuestoCompetencia {
 @MapsId("idPuesto")
 @JoinColumn(referencedColumnName ="id",name="id_puesto")
     private Puesto puesto;
+
+
 @ManyToOne(fetch = FetchType.LAZY)
 @MapsId("idCompetencia")
 @JoinColumn(referencedColumnName = "id",name = "id_competencia")
     private Competencia competencia;
 @Column
     private short ponderacion;
+@Column
+    private boolean eliminacion;
 }

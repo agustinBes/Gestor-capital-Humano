@@ -44,8 +44,8 @@ private final IservicePregunta service;
     @Override
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> eliminar(@PathVariable Long id) {
-        service.eliminar(id);
-        return ResponseEntity.ok("Pregunta eliminada correctamente.");
+        String respuesta=  service.eliminar(id);
+        return ResponseEntity.ok(respuesta);
     }
 
     @Override
