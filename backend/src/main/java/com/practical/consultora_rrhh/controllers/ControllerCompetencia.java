@@ -43,8 +43,8 @@ private final IserviceCompetencia service;
     
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> eliminar(@PathVariable Long id) {
-        service.eliminar(id);
-        return ResponseEntity.ok("Opción de respuesta eliminada correctamente.");
+      String respuesta=  service.eliminar(id);
+        return ResponseEntity.ok(respuesta);
     }
 
     

@@ -93,7 +93,8 @@ public boolean existePorCodigoInsensible(String codigo) {
 public boolean existeNroOrdenPorCompetencia(short id, Long idCompetencia) {
 return  repository.existsByOrdenAndCompetencia_Id(id,idCompetencia);
 }
-
-
-
+@Override
+public boolean existeCompetenciaEnUso(Long idCompetencia) {
+        return repository.existsByCompetencia_IdAndEliminacionIsFalse(idCompetencia);
+    }
 }

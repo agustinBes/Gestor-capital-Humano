@@ -2,10 +2,14 @@ package com.practical.consultora_rrhh.modelo.id;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.*;
 
 import java.io.Serializable;
-import java.util.Objects;
 @Embeddable()
+@Getter
+@Setter
+@AllArgsConstructor
+@EqualsAndHashCode
 public class PuestoCompetenciaId implements Serializable {
     @Column(name="id_competencia")
     private Long idCompetencia;
@@ -13,16 +17,4 @@ public class PuestoCompetenciaId implements Serializable {
     private Long idPuesto;
 
      public PuestoCompetenciaId() {}
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        PuestoCompetenciaId that = (PuestoCompetenciaId) o;
-        return Objects.equals(idCompetencia, that.idCompetencia) && Objects.equals(idPuesto, that.idPuesto);
     }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(idCompetencia, idPuesto);
-    }
-}

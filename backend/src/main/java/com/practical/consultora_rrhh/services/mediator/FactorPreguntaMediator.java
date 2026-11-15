@@ -10,6 +10,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class FactorPreguntaMediator extends GenericMediator<IserviceFactor, IservicePregunta> {
 
+    @Override
+    public void registrarServicioA(IserviceFactor iserviceFactor) {
+        super.registrarServicioA(iserviceFactor);
+    }
+
+    @Override
+    public void registrarServicioB(IservicePregunta iservicePregunta) {
+        super.registrarServicioB(iservicePregunta);
+    }
 
     protected IserviceFactor serviceFactor(){
         return this.servicioA;}

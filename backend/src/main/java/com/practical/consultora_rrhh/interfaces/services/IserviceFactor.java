@@ -11,6 +11,7 @@ import java.util.List;
 @Repository
 public interface IserviceFactor extends IserviceCRUD<Long, factorDto, factorDtoCreate>, InternalService<Factor,Long> {
 
-void validarConsistencia(Long id,Long idCompetencia);
 List<factorDto> buscar(factorFiltrosDto nombre);
+boolean validarCompetenciaEnUso(Long idCompetencia);
+
 }

@@ -17,14 +17,17 @@ public class PuestoCompetencia {
 @EmbeddedId
     PuestoCompetenciaId id;
 
-@ManyToOne(fetch = FetchType.LAZY)
+@ManyToOne(fetch = FetchType.LAZY,optional = false)
 @MapsId("idPuesto")
-@JoinColumn(referencedColumnName ="id",name="id_puesto")
+@JoinColumn(name="id_puesto")
     private Puesto puesto;
-@ManyToOne(fetch = FetchType.LAZY)
+
+
+@ManyToOne(fetch = FetchType.LAZY,optional = false)
 @MapsId("idCompetencia")
-@JoinColumn(referencedColumnName = "id",name = "id_competencia")
+@JoinColumn(name = "id_competencia")
     private Competencia competencia;
 @Column
     private short ponderacion;
+
 }

@@ -1,7 +1,5 @@
 package com.practical.consultora_rrhh.interfaces.repositorio;
 
-import com.practical.consultora_rrhh.excepciones.especializadas.atributos.NombreDuplicadoException;
-import com.practical.consultora_rrhh.excepciones.genericas.DuplicadoException;
 import com.practical.consultora_rrhh.modelo.clases.Pregunta;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -24,7 +22,7 @@ public interface preguntaRepository extends JpaRepository<Pregunta,Long>, JpaSpe
     boolean existsByPreguntaIgnoreCaseAndFactor_IdAndFactor_Competencia_Id(String nombre, Long idFactor, Long idCompetencia);
 
 
-    boolean existsByOpcionRespuesta_Id(Long id);
+    boolean existsByOpcionRespuesta_IdAndEliminacionIsFalse(Long id);
 
 List<Pregunta> findByFactor_Id(Long id);
 }

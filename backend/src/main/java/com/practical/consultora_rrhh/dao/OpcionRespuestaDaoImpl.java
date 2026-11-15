@@ -7,6 +7,7 @@ import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
 import com.practical.consultora_rrhh.interfaces.repositorio.opcionRespuestaRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +24,7 @@ import java.util.Optional;
   * @author  Besigniano Agustin
  * @since 1.0
  */
-@Component
+@Repository
 public class OpcionRespuestaDaoImpl implements IOpcionRespuestaDao {
 
     private final opcionRespuestaRepository repository;

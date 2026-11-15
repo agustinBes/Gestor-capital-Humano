@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface competenciaRepository extends codigoRepository<Competencia,Long>{
 List<Competencia>  findByNombreIgnoreCaseContaining(String nombre);
+
 }
