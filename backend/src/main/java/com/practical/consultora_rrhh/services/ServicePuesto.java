@@ -1,4 +1,4 @@
-package com.practical.consultora_rrhh.services.mediator;
+package com.practical.consultora_rrhh.services;
 
 import com.practical.consultora_rrhh.dto.request.auditoriaDtoCreate;
 import com.practical.consultora_rrhh.dto.request.puestoDtoCreate;
@@ -9,6 +9,7 @@ import com.practical.consultora_rrhh.interfaces.services.IserviceAuditoria;
 import com.practical.consultora_rrhh.interfaces.services.IservicePuesto;
 import com.practical.consultora_rrhh.modelo.clases.Puesto;
 import com.practical.consultora_rrhh.modelo.enums.tipoAuditoria;
+import com.practical.consultora_rrhh.services.mediator.CompetenciaPuestoMediator;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;

@@ -9,7 +9,7 @@ import java.util.List;
 @Repository
 public interface puestoCompetenciaRepository extends JpaRepository<PuestoCompetencia, PuestoCompetenciaId> {
 
-    boolean existsByCompetencia_IdAndEliminacionIsFalse(Long competenciaId);
+    boolean existsByCompetencia_Id(Long competenciaId);
     List<PuestoCompetencia> findByCompetencia_Id(Long competenciaId);
     List<PuestoCompetencia> findByPuesto_Id(Long id);
 }

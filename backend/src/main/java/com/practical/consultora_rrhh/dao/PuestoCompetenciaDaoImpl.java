@@ -20,10 +20,8 @@ public class PuestoCompetenciaDaoImpl implements IpuestoCompetenciaDao {
     public PuestoCompetencia guardar(PuestoCompetencia x){
         return repository.save(x);
     }
-@Transactional
 public void eliminar(PuestoCompetencia x){
-        x.setEliminacion(true);}
-
+repository.delete(x);}
     @Override
     public List<PuestoCompetencia> obtenerPorCompetencia(Long id) {
         return repository.findByCompetencia_Id(id);
@@ -58,6 +56,6 @@ public void eliminar(PuestoCompetencia x){
 
     @Override
     public boolean existeCompetenciaEnUso(Long id) {
-        return repository.existsByCompetencia_IdAndEliminacionIsFalse(id);
+        return repository.existsByCompetencia_Id(id);
     }
 }
