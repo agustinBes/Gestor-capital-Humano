@@ -2,6 +2,7 @@ package com.practical.consultora_rrhh.interfaces.controllers;
 
 import com.practical.consultora_rrhh.dto.request.opcionRespuestaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.opcionRespuestaDto;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -19,5 +20,5 @@ public interface IcontrollerOpcionRespuesta extends IControllerCRUD<opcionRespue
     /**
      * Permite realizar búsquedas por coincidencias parciales
      */
-    public ResponseEntity<List<opcionRespuestaDto>> obtenerPorNombre(String nombre);
+    ResponseEntity<List<opcionRespuestaDto>> obtenerPorNombre(String nombre);
 }

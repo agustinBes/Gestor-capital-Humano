@@ -1,13 +1,10 @@
 package com.practical.consultora_rrhh.modelo.clases;
 
-import com.practical.consultora_rrhh.dto.response.competenciaDto;
 import com.practical.consultora_rrhh.modelo.enums.tipoCompetencia;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
-
-import java.util.ArrayList;
 import java.util.List;
 /**
  * Representa una cualidad a evaluar cuando se aplica a un puesto de trabajo

@@ -1,5 +1,6 @@
 package com.practical.consultora_rrhh.dto.response;
 
+import com.practical.consultora_rrhh.dto.autenticacion.usuarioDtoAuth;
 import com.practical.consultora_rrhh.modelo.clases.Auditoria;
 import com.practical.consultora_rrhh.modelo.enums.tipoAuditoria;
 import java.time.LocalDateTime;
@@ -9,7 +10,7 @@ public record auditoriaDto(
         String registro,
         String tipo,
         LocalDateTime fecha,
-       consultorDto consultor
+       usuarioDtoAuth consultor
 ) {
     public auditoriaDto(Auditoria x){
         this(
@@ -17,7 +18,7 @@ public record auditoriaDto(
                 x.getRegistroEliminado(),
                 tipoAuditoria.desdeTipo(x.getAuditoria()),
             x.getFecha(),
-            new consultorDto( x.getResponsible())
+          new usuarioDtoAuth("jgodf","pepe",1L)
         );
     }
 

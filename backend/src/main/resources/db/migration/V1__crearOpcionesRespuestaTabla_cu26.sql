@@ -1,3 +1,4 @@
+CREATE EXTENSION unaccent;
 CREATE TABLE opcion_respuesta (
                                   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                                   nombre      VARCHAR(50) NOT NULL ,

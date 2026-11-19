@@ -1,7 +1,7 @@
 package com.practical.consultora_rrhh.interfaces.dao;
 
-import com.practical.consultora_rrhh.interfaces.dao.consultas.IConsultaCompetenciaEnUsoDao;
 import com.practical.consultora_rrhh.interfaces.dao.consultas.IConsultaNombreCodigoDao;
+import com.practical.consultora_rrhh.interfaces.dao.consultas.IConsultaCompetenciaEnUsoDao;
 import com.practical.consultora_rrhh.modelo.clases.Competencia;
 import com.practical.consultora_rrhh.modelo.clases.Factor;
 

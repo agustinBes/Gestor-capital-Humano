@@ -11,4 +11,7 @@ public interface IpuestoCompetenciaDao extends  IDaoBase<PuestoCompetenciaId, Pu
 void eliminarPorPuesto(Long idPuesto);
 List<PuestoCompetencia> obtenerPorCompetencia(Long id);
 List<PuestoCompetencia> obtenerPorPuesto(Long id);
+boolean existePuestoCompetencia(Long idPuesto,Long idCompetencia);
+PuestoCompetencia actualizarPonderacion(PuestoCompetencia pc,short ponderacion);
+List<PuestoCompetencia> actualizarPuestoCompetencia(Long idPuesto,List<PuestoCompetencia> pc);
 }

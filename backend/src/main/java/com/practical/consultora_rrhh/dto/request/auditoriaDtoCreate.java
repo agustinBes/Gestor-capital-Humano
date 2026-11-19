@@ -1,6 +1,5 @@
 package com.practical.consultora_rrhh.dto.request;
 
-import com.practical.consultora_rrhh.dto.response.consultorDto;
 import com.practical.consultora_rrhh.modelo.enums.tipoAuditoria;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,6 +15,6 @@ public record auditoriaDtoCreate(
         @NotBlank
         LocalDateTime fecha,
        //en espera de implementacion
-       String consultor
+       Long idConsultor
 ) {
 }

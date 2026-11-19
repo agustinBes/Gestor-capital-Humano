@@ -5,6 +5,7 @@ import com.practical.consultora_rrhh.dto.request.auditoriaDtoCreate;
 import com.practical.consultora_rrhh.dto.request.opcionRespuestaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.opcionDto;
 import com.practical.consultora_rrhh.dto.response.opcionRespuestaDto;
+import com.practical.consultora_rrhh.excepciones.genericas.AtributoInvalidoException;
 import com.practical.consultora_rrhh.excepciones.genericas.ColeccionNotFoundException;
 import com.practical.consultora_rrhh.excepciones.genericas.EntidadEnUsoException;
 import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
@@ -57,15 +58,7 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
     public void init() {
         mediador.registrarServicioB(this);
     }
-    @Override
-    public OpcionRespuesta obtenerEntidad(Long id) {
-
-        return    dao.obtenerPorId(id).orElseThrow(() ->
-                new EntityNotFoundException("No se encontró la entidad con el id: "+id+" en el sistema"));
-
-    }
-    //--------------------------------------------------------------------------------
-
+      //--------------------------------------------------------------------------------
     /**
      Valida el formato de los campos y verifica que no existan conflictos
      * de duplicidad en la base de datos.
@@ -76,21 +69,15 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
      */
 @Override
     public opcionRespuestaDto guardar(opcionRespuestaDtoCreate dto) {
-
     String nombreNormalizado=TextoUtils.normalizar(dto.nombre());
     boolean aux=dao.existePorNombreInsensible(nombreNormalizado);
     validators.validarCampoDuplicado(nombreNormalizado,aux, tipo_campo_duplicado.NOMBRE);
 
         validators.validarFormatoOpciones(dto.opciones());
-
         OpcionRespuesta entidad = new OpcionRespuesta(dto);
-
         OpcionRespuesta guardada = dao.guardar(entidad);
-
-        return new opcionRespuestaDto(guardada);
-    }
+        return new opcionRespuestaDto(guardada);}
 //--------------------------------------------------------------------------------
-
     /**
      * La siguiente funcion se encarga de actualizar(parcialmente) la entidad persistida en la bdd.
      *
@@ -100,8 +87,14 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
     public opcionRespuestaDto actualizar(Long id, opcionRespuestaDtoCreate dto) {
 
         OpcionRespuesta actual = this.obtenerEntidad(id);
+        if(TextoUtils.tieneContenido(dto.nombre())) {
+            String normarlizado=TextoUtils.normalizar(dto.nombre());
+            if(!normarlizado.equals(actual.getNombre())){
+                throw new AtributoInvalidoException("no esta permitido modificar el nombre");
+            }
+        }
 
-       boolean descripcion=validators.validarFormatoModificaciones(id,actual,dto);
+       boolean descripcion=validators.validarFormatoModificaciones(actual,dto);
 
         List<opcionDto> aux = validators.ValidarAlteracionOpcion(id, actual.getOpciones(), dto.opciones());
         OpcionRespuesta nueva;
@@ -123,17 +116,14 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
                 .stream()
                 .map(opcionRespuestaDto::new)
                 .toList();
-        if (lista.isEmpty()) {
-            throw new ColeccionNotFoundException("No se encontraron resultados de busquda");
-        }
-        return lista;
-    }
 
+
+        if (lista.isEmpty()) {
+            throw new ColeccionNotFoundException("No se encontraron resultados de busquda");}
+        return lista;}
     /**
      * Validar existencia de la entidad en la BDD y eliminarla
      * Implementar: Generar registro de auditoria
-     *
-     * @return
      */
     @Override
     public String eliminar(Long id) {
@@ -141,7 +131,7 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
 if(mediador.opcionRespuestaEnUso(id)){
     throw new EntidadEnUsoException("La opcion de respuesta esta siendo usada por una pregunta por lo tanto no puede ser eliminada");
     }
-auditoriaDtoCreate dto = new auditoriaDtoCreate(null,aux.getNombre(), tipoAuditoria.OPCION_RESPUESTA, LocalDateTime.now(),"pepe Juan");
+auditoriaDtoCreate dto = new auditoriaDtoCreate(null,aux.getNombre(), tipoAuditoria.OPCION_RESPUESTA, LocalDateTime.now(),1L);
 auditoria.crearAuditoria(dto);
 
 String respuesta= "los datos de la Opcion de Respuesta:  "+aux.getNombre()+" han sido eliminados del sistema";
@@ -158,8 +148,6 @@ String respuesta= "los datos de la Opcion de Respuesta:  "+aux.getNombre()+" han
 
         return new opcionRespuestaDto(aux);
     }
-
-
     /**
      * Obtiene una lista de opciones de respuesta cuyo nombre coincide parcialmente
      * con el texto proporcionado.
@@ -168,16 +156,18 @@ String respuesta= "los datos de la Opcion de Respuesta:  "+aux.getNombre()+" han
      */
     @Override
     public List<opcionRespuestaDto> obtenerPorNombre(String nombre) {
+        if(!TextoUtils.tieneContenido(nombre)) {
+            return  this.obtenerTodos();
+        }
+
         List<opcionRespuestaDto> lista;
         lista = dao.obtenerPorNombreParcial(nombre)
                 .stream()
                 .map(opcionRespuestaDto::new)
                 .toList();
         if (lista.isEmpty()) {
-             throw new ColeccionNotFoundException("No se encontraron resultados de busquda");
-        }
-        return lista;
-    }
+             throw new ColeccionNotFoundException("No se encontraron resultados de busquda");}
+        return lista;}
 
 //--------------------------------------------------------------
 //---------------------Consultas entre servicio-------------------------
@@ -185,4 +175,9 @@ String respuesta= "los datos de la Opcion de Respuesta:  "+aux.getNombre()+" han
     public void validarEntidad(Long id) {
         dao.existePorId(id);
     }
+    @Override
+    public OpcionRespuesta obtenerEntidad(Long id) {
+        return    dao.obtenerPorId(id).orElseThrow(() ->
+                new EntityNotFoundException("No se encontró la opcion de respuesta con el id: "+id+" en el sistema"));}
+
 }

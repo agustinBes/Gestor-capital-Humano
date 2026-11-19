@@ -18,11 +18,11 @@ public interface IControllerCRUD<DtoResponse,DtoRequest> {
 
  ResponseEntity<DtoResponse> guardar(DtoRequest dto);
 
- ResponseEntity<DtoResponse> actualizar(Long id,DtoRequest dto);
+ ResponseEntity<DtoResponse> actualizar(String id,DtoRequest dto);
 
- ResponseEntity<String> eliminar(Long id);
+ ResponseEntity<String> eliminar(String id);
 
  ResponseEntity<List<DtoResponse>> obtenerTodos();
 
- ResponseEntity<DtoResponse> obtenerPorId(Long id);
+ ResponseEntity<DtoResponse> obtenerPorId(String id);
 }

@@ -9,5 +9,8 @@ import java.util.List;
 
 public interface IserviceCompetencia extends IserviceCRUD<Long, competenciaDto, competenciaDtoCreate>,InternalService<Competencia,Long>{
 
-List<competenciaDto> buscar(String nombre);
+     List<Competencia> validarCompetencias(List<Long> idCompetencias) ;
+
+
+    List<competenciaDto> buscar(String nombre);
 }
