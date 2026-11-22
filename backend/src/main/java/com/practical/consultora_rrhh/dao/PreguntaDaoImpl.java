@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -58,7 +59,8 @@ public class PreguntaDaoImpl  implements IPreguntaDao {
      * Lanzar una excepción en caso de detectar una coincidencia.
      */
     public boolean existeNombrePorFactorInsensible(String nombre, Long idFactor, Long idCompetencia) {
-        return  repository.existsByNombreIgnoreCaseAndFactor_IdAndFactor_Competencia_Id(nombre,idFactor,idCompetencia);
+        Specification<Pregunta>  filtros=PreguntaSpecifications.existeNombre(nombre,idFactor,idCompetencia);
+return  repository.exists(filtros);
     }
 
     /**
@@ -67,9 +69,9 @@ public class PreguntaDaoImpl  implements IPreguntaDao {
      * Lanzar una excepción en caso de detectar una coincidencia.
      */
     public boolean existePreguntaPorFactorInsensible(String nombre, Long idFactor, Long competencia) {
-        return  repository.existsByPreguntaIgnoreCaseAndFactor_IdAndFactor_Competencia_Id(nombre,idFactor,competencia);
+        Specification<Pregunta>  filtros=PreguntaSpecifications.existePregunta(nombre,idFactor,competencia);
+        return  repository.exists(filtros);
     }
-
 
     public Pregunta guardar(Pregunta pregunta) {
         return repository.save(pregunta);
@@ -94,13 +96,16 @@ public class PreguntaDaoImpl  implements IPreguntaDao {
             }
         }
         if (respuesta != null) {
+            pregunta.getPonderaciones().clear();
+repository.saveAndFlush(pregunta);
             pregunta.setOpcionRespuesta(respuesta);
-            pregunta.setPonderaciones(ponderaciones);
+            pregunta.getPonderaciones().addAll(ponderaciones);
         } else if (ponderaciones != null) {
             pregunta.setPonderaciones(ponderaciones);
         }
 return repository.save(pregunta);
     }
+
 
 //-----------------------------------------------------------------------
 
@@ -111,9 +116,12 @@ return repository.save(pregunta);
     /**
      * Eliminar logicamente una pregunta
      */
-
+@Transactional
     public void eliminar(Pregunta pregunta) {
         pregunta.setEliminacion(true);
+    if (pregunta.getPonderaciones() != null) {
+        pregunta.getPonderaciones().clear();}
+        repository.saveAndFlush(pregunta);
 }
         //-----------------------------------------------------------------------------------
         public Optional<Pregunta> obtenerPorId(Long id) {

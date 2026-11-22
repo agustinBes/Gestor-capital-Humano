@@ -46,11 +46,11 @@ public class ControllerOpcionRespuesta implements IcontrollerOpcionRespuesta {
     }
 
     @Override
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> eliminar(@PathVariable String id) {
+    @DeleteMapping("/delete/{id}/responsable/{idConsultor}")
+    public ResponseEntity<String> eliminar(@PathVariable String id,  @PathVariable  String idConsultor) {
         Long identificador= TextoUtils.identificador(id);
-
-        String respuesta=  service.eliminar(identificador);
+Long consultor= TextoUtils.identificador(idConsultor);
+        String respuesta=  service.eliminar(identificador, consultor);
         return ResponseEntity.ok(respuesta);
     }
 

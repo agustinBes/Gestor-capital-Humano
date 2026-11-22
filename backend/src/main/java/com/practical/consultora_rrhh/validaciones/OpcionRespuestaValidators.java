@@ -1,7 +1,6 @@
 package com.practical.consultora_rrhh.validaciones;
 
 import com.practical.consultora_rrhh.Util.TextoUtils;
-import com.practical.consultora_rrhh.dao.OpcionRespuestaDaoImpl;
 import com.practical.consultora_rrhh.dto.request.opcionDtoCreate;
 import com.practical.consultora_rrhh.dto.request.opcionRespuestaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.opcionDto;
@@ -18,11 +17,9 @@ import java.util.*;
 /**
  * Componente encargado de centralizar las validaciones relacionadas
  * con la gestión de opciones de respuesta.
- *
  * Contiene las reglas de validación correspondientes a la entidad
  * OpcionRespuesta y delega las validaciones específicas de cada
  * opción a {@link OpcionValidators}.
- *
  * Ante el incumplimiento de una regla de negocio, lanza excepciones
  * personalizadas que permiten identificar el tipo de error producido.
  *
@@ -31,52 +28,36 @@ import java.util.*;
  */
 @Service
 public class OpcionRespuestaValidators  extends DuplicadoValidators {
-    private final OpcionRespuestaDaoImpl dao;
-    private final OpcionValidators opcionValidators;
-
-    public OpcionRespuestaValidators(OpcionRespuestaDaoImpl dao, OpcionValidators opcionValidators) {
-      super();
-        this.dao= dao;
-        this.opcionValidators = opcionValidators;
-    }
+    public  OpcionValidators opcionValidators=new OpcionValidators();
 //----------------------------------------------------------
-
   // comprobar la disponibilidad del  texto para modificacion
 public boolean validarAlteracionTexto(String actual, String nuevo) {
     boolean coinciden = TextoUtils.comparar(actual, nuevo);
-    return coinciden ? false : true;}
-
-
+    return !coinciden;}
 //-------------------------------------------------------------------------
-    // validar Opciones asociadas a la OpcionRespuesta para la creacion
+  // validar Opciones asociadas a la OpcionRespuesta para la creacion
 
     public void validarFormatoOpciones(List<opcionDtoCreate> opcion) {
+opcionValidators.filaUnica(opcion);
 
         if (!opcionValidators.ordenConsecutivo(opcion)) {
             throw new OrdenNoConsecutivoException(
-                    "Las opciones deben tener un orden consecutivo comenzando desde 1");
-        }
-
+                    "Las opciones deben tener un orden consecutivo comenzando desde 1");}
         if (!opcionValidators.descripcionUnica(opcion)) {
-            throw
-new DescripcionDuplicadaException("La descripciones recibida ya existe en el sistema");
-        }
+            throw   new DescripcionDuplicadaException("La descripciones recibida ya existe en el sistema");}
     }
 
 public void validarAlteracionCantidadOpciones(Integer actual, List<opcionDtoCreate> modificacion) {
         if(!actual.equals(opcionValidators.cantidadOpciones(modificacion))){
-            throw
-        new CantidadOpcionesInvalidException("No esta permitido agregar ni eliminar opciones de las que ya existian");}
-
-        }
-
-    /**
+            throw           new CantidadOpcionesInvalidException("No esta permitido agregar ni eliminar opciones de las que ya existian");}
+}
+/**
      * Detectar alteraciones de descripcion y orden de visualizacion de las opciones
      */
 
     public List<opcionDto> ValidarAlteracionOpcion(Long id,List<Opcion> actual, List<opcionDtoCreate> dto) {
         List<opcionDtoCreate> aux = new ArrayList<>();
-        Integer modificacion = 0;
+        int modificacion = 0;
 
         for (int i = 0; i < actual.size(); i++) {
             Opcion x = actual.get(i);
@@ -97,19 +78,19 @@ this.validarFormatoOpciones(aux);
                             o,id))
                     .toList();
         }
-
     /**
      *        Detectar modificaciones de la descripcion
      *        Detectar si la cantidad de {@link Opcion} es la misma que la persistida en la bdd durante la creacion
      *        Detectar si el nuevo formato de las opciones  es adecuado
      */
-    public boolean validarFormatoModificaciones(Long id, OpcionRespuesta actual, opcionRespuestaDtoCreate dto) {
+    public boolean validarFormatoModificaciones(OpcionRespuesta actual, opcionRespuestaDtoCreate dto) {
+        opcionValidators.filaUnica(dto.opciones());
+
       boolean descripcion;
         descripcion = this.validarAlteracionTexto(actual.getDescripcion(), dto.descripcion());
         this.validarAlteracionCantidadOpciones(actual.getOpciones().size(), dto.opciones());
         this.validarFormatoOpciones(dto.opciones());
-
-        return descripcion;  }
+        return descripcion; }
 }
 
     //-----------------------------------------------------------

@@ -5,7 +5,7 @@ import jakarta.validation.constraints.*;
 import java.util.List;
 
 /**
- * Usado para transferir informacion ademas de la gestion de creacion y modificacion
+ * Usado para transferir informacion ademas de la gestion de creacion y modificacion de preguntas
  *
  * @author  Besigniano Agustin
  * @since 1.0

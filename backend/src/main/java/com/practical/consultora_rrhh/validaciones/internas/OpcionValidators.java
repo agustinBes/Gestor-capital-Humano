@@ -2,6 +2,7 @@ package com.practical.consultora_rrhh.validaciones.internas;
 
 import com.practical.consultora_rrhh.Util.TextoUtils;
 import com.practical.consultora_rrhh.dto.request.opcionDtoCreate;
+import com.practical.consultora_rrhh.excepciones.especializadas.atributos.CantidadOpcionesInvalidException;
 import org.springframework.stereotype.Service;
 /**
  * Clase para validar atributos de la lista de opciones garantizando
@@ -47,6 +48,19 @@ public class OpcionValidators {
     public Integer cantidadOpciones(List<opcionDtoCreate> opciones) {
         return opciones.size();
     }
+
+    public void filaUnica(List<opcionDtoCreate> opciones) {
+        Set<Short> filas = new HashSet<>();
+        for (opcionDtoCreate opcion : opciones) {
+            filas.add(opcion.fila()); // <-- Cambiado de orden() a fila()
+        }
+
+        int aux = opciones.size();
+        if (aux != filas.size()) {
+            throw new CantidadOpcionesInvalidException("Las filas no pueden repetirse y deben arrancar desde 1");
+        }
+    }
+
 
 
 }

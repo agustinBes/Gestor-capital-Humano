@@ -1,4 +1,4 @@
-package com.practical.consultora_rrhh.interfaces.controllers;
+package com.practical.consultora_rrhh.interfaces.genericos;
 
 import org.springframework.http.ResponseEntity;
 
@@ -20,7 +20,7 @@ public interface IControllerCRUD<DtoResponse,DtoRequest> {
 
  ResponseEntity<DtoResponse> actualizar(String id,DtoRequest dto);
 
- ResponseEntity<String> eliminar(String id);
+ ResponseEntity<String> eliminar(String id,String idConsultor);
 
  ResponseEntity<List<DtoResponse>> obtenerTodos();
 

@@ -1,22 +1,28 @@
 package com.practical.consultora_rrhh.modelo.clases;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@Builder
 @Entity
 @Table(name = "consultor")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Consultor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "nombre_usuario")
+    @Column
+    private String usuario;
+    @Column
     private String nombre;
-    private String clave;
-    @Column(name="nivel_acceso")
-private short nivelAcceso;
+    @Column
+    private String apellido;
+    @Column
+     private String clave;
+
 
 
 

@@ -126,12 +126,19 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
      * Implementar: Generar registro de auditoria
      */
     @Override
-    public String eliminar(Long id) {
+    public String eliminar(Long id, Long idConsultor) {
         OpcionRespuesta aux = this.obtenerEntidad(id);
+
+
 if(mediador.opcionRespuestaEnUso(id)){
     throw new EntidadEnUsoException("La opcion de respuesta esta siendo usada por una pregunta por lo tanto no puede ser eliminada");
     }
-auditoriaDtoCreate dto = new auditoriaDtoCreate(null,aux.getNombre(), tipoAuditoria.OPCION_RESPUESTA, LocalDateTime.now(),1L);
+if(aux.isEliminacion()){
+    String r=auditoria.buscarAuditor(id, aux.getNombre(),tipoAuditoria.OPCION_RESPUESTA );
+    return "La opcion de respuesta: "+ aux.getNombre()+" ya fue eliminado del sistema por el consultor "+r;
+}
+
+auditoriaDtoCreate dto = new auditoriaDtoCreate(null,id,aux.getNombre(), tipoAuditoria.OPCION_RESPUESTA, LocalDateTime.now(),idConsultor);
 auditoria.crearAuditoria(dto);
 
 String respuesta= "los datos de la Opcion de Respuesta:  "+aux.getNombre()+" han sido eliminados del sistema";

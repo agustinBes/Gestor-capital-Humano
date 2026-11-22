@@ -60,6 +60,8 @@ Map<String,String> modificacion=new HashMap<>();
    String nombreNormalizado = TextoUtils.normalizar(dto.titulo());
     String preguntaNormalizada = TextoUtils.normalizar(dto.pregunta());
 
+
+
     if (!TextoUtils.comparar(actual.getNombre(), nombreNormalizado)) {
    this.existeNombre(dto,idFactor,idCompetencia);
 

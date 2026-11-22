@@ -7,6 +7,8 @@ import com.practical.consultora_rrhh.modelo.clases.Competencia;
 import com.practical.consultora_rrhh.modelo.clases.Factor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class FactorPreguntaMediator extends GenericMediator<IserviceFactor, IservicePregunta> {
 
@@ -29,8 +31,8 @@ public class FactorPreguntaMediator extends GenericMediator<IserviceFactor, Iser
     public Factor obtenerFactor(Long id) {
         return this.serviceFactor().obtenerEntidad(id);
     }
-    public void eliminarPreguntas(Long id){
-        this.servicePregunta().eliminarPorFactor(id);
+    public List<String> eliminarPreguntas(Long id, Long idConsultor){
+   return   servicePregunta().eliminarPorFactor(id,idConsultor);
     }
 
 }

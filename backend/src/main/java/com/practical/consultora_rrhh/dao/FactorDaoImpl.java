@@ -4,7 +4,10 @@ import com.practical.consultora_rrhh.interfaces.dao.IFactorDao;
 import com.practical.consultora_rrhh.interfaces.repositorio.factorRepository;
 import com.practical.consultora_rrhh.modelo.clases.Competencia;
 import com.practical.consultora_rrhh.modelo.clases.Factor;
+import com.practical.consultora_rrhh.modelo.specifications.FactorSpecifications;
+import com.practical.consultora_rrhh.modelo.specifications.TextoSpecifications;
 import jakarta.transaction.Transactional;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -64,34 +67,29 @@ return  repository.existsById(id);
     }
 
     @Override
-    public List<Factor> buscar(String factor,String competencia) {
-        if(factor!=null && competencia!=null) {
-            return repository.findByNombreIgnoreCaseAndCompetencia_NombreIgnoreCase(factor, competencia);
-        }
-        else {
-            if (factor != null) {
-                return repository.findByNombreIgnoreCase(factor);
-            }
-        }
-        return repository.findByCompetencia_NombreIgnoreCase(competencia);
+    public List<Factor> buscar(String factor, String competencia) {
 
-        }
+        Specification<Factor> filtro= FactorSpecifications.buscar(factor, competencia);
+
+return         repository.findAll(filtro);
+    }
 //----------------------------------------------------------------------------
     @Override
 
 public boolean existePorNombreInsensible(String nombre) {
+        Specification<Factor> filtro = TextoSpecifications.coincidencia("nombre", nombre,false,true);
+        return repository.exists(filtro);
 
-        return repository.existsByNombreIgnoreCase(nombre);
-}
+   }
 @Override
 
 public boolean existePorCodigoInsensible(String codigo) {
-
-        return   repository.existsByCodigoIgnoreCase(codigo);
+    Specification<Factor> filtro= TextoSpecifications.coincidencia("codigo",codigo,false,true);
+    return repository.exists(filtro);
 }
 @Override
 public boolean existeNroOrdenPorCompetencia(short id, Long idCompetencia) {
-return  repository.existsByOrdenAndCompetencia_Id(id,idCompetencia);
+return  repository.existsByOrdenAndCompetencia_IdAndEliminacionIsFalse(id,idCompetencia);
 }
 @Override
 public boolean existeCompetenciaEnUso(Long idCompetencia) {

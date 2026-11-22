@@ -3,6 +3,7 @@ package com.practical.consultora_rrhh.interfaces.controllers;
 import com.practical.consultora_rrhh.dto.FiltrosBusqueda.preguntaFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.preguntaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.preguntaDto;
+import com.practical.consultora_rrhh.interfaces.genericos.IControllerCRUD;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;

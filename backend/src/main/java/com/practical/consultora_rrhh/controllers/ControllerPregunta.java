@@ -1,5 +1,6 @@
 package com.practical.consultora_rrhh.controllers;
 
+import com.practical.consultora_rrhh.Util.TextoUtils;
 import com.practical.consultora_rrhh.dto.FiltrosBusqueda.preguntaFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.preguntaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.preguntaDto;
@@ -23,13 +24,9 @@ private final IservicePregunta service;
     public ControllerPregunta(IservicePregunta service) {
         this.service = service;
     }
-    @GetMapping("/")
-    public String inicio() {
-        return "Servidor de Preguntas Consultora RRHH funcionando";
-    }
 
     @Override
-    @PostMapping()
+    @PostMapping("/new")
     public ResponseEntity<preguntaDto> guardar(@Valid @RequestBody preguntaDtoCreate dto) {
         preguntaDto aux = service.guardar(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(aux);
@@ -37,14 +34,18 @@ private final IservicePregunta service;
 
     @Override
     @PatchMapping("/update/{id}")
-    public ResponseEntity<preguntaDto> actualizar(@PathVariable Long id, @Valid @RequestBody preguntaDtoCreate dto) {
-        return ResponseEntity.ok(service.actualizar(id, dto));
+    public ResponseEntity<preguntaDto> actualizar(@PathVariable String id, @Valid @RequestBody preguntaDtoCreate dto) {
+        Long identificador= TextoUtils.identificador(id);
+
+        return ResponseEntity.ok(service.actualizar(identificador, dto));
     }
 
     @Override
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> eliminar(@PathVariable Long id) {
-        String respuesta=  service.eliminar(id);
+    @DeleteMapping("/delete/{id}/responsable/{idConsultor}")
+    public ResponseEntity<String> eliminar(@PathVariable String id,  @PathVariable  String idConsultor) {
+        Long identificador= TextoUtils.identificador(id);
+        Long consultor= TextoUtils.identificador(idConsultor);
+        String respuesta=  service.eliminar(identificador, consultor);
         return ResponseEntity.ok(respuesta);
     }
 
@@ -56,8 +57,10 @@ private final IservicePregunta service;
 
     @Override
     @GetMapping("/{id}")
-    public ResponseEntity<preguntaDto> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(service.obtenerPorId(id));
+    public ResponseEntity<preguntaDto> obtenerPorId(@PathVariable String id) {
+        Long identificador= TextoUtils.identificador(id);
+
+        return ResponseEntity.ok(service.obtenerPorId(identificador));
     }
 
     @Override()

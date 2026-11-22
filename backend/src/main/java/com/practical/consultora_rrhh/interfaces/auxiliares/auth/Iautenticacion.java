@@ -1,4 +1,4 @@
-package com.practical.consultora_rrhh.interfaces.controllers;
+package com.practical.consultora_rrhh.interfaces.auxiliares.auth;
 
 import com.practical.consultora_rrhh.dto.autenticacion.usuarioCandidatoDtoAuth;
 import com.practical.consultora_rrhh.dto.autenticacion.usuarioConsultorDtoAuth;

@@ -105,6 +105,10 @@ return respuesta(HttpStatus.CONFLICT,e.getMessage());
     public ResponseEntity<Map<String,Object>> manejarFiltro(FiltroVacioException e) {
         return respuesta(HttpStatus.BAD_REQUEST,e.getMessage());
       }
+      @ExceptionHandler(IntegridadComprometidaException.class)
+      public ResponseEntity<Map<String,Object>> manejarIntegridad(IntegridadComprometidaException e) {
+         return respuesta(HttpStatus.BAD_REQUEST,e.getMessage());
+      }
     //-----------------------------------------------------------------------
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String,Object>> manejarNumberFormat(HttpMessageNotReadableException e) {

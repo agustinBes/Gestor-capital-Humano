@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 
 public record auditoriaDtoCreate(
        Long id,
+       @NotNull(message = "se requiere el id de la entidad eliminada")
+       Long id_entidad,
        @NotBlank(message = "se requiere el nombre del registro eliminado")
         String registro,
         @NotBlank

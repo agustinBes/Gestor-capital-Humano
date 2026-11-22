@@ -2,7 +2,7 @@ package com.practical.consultora_rrhh.interfaces.controllers;
 
 import com.practical.consultora_rrhh.dto.request.opcionRespuestaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.opcionRespuestaDto;
-import jakarta.validation.constraints.Pattern;
+import com.practical.consultora_rrhh.interfaces.genericos.IControllerCRUD;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;

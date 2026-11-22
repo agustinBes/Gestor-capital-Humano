@@ -2,37 +2,37 @@
 -- CONFIGURACIONES DE OPCIONES DE RESPUESTA
 -- =============================================
 
-INSERT INTO opcion_respuesta (nombre, descripcion, activo)
+INSERT INTO opcion_respuesta (nombre, descripcion)
 VALUES
     ('Escala de desempeño',
-     'Evalúa el nivel general de desempeño del candidato en una actividad laboral.', TRUE),
+     'Evalúa el nivel general de desempeño del candidato en una actividad laboral.'),
 
     ('Frecuencia de comportamiento',
-     'Determina con qué frecuencia el candidato manifiesta un comportamiento determinado.', TRUE),
+     'Determina con qué frecuencia el candidato manifiesta un comportamiento determinado.'),
 
     ('Nivel de autonomía',
-     'Evalúa la capacidad del candidato para desarrollar tareas sin supervisión constante.', TRUE),
+     'Evalúa la capacidad del candidato para desarrollar tareas sin supervisión constante.'),
 
     ('Dominio técnico',
-     'Mide el grado de conocimiento y dominio de herramientas y procedimientos técnicos.', TRUE),
+     'Mide el grado de conocimiento y dominio de herramientas y procedimientos técnicos.'),
 
     ('Adaptabilidad',
-     'Evalúa la capacidad de adaptación ante cambios en el entorno laboral.', TRUE),
+     'Evalúa la capacidad de adaptación ante cambios en el entorno laboral.'),
 
     ('Resolución de conflictos',
-     'Determina la capacidad para gestionar desacuerdos y resolver situaciones conflictivas.', TRUE),
+     'Determina la capacidad para gestionar desacuerdos y resolver situaciones conflictivas.'),
 
     ('Trabajo en equipo',
-     'Evalúa la predisposición y capacidad para colaborar con otros integrantes del equipo.', TRUE),
+     'Evalúa la predisposición y capacidad para colaborar con otros integrantes del equipo.'),
 
     ('Gestión del tiempo',
-     'Mide la capacidad para organizar actividades y cumplir plazos establecidos.', TRUE),
+     'Mide la capacidad para organizar actividades y cumplir plazos establecidos.'),
 
     ('Comunicación laboral',
-     'Evalúa la claridad y efectividad de la comunicación en situaciones profesionales.', TRUE),
+     'Evalúa la claridad y efectividad de la comunicación en situaciones profesionales.'),
 
     ('Liderazgo',
-     'Determina el nivel de iniciativa y capacidad para orientar a otras personas.', TRUE);
+     'Determina el nivel de iniciativa y capacidad para orientar a otras personas.');
 
 
 -- =============================================

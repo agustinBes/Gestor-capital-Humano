@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 @Repository
 public class PuestoDaoImpl implements IPuestoDao {
@@ -17,6 +18,23 @@ public PuestoDaoImpl(puestoRepository repositoriy) {
 @Override
     public Puesto guardar(Puesto puesto) {
         return  repositoriy.save(puesto);}
+
+    @Override
+   @Transactional
+    public Puesto actualizar(Puesto actual, Map<String, String> modificacion) {
+
+
+        if(modificacion.containsKey("nombre")) {
+            actual.setNombre(modificacion.get("nombre"));}
+        if(modificacion.containsKey("descripcion")) {
+            actual.setDescripcion(modificacion.get("descripcion"));
+        }
+        if(modificacion.containsKey("empresa")) {
+            actual.setEmpresa(modificacion.get("empresa"));
+        }
+
+    return actual;
+    }
 
     @Override
     public List<Puesto> obtenerTodos() {

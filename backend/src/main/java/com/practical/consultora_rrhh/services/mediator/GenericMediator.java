@@ -1,9 +1,6 @@
 package com.practical.consultora_rrhh.services.mediator;
 
 import com.practical.consultora_rrhh.interfaces.auxiliares.IMediatorGeneric;
-import com.practical.consultora_rrhh.interfaces.services.InternalService;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 
 /**
  * Clase abstracta

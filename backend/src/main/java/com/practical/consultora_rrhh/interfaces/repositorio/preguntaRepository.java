@@ -1,5 +1,6 @@
 package com.practical.consultora_rrhh.interfaces.repositorio;
 
+import com.practical.consultora_rrhh.modelo.clases.Ponderacion;
 import com.practical.consultora_rrhh.modelo.clases.Pregunta;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -23,6 +24,7 @@ public interface preguntaRepository extends JpaRepository<Pregunta,Long>, JpaSpe
 
 
     boolean existsByOpcionRespuesta_IdAndEliminacionIsFalse(Long id);
+    void deleteByPonderaciones(List<Ponderacion> list);
 
 List<Pregunta> findByFactor_Id(Long id);
 }

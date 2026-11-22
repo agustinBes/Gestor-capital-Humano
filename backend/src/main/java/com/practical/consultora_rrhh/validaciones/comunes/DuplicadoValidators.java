@@ -28,4 +28,7 @@ public abstract class DuplicadoValidators {
 
 
     }
+    public void validarId(Long id){
+
+    }
 }

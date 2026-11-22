@@ -3,7 +3,7 @@ CREATE TABLE opcion_respuesta (
                                   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                                   nombre      VARCHAR(50) NOT NULL ,
                                   descripcion VARCHAR(300),
-                                    activo boolean NOT NULL  DEFAULT true);
+                                    eliminacion boolean NOT NULL  DEFAULT false);
 CREATE TABLE opcion (
                         id_opcion_respuesta BIGINT NOT NULL,
                         fila SMALLINT NOT NULL,

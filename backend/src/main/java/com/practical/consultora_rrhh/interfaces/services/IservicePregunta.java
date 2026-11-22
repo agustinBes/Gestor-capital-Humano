@@ -3,6 +3,8 @@ package com.practical.consultora_rrhh.interfaces.services;
 import com.practical.consultora_rrhh.dto.FiltrosBusqueda.preguntaFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.preguntaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.preguntaDto;
+import com.practical.consultora_rrhh.interfaces.auxiliares.InternalService;
+import com.practical.consultora_rrhh.interfaces.genericos.IserviceCRUD;
 import com.practical.consultora_rrhh.modelo.clases.Pregunta;
 
 import java.util.List;
@@ -14,7 +16,7 @@ public interface IservicePregunta extends IserviceCRUD<Long,preguntaDto, pregunt
 
 
     List<preguntaDto> buscar(preguntaFiltrosDto dto);
-    void eliminarPorFactor(Long id);
+    List<String> eliminarPorFactor(Long id,Long consultor);
 
     /**
      * Consulta particular para el servicio de OpcionRespuesta para ver si permite la eliminacion de una Entidad

@@ -1,6 +1,6 @@
 package com.practical.consultora_rrhh.interfaces.dao;
 
-import com.practical.consultora_rrhh.interfaces.services.IcompetenciaEnUso;
+import com.practical.consultora_rrhh.interfaces.auxiliares.IcompetenciaEnUso;
 import com.practical.consultora_rrhh.modelo.clases.PuestoCompetencia;
 import com.practical.consultora_rrhh.modelo.id.PuestoCompetenciaId;
 

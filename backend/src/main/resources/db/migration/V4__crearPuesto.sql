@@ -1,6 +1,6 @@
 CREATE TABLE puesto(
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    codigo VARCHAR(30) NOT NULL UNIQUE,
+    codigo VARCHAR(30) NOT NULL ,
     nombre VARCHAR(50) NOT NULL ,
     descripcion VARCHAR(300),
     empresa VARCHAR(50),

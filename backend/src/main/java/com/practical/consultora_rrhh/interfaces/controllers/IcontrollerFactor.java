@@ -3,6 +3,7 @@ package com.practical.consultora_rrhh.interfaces.controllers;
 import com.practical.consultora_rrhh.dto.FiltrosBusqueda.factorFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.factorDtoCreate;
 import com.practical.consultora_rrhh.dto.response.factorDto;
+import com.practical.consultora_rrhh.interfaces.genericos.IControllerCRUD;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;

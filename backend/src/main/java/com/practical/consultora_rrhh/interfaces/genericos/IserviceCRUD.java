@@ -1,4 +1,4 @@
-package com.practical.consultora_rrhh.interfaces.services;
+package com.practical.consultora_rrhh.interfaces.genericos;
 
 import java.util.List;
 
@@ -18,6 +18,6 @@ public interface IserviceCRUD <Id,DtoResponse,DtoRequest>{
 DtoResponse guardar(DtoRequest dto);
 DtoResponse actualizar(Id id,DtoRequest dto);
 List<DtoResponse>  obtenerTodos();
-String eliminar(Id id);
+String eliminar(Id id,Long idConsultor);
 DtoResponse obtenerPorId(Id id);
 }

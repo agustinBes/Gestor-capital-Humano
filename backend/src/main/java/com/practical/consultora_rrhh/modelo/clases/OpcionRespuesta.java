@@ -1,6 +1,5 @@
 package com.practical.consultora_rrhh.modelo.clases;
 
-import com.practical.consultora_rrhh.dto.request.opcionDtoCreate;
 import com.practical.consultora_rrhh.dto.request.opcionRespuestaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.opcionRespuestaDto;
 import jakarta.persistence.*;
@@ -42,7 +41,7 @@ public class OpcionRespuesta {
  @Column()
  private String descripcion;
  @Column()
- private boolean activo;
+ private boolean eliminacion;
  /*
  * @ElementCollection: indica que es una colección de objetos embebidos.
 @CollectionTable: establece la tabla donde se almacenan.
@@ -73,6 +72,6 @@ public class OpcionRespuesta {
                         .map(Opcion::new)
                         .toList()
         );
-        this.activo=true;
+        this.eliminacion =false;
     }
 }

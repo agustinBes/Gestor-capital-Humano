@@ -1,5 +1,6 @@
 package com.practical.consultora_rrhh.controllers;
 
+import com.practical.consultora_rrhh.Util.TextoUtils;
 import com.practical.consultora_rrhh.dto.request.competenciaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.competenciaDto;
 import com.practical.consultora_rrhh.interfaces.controllers.IcontrollerCompetencia;
@@ -28,7 +29,7 @@ private final IserviceCompetencia service;
     }
 
     
-    @PostMapping()
+    @PostMapping("/new")
     public ResponseEntity<competenciaDto> guardar(@Valid @RequestBody competenciaDtoCreate dto) {
         competenciaDto aux = service.guardar(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(aux);
@@ -36,14 +37,19 @@ private final IserviceCompetencia service;
 
     
     @PatchMapping("/update/{id}")
-    public ResponseEntity<competenciaDto> actualizar(@PathVariable Long id, @Valid @RequestBody competenciaDtoCreate dto) {
-        return ResponseEntity.ok(service.actualizar(id, dto));
+    public ResponseEntity<competenciaDto> actualizar(@PathVariable String id, @Valid @RequestBody competenciaDtoCreate dto) {
+        Long identificador= TextoUtils.identificador(id);
+
+        return ResponseEntity.ok(service.actualizar(identificador, dto));
     }
 
-    
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> eliminar(@PathVariable Long id) {
-      String respuesta=  service.eliminar(id);
+
+    @Override
+    @DeleteMapping("/delete/{id}/responsable/{idConsultor}")
+    public ResponseEntity<String> eliminar(@PathVariable String id,  @PathVariable  String idConsultor) {
+        Long identificador= TextoUtils.identificador(id);
+        Long consultor= TextoUtils.identificador(idConsultor);
+      String respuesta=  service.eliminar(identificador, consultor);
         return ResponseEntity.ok(respuesta);
     }
 
@@ -55,8 +61,10 @@ private final IserviceCompetencia service;
 
     
     @GetMapping("/{id}")
-    public ResponseEntity<competenciaDto> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(service.obtenerPorId(id));
+    public ResponseEntity<competenciaDto> obtenerPorId(@PathVariable String id) {
+        Long identificador= TextoUtils.identificador(id);
+
+        return ResponseEntity.ok(service.obtenerPorId(identificador));
     }
 
 @GetMapping("/buscar/{nombre}")
