@@ -16,6 +16,8 @@ import java.util.List;
 public record preguntaDtoCreate(
 
         @NotNull(message = "Se requiere un factor")
+        @Positive(message = "el id no puede ser negativo")
+        @Min(value = 1,message = "el id debe ser mayor que 0")
         Long idFactor,
 
         @NotBlank(message = "Se requiere un título para guardar la pregunta")

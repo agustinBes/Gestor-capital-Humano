@@ -1,6 +1,7 @@
 package com.practical.consultora_rrhh.interfaces.repositorio;
 
 import com.practical.consultora_rrhh.modelo.clases.Factor;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface factorRepository extends codigoRepository<Factor, Long> , JpaSpecificationExecutor<Factor> {
+public interface factorRepository extends JpaRepository<Factor, Long>, JpaSpecificationExecutor<Factor> {
 
       boolean existsByIdAndCompetencia_Id(Long id, Long idCompetencia);
 boolean existsByOrdenAndCompetencia_IdAndEliminacionIsFalse(short id, Long idCompetencia);

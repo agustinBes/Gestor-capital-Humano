@@ -1,4 +1,4 @@
-package com.practical.consultora_rrhh.interfaces.dao;
+package com.practical.consultora_rrhh.interfaces.genericos;
 
 import java.util.List;
 import java.util.Optional;

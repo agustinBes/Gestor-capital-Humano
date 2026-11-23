@@ -16,13 +16,6 @@ import java.util.List;
 @Repository
 public interface preguntaRepository extends JpaRepository<Pregunta,Long>, JpaSpecificationExecutor<Pregunta> {
 
-    boolean existsByNombreIgnoreCase(String nombre);
-
-    boolean existsByNombreIgnoreCaseAndFactor_IdAndFactor_Competencia_Id(String nombre, Long idFactor, Long idCompetencia);
-
-    boolean existsByPreguntaIgnoreCaseAndFactor_IdAndFactor_Competencia_Id(String nombre, Long idFactor, Long idCompetencia);
-
-
     boolean existsByOpcionRespuesta_IdAndEliminacionIsFalse(Long id);
     void deleteByPonderaciones(List<Ponderacion> list);
 

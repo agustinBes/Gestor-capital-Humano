@@ -41,5 +41,5 @@ public class Competencia {
     @Column(name = "tipo")
     private tipoCompetencia tipoCompetencia;
     @Column (name="eliminacion")
-    private Boolean eliminacion;
+    private boolean eliminacion;
   }

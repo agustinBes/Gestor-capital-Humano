@@ -1,5 +1,6 @@
 package com.practical.consultora_rrhh.excepciones;
 
+import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.practical.consultora_rrhh.excepciones.especializadas.atributos.SumaPonderacionesInvalidException;
 import com.practical.consultora_rrhh.excepciones.genericas.*;
 import org.springframework.http.HttpStatus;
@@ -12,7 +13,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import tools.jackson.databind.exc.InvalidFormatException;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,11 +39,18 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(s).body(body);
     }
+    @ExceptionHandler(InvalidFormatException.class)
+    public ResponseEntity<Map<String, Object>> invalidFormat(InvalidFormatException e) {
+return  respuesta(HttpStatus.BAD_REQUEST, e.getMessage());    }
 //Duplicados de nombre y codigo
     @ExceptionHandler(DuplicadoException.class)
     public ResponseEntity<Map<String, Object>> manejarDuplicado(
             DuplicadoException e) {
 return respuesta(HttpStatus.CONFLICT,e.getMessage());
+          }
+          @ExceptionHandler(CorruptFileException.class)
+          public ResponseEntity<Map<String, Object>> handleIOException(IOException e){
+         return respuesta(HttpStatus.UNPROCESSABLE_CONTENT,e.getMessage());
           }
 //Ponderaciones en la pregunta
     @ExceptionHandler(SumaPonderacionesInvalidException.class)
@@ -110,8 +120,8 @@ return respuesta(HttpStatus.CONFLICT,e.getMessage());
          return respuesta(HttpStatus.BAD_REQUEST,e.getMessage());
       }
     //-----------------------------------------------------------------------
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String,Object>> manejarNumberFormat(HttpMessageNotReadableException e) {
+    @ExceptionHandler({HttpMessageNotReadableException.class, RuntimeJsonMappingException.class})
+    public ResponseEntity<Map<String,Object>> manejarNumberFormat(Exception e) {
         String mensajeAmigable = "El formato del JSON es inválido o contiene valores malformados.";
 
         if (e.getMessage().contains("Unrecognized token") || e.getMessage().contains("Unexpected character")) {
@@ -130,12 +140,6 @@ return respuesta(HttpStatus.CONFLICT,e.getMessage());
 
         return respuesta(HttpStatus.BAD_REQUEST,e.getMessage());
          }
-
-    @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<Map<String,Object>> manejarAusenciaArgumento(NoResourceFoundException e) {
-        return respuesta(HttpStatus.BAD_REQUEST, e.getMessage());
-    }
-
 
 
 }

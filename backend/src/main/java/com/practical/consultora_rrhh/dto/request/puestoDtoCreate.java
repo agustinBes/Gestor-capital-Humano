@@ -19,7 +19,7 @@ public record puestoDtoCreate(
 String empresa,
         @NotEmpty(message = "se requiere al menos una competencia")
         @Size(min = 2,message = "se requieren al menos dos competencias para dar de alta un puesto")
-        Map<Long, @Min(value = 0,message = "una calificacion no puede ser negativa")
+        Map<@Positive @Min(value = 1, message = "el identificador no puede ser negativo o 0") Long, @Min(value = 0,message = "una calificacion no puede ser negativa")
         @Max(value=10,message = "Una calificacion no puede ponderar por encima de 10 puntos")
                 Short> caracteristicas
         ) {

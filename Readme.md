@@ -28,6 +28,8 @@ realizamos la creacion del proyecto base a traves de [Spring Boot initializer](h
 7. devtools
 8. Flyway 
 9. OAuth2 Resource Server(desactivado por el momento)
+10. Jackson Csv
+11. jackson-datatype-jsr310
 --- 
 ## 🗄️ Configuración de la capa de persistencia
 
