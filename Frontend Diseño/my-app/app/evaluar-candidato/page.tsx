@@ -6,6 +6,31 @@ import Tabla from "../../componentes/tabla";
 
 export default function EvaluarCandidato() {
   const [mostrarTablas, setMostrarTablas] = useState(false);
+
+  const [candidatos, setCandidatos] = useState([
+  ["038", "Lucas", "Besigniano"],
+  ["069", "Agustina", "Luna"],
+  ["016", "Micalea", "Gaitan"],
+  ["067", "Ivan", "Cabañas"],
+  ]);
+
+  const [aEvaluar, setAEvaluar] = useState<(string | number)[][]>([]);
+  const [seleccionados, setSeleccionados] = useState<number[]>([]);
+
+  const seleccionDeFilas = (index: number) => {
+  if (seleccionados.includes(index)) {
+    setSeleccionados(seleccionados.filter(i => i !== index));
+  } else {
+    setSeleccionados([...seleccionados, index]);
+  }
+  };
+
+  const agregarSeleccionados = () => {
+    const nuevos = seleccionados.map(i => candidatos[i]);
+    setAEvaluar([...aEvaluar, ...nuevos]);
+    setSeleccionados([]);
+  };
+
   return (
 
     <div style={{
@@ -44,22 +69,23 @@ export default function EvaluarCandidato() {
       </div>
 
       {mostrarTablas && (
-      <div>
+      <div style={{ marginTop: "2rem" }}>
+      <h3>Candidatos encontrados</h3>
      <Tabla
       columnas={["Nro de Candidato", "Nombre", "Apellido"]}
-      datos={[
-        ["038", "Lucas", "Besigniano"],
-        ["069", "Agustina", "Luna"],
-      ]}
+      datos={candidatos}
+      onRowClick={seleccionDeFilas}
+      seleccionados={seleccionados}
     />
+    <div style={{ textAlign: "center", margin: "1rem 0" }}>
+    <Boton texto="Agregar Candidatos" onClick={agregarSeleccionados} padding="10px 20px" />
+    </div>
+     <h3>Candidatos a evaluar</h3>
     <Tabla
       columnas={["Nro de Candidato", "Nombre", "Apellido"]}
-      datos={[
-        ["016", "Micalea", "Gaitan"],
-        ["067", "Ivan", "Cabañas"],
-      ]}
+      datos={aEvaluar}
     />
-     </div>
+    </div>
      )}
     </div>
     </div>

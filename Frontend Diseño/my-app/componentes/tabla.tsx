@@ -3,9 +3,11 @@
 type Props = {
   columnas: string[];
   datos: (string | number)[][];
+  onRowClick?: (index: number) => void;
+  seleccionados?: number[];
 };
 
-export default function Tabla({ columnas, datos }: Props) {
+export default function Tabla({ columnas, datos, onRowClick, seleccionados = []}: Props) {
   return (
     <table style={{ borderCollapse: "collapse", width: "100%", marginTop: "1rem" }}>
         <thead>
@@ -27,7 +29,12 @@ export default function Tabla({ columnas, datos }: Props) {
       </thead>
       <tbody>
         {datos.map((fila, i) => (
-          <tr key={i}>
+          <tr key={i}
+          onClick={() => onRowClick && onRowClick(i)}
+            style={{
+              background: seleccionados.includes(i) ? "#EAE0B5" : "white",
+              cursor: onRowClick ? "pointer" : "default"
+            }}>
             {fila.map((celda, j) => (
               <td
                 key={j}
