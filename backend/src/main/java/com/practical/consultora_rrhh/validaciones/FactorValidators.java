@@ -70,7 +70,7 @@ public class FactorValidators     extends DuplicadoValidators implements Ivalida
 
         if (!TextoUtils.tieneContenido(dto.competencia()) &&
                 !TextoUtils.tieneContenido(dto.factor())) {
-            throw new FiltroVacioException("Se requiere completar al menos uno de los campos");
+            throw new FiltroVacioException();
         }
     }
 

@@ -99,7 +99,7 @@ return modificacion;
         boolean factor=TextoUtils.tieneContenido(dto.factor());
 
         if (! pregunta && !competencia && !factor) {
-            throw new FiltroVacioException("Se requiere completar al menos uno de los campos");
+            throw new FiltroVacioException();
         }
     }
 //----------------------------------------------------------------------------------------------

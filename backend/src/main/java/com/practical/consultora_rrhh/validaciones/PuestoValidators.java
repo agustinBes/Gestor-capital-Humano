@@ -1,6 +1,7 @@
 package com.practical.consultora_rrhh.validaciones;
 
 import com.practical.consultora_rrhh.Util.TextoUtils;
+import com.practical.consultora_rrhh.dto.FiltrosBusqueda.puestoFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.puestoDtoCreate;
 import com.practical.consultora_rrhh.interfaces.dao.IPuestoDao;
 import com.practical.consultora_rrhh.interfaces.auxiliares.IvalidarExistenciaNombreCodigoService;
@@ -72,6 +73,10 @@ public class PuestoValidators extends DuplicadoValidators implements IvalidarExi
         String codigoNormalizado= TextoUtils.normalizar(codigo);
         boolean aux = dao.existePorCodigoInsensible(codigoNormalizado);
         this.validarCampoDuplicado(codigoNormalizado, aux, tipo_campo_duplicado.CODIGO);
+    }
+    public boolean validarFiltros(puestoFiltrosDto dto){
+        return TextoUtils.tieneContenido(dto.codigo()) | TextoUtils.tieneContenido(dto.puesto())   |
+                TextoUtils.tieneContenido(dto.empresa());
     }
 
 
