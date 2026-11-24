@@ -16,6 +16,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import tools.jackson.databind.exc.InvalidFormatException;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -61,9 +62,12 @@ return respuesta(HttpStatus.CONFLICT,e.getMessage());
     //Ausencia de entidad con id :x
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Map<String,Object>> manejarObjectNotFound(EntityNotFoundException e) {
-
         return respuesta(HttpStatus.NOT_FOUND, e.getMessage());
 
+    }
+    @ExceptionHandler(ColeccionNotFoundException.class)
+    public ResponseEntity<Map<String,Object>> manejarColeccionNotFound(ColeccionNotFoundException e) {
+         return respuesta(HttpStatus.NOT_FOUND,e.getMessage());
     }
     @ExceptionHandler(EntidadEnUsoException.class)
     public ResponseEntity<Map<String, Object>> manejarEntidadEnUso(EntidadEnUsoException e){
@@ -113,7 +117,7 @@ return respuesta(HttpStatus.CONFLICT,e.getMessage());
 
     @ExceptionHandler(FiltroVacioException.class)
     public ResponseEntity<Map<String,Object>> manejarFiltro(FiltroVacioException e) {
-        return respuesta(HttpStatus.BAD_REQUEST,e.getMessage());
+        return respuesta(HttpStatus.BAD_REQUEST,e.getMessage()) ;
       }
       @ExceptionHandler(IntegridadComprometidaException.class)
       public ResponseEntity<Map<String,Object>> manejarIntegridad(IntegridadComprometidaException e) {
@@ -140,6 +144,12 @@ return respuesta(HttpStatus.CONFLICT,e.getMessage());
 
         return respuesta(HttpStatus.BAD_REQUEST,e.getMessage());
          }
+         @ExceptionHandler(UnsupportedOperationException.class)
+    public ResponseEntity<Map<String,Object>> manejarUnicode(UnsupportedOperationException e) {
+             Map<String, Object> map = new HashMap<>();
+             map.put("error", HttpStatus.NOT_IMPLEMENTED.value());
+             map.put("mensaje", "Metodo no implementado en esta version");
+             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
 
-
+         }
 }
