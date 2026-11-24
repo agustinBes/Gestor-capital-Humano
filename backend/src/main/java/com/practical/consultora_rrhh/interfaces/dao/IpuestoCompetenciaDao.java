@@ -17,4 +17,5 @@ PuestoCompetencia actualizarPonderacion(PuestoCompetencia pc,short ponderacion);
 List<PuestoCompetencia> actualizarPuestoCompetencia(Long idPuesto,List<PuestoCompetencia> pc);
 
 
+    List<PuestoCompetencia> obtenerPorPuestos(List<Long> coleccion);
 }
