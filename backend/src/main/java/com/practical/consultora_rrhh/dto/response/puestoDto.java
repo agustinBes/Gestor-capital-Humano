@@ -5,6 +5,7 @@ import com.practical.consultora_rrhh.modelo.clases.PuestoCompetencia;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,8 +26,8 @@ public puestoDto(Puesto p, List<PuestoCompetencia> pc)    {
             p.getDescripcion(),
             p.getEmpresa(),
             pc.stream()
-              .map(puestoCompetenciaDto::new)
-              .toList()
+                    .map(o -> new puestoCompetenciaDto(o,o.getCompetencia().getNombre()))
+                    .toList()
     );
 }
   public puestoDto(Puesto p)    {
@@ -36,7 +37,7 @@ public puestoDto(Puesto p, List<PuestoCompetencia> pc)    {
             p.getNombre(),
             p.getDescripcion(),
             p.getEmpresa(),
-            null
+            new ArrayList<>()
     );
   }
 
