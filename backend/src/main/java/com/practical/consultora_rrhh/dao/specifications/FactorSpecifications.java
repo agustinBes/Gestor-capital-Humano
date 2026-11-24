@@ -1,4 +1,4 @@
-package com.practical.consultora_rrhh.modelo.specifications;
+package com.practical.consultora_rrhh.dao.specifications;
 
 import com.practical.consultora_rrhh.Util.TextoUtils;
 import com.practical.consultora_rrhh.dto.FiltrosBusqueda.preguntaFiltrosDto;
@@ -30,8 +30,9 @@ public class FactorSpecifications {
                 predicados.add(
                         TextoSpecifications.buscarTexto(cb, root.get("competencia").get("nombre"), competencia, true));
             }
-            return cb.and(predicados.toArray(new Predicate[predicados.size()]));
-        };}
+            return cb.and(predicados.toArray(new Predicate[0]));};}
+
+
 }
 
 

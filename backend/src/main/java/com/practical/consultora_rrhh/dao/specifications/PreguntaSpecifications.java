@@ -1,4 +1,4 @@
-package com.practical.consultora_rrhh.modelo.specifications;
+package com.practical.consultora_rrhh.dao.specifications;
 
 import com.practical.consultora_rrhh.Util.TextoUtils;
 import com.practical.consultora_rrhh.dto.FiltrosBusqueda.preguntaFiltrosDto;
