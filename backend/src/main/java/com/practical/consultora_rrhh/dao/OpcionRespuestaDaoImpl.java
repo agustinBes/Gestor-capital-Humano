@@ -5,7 +5,7 @@ import com.practical.consultora_rrhh.interfaces.dao.IOpcionRespuestaDao;
 import com.practical.consultora_rrhh.modelo.clases.Opcion;
 import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
 import com.practical.consultora_rrhh.interfaces.repositorio.opcionRespuestaRepository;
-import com.practical.consultora_rrhh.modelo.specifications.TextoSpecifications;
+import com.practical.consultora_rrhh.dao.specifications.TextoSpecifications;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
@@ -72,6 +72,10 @@ public class OpcionRespuestaDaoImpl implements IOpcionRespuestaDao {
     @Transactional
     public void eliminar(OpcionRespuesta opcionRespuesta) {
    opcionRespuesta.setEliminacion(true);}
+    @Transactional
+    public void reactivar(OpcionRespuesta opcionRespuesta) {
+        opcionRespuesta.setEliminacion(false);
+    }
     /**
      * Busca registros por coincidencia parcial
      */

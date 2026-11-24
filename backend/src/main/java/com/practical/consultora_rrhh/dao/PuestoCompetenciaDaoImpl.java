@@ -6,6 +6,8 @@ import com.practical.consultora_rrhh.modelo.clases.PuestoCompetencia;
 import com.practical.consultora_rrhh.modelo.id.PuestoCompetenciaId;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Repository;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,7 +35,7 @@ public class PuestoCompetenciaDaoImpl implements IpuestoCompetenciaDao {
 
     @Override
     @Transactional
-    public List<PuestoCompetencia> actualizarPuestoCompetencia(Long idPuesto,           List<PuestoCompetencia> caracteristicas) {
+    public List<PuestoCompetencia> actualizarPuestoCompetencia(Long idPuesto,  List<PuestoCompetencia> caracteristicas) {
 
         Map<Long, PuestoCompetencia> guardadas = obtenerPorPuesto(idPuesto).stream()
                 .collect(Collectors.toMap(pc -> pc.getCompetencia().getId(),Function.identity()));
@@ -66,6 +68,8 @@ public class PuestoCompetenciaDaoImpl implements IpuestoCompetenciaDao {
 
     public void eliminar(PuestoCompetencia x){
 repository.delete(x);}
+
+
     @Override
     public List<PuestoCompetencia> obtenerPorCompetencia(Long id) {
         return repository.findByCompetencia_Id(id);
@@ -77,11 +81,16 @@ repository.delete(x);}
     }
 
     @Override
+    public List<PuestoCompetencia> obtenerPorPuestos(List<Long> coleccion) {
+        return repository.findByPuesto_IdIn(coleccion);
+    }
+    @Override
     @Transactional
     public void eliminarPorPuesto(Long idPuesto) {
         List<PuestoCompetencia> lista=obtenerPorPuesto(idPuesto);
         lista.forEach(this::eliminar);
     }
+
 
     @Override
     public List<PuestoCompetencia> obtenerTodos() {
@@ -97,6 +106,7 @@ repository.delete(x);}
     public boolean existePorId(PuestoCompetenciaId puestoCompetenciaId) {
         return repository.existsById(puestoCompetenciaId);
     }
+
 
     @Override
     public boolean existeCompetenciaEnUso(Long id) {

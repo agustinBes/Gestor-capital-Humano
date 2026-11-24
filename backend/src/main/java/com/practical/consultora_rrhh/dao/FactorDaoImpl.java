@@ -4,8 +4,8 @@ import com.practical.consultora_rrhh.interfaces.dao.IFactorDao;
 import com.practical.consultora_rrhh.interfaces.repositorio.factorRepository;
 import com.practical.consultora_rrhh.modelo.clases.Competencia;
 import com.practical.consultora_rrhh.modelo.clases.Factor;
-import com.practical.consultora_rrhh.modelo.specifications.FactorSpecifications;
-import com.practical.consultora_rrhh.modelo.specifications.TextoSpecifications;
+import com.practical.consultora_rrhh.dao.specifications.FactorSpecifications;
+import com.practical.consultora_rrhh.dao.specifications.TextoSpecifications;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
@@ -52,6 +52,10 @@ return factor;}
 @Transactional
     public void eliminar(Factor factor) {
         factor.setEliminacion(true);
+    }
+    @Transactional
+    public void reactivar(Factor factor) {
+        factor.setEliminacion(false);
     }
 
     public Optional<Factor> obtenerPorId(Long id) {

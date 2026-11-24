@@ -6,12 +6,11 @@ import com.practical.consultora_rrhh.interfaces.repositorio.preguntaRepository;
 import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
 import com.practical.consultora_rrhh.modelo.clases.Ponderacion;
 import com.practical.consultora_rrhh.modelo.clases.Pregunta;
-import com.practical.consultora_rrhh.modelo.specifications.PreguntaSpecifications;
+import com.practical.consultora_rrhh.dao.specifications.PreguntaSpecifications;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -122,6 +121,10 @@ return repository.save(pregunta);
     if (pregunta.getPonderaciones() != null) {
         pregunta.getPonderaciones().clear();}
         repository.saveAndFlush(pregunta);
+}
+@Transactional
+public void reactivar(Pregunta p) {
+p.setEliminacion(false);
 }
         //-----------------------------------------------------------------------------------
         public Optional<Pregunta> obtenerPorId(Long id) {
