@@ -5,6 +5,7 @@ import com.practical.consultora_rrhh.dto.FiltrosBusqueda.factorFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.auditoriaDtoCreate;
 import com.practical.consultora_rrhh.dto.request.factorDtoCreate;
 import com.practical.consultora_rrhh.dto.response.factorDto;
+import com.practical.consultora_rrhh.excepciones.genericas.ColeccionNotFoundException;
 import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
 import com.practical.consultora_rrhh.interfaces.dao.IFactorDao;
 import com.practical.consultora_rrhh.interfaces.services.IserviceAuditoria;
@@ -172,20 +173,28 @@ dao.eliminar(factor);
      */
     public Factor obtenerEntidad(Long id) {
         return    dao.obtenerPorId(id).orElseThrow(() ->
-                new EntityNotFoundException("No se encontró el factor con el id: "+id+" en el sistema"));}
+                new EntityNotFoundException(Factor.class,id.toString()));}
 //--------------------------------------------------------------------------------------------
     /**
      * Validar existencia de una entidad mediante su id
      */
      public void validarEntidad(Long id) {
-if(!dao.existePorId(id)){
-    throw new  EntityNotFoundException("No se encontro el factor con el id: "+id);}}
+         if (!dao.existePorId(id)) {
+             throw new EntityNotFoundException(Factor.class, id.toString());
+         }
+     }
 //--------------------------------------------------------------------------------------------
     public List<factorDto> buscar(factorFiltrosDto dto) {
     validators.validarCriterios(dto);
-    return dao.buscar(dto.factor(), dto.competencia())
+
+    List<factorDto> result= dao.buscar(dto.factor(), dto.competencia())
                 .stream().map(factorDto::new)
-                .toList();}
+                .toList();
+
+        if(result.isEmpty()){
+            throw  new ColeccionNotFoundException();}
+        return result;}
+
 //--------------------------------------------------------------------------------------------
 
     @Override

@@ -119,7 +119,7 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
 
 
         if (lista.isEmpty()) {
-            throw new ColeccionNotFoundException("No se encontraron resultados de busquda");}
+            throw new ColeccionNotFoundException();}
         return lista;}
     /**
      * Validar existencia de la entidad en la BDD y eliminarla
@@ -173,7 +173,7 @@ String respuesta= "los datos de la Opcion de Respuesta:  "+aux.getNombre()+" han
                 .map(opcionRespuestaDto::new)
                 .toList();
         if (lista.isEmpty()) {
-             throw new ColeccionNotFoundException("No se encontraron resultados de busquda");}
+             throw new ColeccionNotFoundException();}
         return lista;}
 
 //--------------------------------------------------------------
@@ -185,6 +185,6 @@ String respuesta= "los datos de la Opcion de Respuesta:  "+aux.getNombre()+" han
     @Override
     public OpcionRespuesta obtenerEntidad(Long id) {
         return    dao.obtenerPorId(id).orElseThrow(() ->
-                new EntityNotFoundException("No se encontró la opcion de respuesta con el id: "+id+" en el sistema"));}
+                new EntityNotFoundException(OpcionRespuesta.class, id.toString()));}
 
 }

@@ -9,17 +9,14 @@ import com.practical.consultora_rrhh.Util.TextoUtils;
 import com.practical.consultora_rrhh.dto.FiltrosBusqueda.candidatoFiltrosDto;
 import com.practical.consultora_rrhh.dto.response.candidatoDto;
 import com.practical.consultora_rrhh.excepciones.genericas.*;
-import com.practical.consultora_rrhh.interfaces.repositorio.candidatoRepository;
+import com.practical.consultora_rrhh.interfaces.dao.IcandidatoDao;
 import com.practical.consultora_rrhh.interfaces.services.IserviceCandidato;
 import com.practical.consultora_rrhh.modelo.clases.Candidato;
-import com.practical.consultora_rrhh.modelo.specifications.CandidatoSpecifications;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.ConstraintViolation;
 import org.springframework.core.io.Resource;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import jakarta.validation.Validator;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +36,7 @@ import java.util.stream.Collectors;
 
  * Por motivos prácticos y considerando el alcance de este trabajo, queda
  * fuera de la implementación la gestión individual de candidatos como entidad.
- *
+
  * Por lo tanto, no se contemplan las operaciones de creación individual,
  * actualización ni eliminación de candidatos, limitándose su incorporación
  * al proceso de importación masiva desde archivos CSV.
@@ -51,15 +48,49 @@ import java.util.stream.Collectors;
 public class ServiceCandidato implements IserviceCandidato {
     private  int creados=0;
 private final Validator validador;
-private final candidatoRepository repository;
+private  final IcandidatoDao dao;
 
-    public ServiceCandidato(Validator validador, candidatoRepository repository) {
+
+    public ServiceCandidato(Validator validador, IcandidatoDao dao) {
+        this.dao = dao;
         this.validador = validador;
-        this.repository = repository;}
+    }
 @PostConstruct
 public void inicializar(){
-        creados=repository.findAll().size();
+        creados=dao.obtenerTodos().size();
 }
+
+
+    @Override
+    public candidatoDto guardar(candidatoFiltrosDto dto) {
+        throw  new UnsupportedOperationException("Not supported yet.");
+
+    }
+
+    @Override
+    public candidatoDto actualizar(Long aLong, candidatoFiltrosDto dto) {
+        throw  new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public List<candidatoDto> obtenerTodos() {
+        return dao.obtenerTodos().stream()
+                .map(candidatoDto::new)
+                .toList();
+    }
+
+    @Override
+    public String eliminar(Long aLong, Long idConsultor) {
+        throw  new UnsupportedOperationException("Not supported yet.");
+
+    }
+
+    @Override
+    public candidatoDto obtenerPorId(Long aLong) {
+        throw  new UnsupportedOperationException("Not supported yet.");
+
+    }
+
     @Override
     public String importarCandidatos(Resource file) throws CorruptFileException {
         List<Long> nrosCandidatos = new ArrayList<>();
@@ -71,15 +102,15 @@ int existe=0;
 
 for (Candidato candidato : candidatos) {
     Long id=candidato.getId();
-Optional<Candidato> aux= repository.findById(id);
+Optional<Candidato> aux= dao.obtenerPorId(id);
 if(aux.isEmpty()){
-    repository.save(candidato);
+    dao.guardar(candidato);
     creados=creados+1;
 }
 else{existe=existe+1;
 nrosCandidatos.add(id);}
 }
-if(existe>0){return "Algunos Nros de candidatos ya existe en el sistema.Verifica si se trata de un nuevo candidato o intentas crear el mismo devuelta" +
+if(existe>0){return "Algunos Nros de candidatos ya existen en el sistema.Verifica si se trata de un nuevo candidato o intentas crear el mismo devuelta" +
         nrosCandidatos.toString();}
 
 return  "Se crearon todos los candidatos";
@@ -128,38 +159,20 @@ return  "Se crearon todos los candidatos";
         throw new RuntimeException("Error al procesar el archivo CSV: " + e.getMessage(), e);
     }
     }
-
-    @Override
-    public List<candidatoDto> obtenerCandidatos() {
-        return  repository.findAll().stream().map(candidatoDto::new)
-                .toList();
-    }
-
-    @Override
-    public Candidato obtenerCandidato(Long id) {
-        return repository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException(
-                        "Candidato no encontrado: " + id
-                )
-        );
-    }
-
     @Override
     public List<candidatoDto> buscarCandidatos(candidatoFiltrosDto filtro) {
         List<candidatoDto> result=new ArrayList<>();
 boolean validacion=validarFiltros(filtro);
-Specification<Candidato> filtros;
 if(validacion){
- filtros= CandidatoSpecifications.buscar(filtro);
-result=repository.findAll(filtros)
+result=dao.buscar(filtro)
             .stream()
             .map(candidatoDto::new)
             .toList();
 if(result.isEmpty()){
-    throw new ColeccionNotFoundException("No se encontraron resultados de busquda");}
+    throw new ColeccionNotFoundException();}
 return result;}
 
-throw new FiltroVacioException("Se requiere completar alguno de los filtros de busqueda");
+throw new FiltroVacioException();
 
     }
 

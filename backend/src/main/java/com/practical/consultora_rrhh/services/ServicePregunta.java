@@ -6,6 +6,7 @@ import com.practical.consultora_rrhh.dto.request.auditoriaDtoCreate;
 import com.practical.consultora_rrhh.dto.request.preguntaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.preguntaDto;
 import com.practical.consultora_rrhh.excepciones.especializadas.atributos.CantidadOpcionesInvalidException;
+import com.practical.consultora_rrhh.excepciones.genericas.ColeccionNotFoundException;
 import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
 import com.practical.consultora_rrhh.interfaces.dao.IPreguntaDao;
 import com.practical.consultora_rrhh.interfaces.services.IserviceAuditoria;
@@ -104,6 +105,11 @@ if(opcionRespuesta.getOpciones().size()!=dto.ponderaciones().size()) {
         validators.validarCriterio(dto);
 
         List<Pregunta> resultados = dao.buscar(dto);
+
+        if(resultados.isEmpty()){
+            throw  new ColeccionNotFoundException();}
+
+
         return resultados
                 .stream()
                 .map(preguntaDto::new)
@@ -196,13 +202,19 @@ if(opcionRespuesta.getOpciones().size()!=dto.ponderaciones().size()) {
         List<Pregunta> preguntas=dao.obtenerPorFactor(id);
         List<String> respuestas=new ArrayList<>();
         preguntas.forEach(pregunta ->
+
                 {
+                    if(pregunta.getEliminacion()){
+                        String r=auditoria.buscarAuditor(pregunta.getId(), pregunta.getNombre(),tipoAuditoria.PREGUNTA );
+                        respuestas.add( "La pregunta: "+ pregunta.getNombre()+" ya fue eliminado del sistema por el consultor "+r);
+                    }
+                    else{
                     auditoriaDtoCreate aux=new auditoriaDtoCreate(null,pregunta.getId(), pregunta.getNombre(),tipoAuditoria.PREGUNTA, LocalDateTime.now(),idconsultor);
                     respuestas.add("Los datos de la Pregunta: "+pregunta.getNombre()+" han sido eliminados del sistema");
 
                     auditoria.crearAuditoria(aux);
                     dao.eliminar(pregunta);
-                }
+                }}
                 );
     return respuestas;}
 
@@ -236,8 +248,7 @@ auditoriaDtoCreate nuevo= new auditoriaDtoCreate(null,id,aux.getNombre(),tipoAud
      */
     public Pregunta obtenerEntidad(Long id) {
             return    dao.obtenerPorId(id).orElseThrow(() ->
-                    new EntityNotFoundException("No se encontró la pregunta con el id: "+id+" en el sistema"));
-
+                    new EntityNotFoundException(Pregunta.class,id.toString()));
         }
 
     /**
