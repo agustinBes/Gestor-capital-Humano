@@ -1,6 +1,7 @@
 package com.practical.consultora_rrhh.controllers;
 
 import com.practical.consultora_rrhh.Util.TextoUtils;
+import com.practical.consultora_rrhh.dto.FiltrosBusqueda.puestoFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.puestoDtoCreate;
 import com.practical.consultora_rrhh.dto.response.puestoDto;
 import com.practical.consultora_rrhh.interfaces.controllers.IcontrollerPuesto;
@@ -70,5 +71,11 @@ public class ControllerPuesto implements IcontrollerPuesto {
         return ResponseEntity.ok(service.obtenerPorId(identificador));
     }
 
+    @Override
+    @GetMapping("/buscar")
+    public ResponseEntity<List<puestoDto>> buscar(@ModelAttribute puestoFiltrosDto dto) {
+        List<puestoDto> result=service.buscar(dto);
 
+    return ResponseEntity.ok(result);
+    }
 }
