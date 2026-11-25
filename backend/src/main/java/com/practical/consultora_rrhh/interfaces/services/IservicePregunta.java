@@ -5,6 +5,7 @@ import com.practical.consultora_rrhh.dto.request.preguntaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.preguntaDto;
 import com.practical.consultora_rrhh.interfaces.auxiliares.InternalService;
 import com.practical.consultora_rrhh.interfaces.genericos.IserviceCRUD;
+import com.practical.consultora_rrhh.modelo.clases.Competencia;
 import com.practical.consultora_rrhh.modelo.clases.Pregunta;
 
 import java.util.List;
@@ -23,4 +24,5 @@ public interface IservicePregunta extends IserviceCRUD<Long,preguntaDto, pregunt
      */
     boolean existeOpcionRespuestaEnUso(Long id);
 
+    List<Pregunta> obtenerPorCompetencia(List<Competencia> competencias);
 }

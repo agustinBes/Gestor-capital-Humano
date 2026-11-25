@@ -9,4 +9,7 @@ import java.util.List;
 public interface IcandidatoDao extends IDaoBase<Long, Candidato> {
 
 List<Candidato> buscar(candidatoFiltrosDto dto);
+
+
+    List<Candidato> obtenerCandidatosPorId(List<Long> identificadores);
 }

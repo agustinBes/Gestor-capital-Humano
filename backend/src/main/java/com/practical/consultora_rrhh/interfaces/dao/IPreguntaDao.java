@@ -19,4 +19,6 @@ public interface IPreguntaDao extends IDaoBase<Long, Pregunta>, IConsultaOpcionR
 
 
 Pregunta actualizar(Pregunta pregunta, Map<String,String> modificaciones, OpcionRespuesta respuesta,List<Ponderacion> ponderaciones);
+
+    List<Pregunta> obtenerPorCompetencia(List<Long> competencias);
 }

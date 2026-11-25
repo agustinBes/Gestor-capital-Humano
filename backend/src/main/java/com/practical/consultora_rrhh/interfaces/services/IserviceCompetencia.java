@@ -14,4 +14,6 @@ public interface IserviceCompetencia extends IserviceCRUD<Long, competenciaDto, 
 
 
     List<competenciaDto> buscar(String nombre);
+
+
 }

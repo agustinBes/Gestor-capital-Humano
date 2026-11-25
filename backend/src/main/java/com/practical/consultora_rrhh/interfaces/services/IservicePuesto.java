@@ -17,4 +17,6 @@ public interface IservicePuesto extends IserviceCRUD<Long, puestoDto,puestoDtoCr
 public List<PuestoCompetencia> guardarCaracteristicas(List<puestoCompetenciaDtoCreate> caracteristicas);
 
     List<puestoDto> buscar(puestoFiltrosDto dto);
+
+    List<PuestoCompetencia> obtenerPorPuesto(Long id);
 }
