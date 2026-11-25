@@ -5,7 +5,7 @@ import jakarta.validation.constraints.*;
 import java.util.List;
 
 /**
- * Usado para transferir informacion ademas de la gestion de creacion y modificacion
+ * Usado para transferir informacion ademas de la gestion de creacion y modificacion de preguntas
  *
  * @author  Besigniano Agustin
  * @since 1.0
@@ -16,6 +16,8 @@ import java.util.List;
 public record preguntaDtoCreate(
 
         @NotNull(message = "Se requiere un factor")
+        @Positive(message = "el id no puede ser negativo")
+        @Min(value = 1,message = "el id debe ser mayor que 0")
         Long idFactor,
 
         @NotBlank(message = "Se requiere un título para guardar la pregunta")
@@ -33,7 +35,7 @@ public record preguntaDtoCreate(
         Long id_opcionRespuesta,
 
         @NotEmpty(message = "Se requiere al menos una ponderación")
-        List<@Positive(message = "Las ponderaciones deben ser mayores a cero") Short> ponderaciones
+        List<@Min(value = 0, message = "Las ponderaciones deben ser 0 o positivas")Short> ponderaciones
 ) {
 
 

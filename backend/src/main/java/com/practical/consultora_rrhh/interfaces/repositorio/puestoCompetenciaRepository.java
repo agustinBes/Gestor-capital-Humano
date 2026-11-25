@@ -12,4 +12,6 @@ public interface puestoCompetenciaRepository extends JpaRepository<PuestoCompete
     boolean existsByCompetencia_Id(Long competenciaId);
     List<PuestoCompetencia> findByCompetencia_Id(Long competenciaId);
     List<PuestoCompetencia> findByPuesto_Id(Long id);
+    List<PuestoCompetencia> findByPuesto_IdIn(List<Long> ids);
+    boolean existsByCompetencia_IdAndPuesto_Id(Long idCompetencia,Long idPuestoId);
 }

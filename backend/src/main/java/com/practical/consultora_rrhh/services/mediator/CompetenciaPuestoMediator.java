@@ -2,7 +2,10 @@ package com.practical.consultora_rrhh.services.mediator;
 
 import com.practical.consultora_rrhh.interfaces.services.IserviceCompetencia;
 import com.practical.consultora_rrhh.interfaces.services.IservicePuesto;
+import com.practical.consultora_rrhh.modelo.clases.Competencia;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class CompetenciaPuestoMediator extends  GenericMediator<IserviceCompetencia,IservicePuesto> {
@@ -26,6 +29,9 @@ public boolean CompetenciaEnUso(Long idCompetencia){
         return servicePuesto().existeCompetenciaEnUso(idCompetencia);
 }
 
+public List<Competencia> validarCompetencias(List<Long> idCompetencias){
+        return  serviceCompetencia().validarCompetencias(idCompetencias);
+}
 
 
 

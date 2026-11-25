@@ -13,13 +13,15 @@ import jakarta.validation.constraints.*;
  *
  */
 public record opcionDtoCreate(
-        @NotNull
-
-        short fila,
+        @NotNull(message = "La fila no puede ser null y debe ser de tipo entero")
+        @Min(value = 1, message = "La fila debe ser mayor a cero")
+        @Max(value = 32767, message = "El valor máximo es 32767")
+        Short fila,
 
         @NotNull(message = "Se requiere establecer el orden de visualización")
         @Min(value = 1, message = "El orden de visualización debe ser mayor a cero")
-        short orden,
+        @Max(value = 32767, message = "El valor máximo es 32767")
+        Short orden,
 
             @NotBlank(message = "Se requiere al menos una oración que describa la opción")
         @Size(max=100, message = "Longitud excedida")

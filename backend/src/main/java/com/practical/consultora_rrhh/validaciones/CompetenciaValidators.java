@@ -4,7 +4,7 @@ import com.practical.consultora_rrhh.Util.TextoUtils;
 import com.practical.consultora_rrhh.dto.request.competenciaDtoCreate;
 import com.practical.consultora_rrhh.excepciones.genericas.IntegridadComprometidaException;
 import com.practical.consultora_rrhh.interfaces.dao.ICompetenciaDao;
-import com.practical.consultora_rrhh.interfaces.services.IvalidarExistenciaNombreCodigoService;
+import com.practical.consultora_rrhh.interfaces.auxiliares.IvalidarExistenciaNombreCodigoService;
 import com.practical.consultora_rrhh.modelo.clases.Competencia;
 import com.practical.consultora_rrhh.modelo.enums.tipo_campo_duplicado;
 import com.practical.consultora_rrhh.validaciones.comunes.DuplicadoValidators;

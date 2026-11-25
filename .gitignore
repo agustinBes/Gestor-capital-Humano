@@ -51,6 +51,6 @@ backend/.vscode/
 # =========================================================================
 # MIS EXCLUSIONES PERSONALES (Carpetas en la raíz del proyecto)
 # =========================================================================
+backend/src/test/**/*
 
-
-**/backend/**/desarrollo/
+backend/src/main/**/borrador/

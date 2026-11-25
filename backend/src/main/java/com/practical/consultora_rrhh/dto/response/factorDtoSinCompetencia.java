@@ -6,8 +6,7 @@ public record factorDtoSinCompetencia(Long id,
                                       String codigo,
                                       String nombre,
                                       String descripcion,
-                                      short orden,
-                                      boolean eliminacion
+                                      short orden
 
 ) {
 
@@ -16,8 +15,7 @@ public record factorDtoSinCompetencia(Long id,
                 x.getCodigo(),
                 x.getNombre(),
                 x.getDescripcion(),
-                x.getOrden(),
-                x.isEliminacion());
+                x.getOrden());
 
 }
 }

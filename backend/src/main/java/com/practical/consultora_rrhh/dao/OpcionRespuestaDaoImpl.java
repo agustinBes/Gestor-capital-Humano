@@ -5,8 +5,9 @@ import com.practical.consultora_rrhh.interfaces.dao.IOpcionRespuestaDao;
 import com.practical.consultora_rrhh.modelo.clases.Opcion;
 import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
 import com.practical.consultora_rrhh.interfaces.repositorio.opcionRespuestaRepository;
+import com.practical.consultora_rrhh.dao.specifications.TextoSpecifications;
 import jakarta.transaction.Transactional;
-import org.springframework.stereotype.Component;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -70,20 +71,28 @@ public class OpcionRespuestaDaoImpl implements IOpcionRespuestaDao {
      */
     @Transactional
     public void eliminar(OpcionRespuesta opcionRespuesta) {
-   opcionRespuesta.setActivo(false);}
+   opcionRespuesta.setEliminacion(true);}
+    @Transactional
+    public void reactivar(OpcionRespuesta opcionRespuesta) {
+        opcionRespuesta.setEliminacion(false);
+    }
     /**
      * Busca registros por coincidencia parcial
      */
 
     @Override
     public List<OpcionRespuesta> obtenerPorNombreParcial(String texto) {
-        return repository.findByNombreContaining(texto);
+     Specification<OpcionRespuesta> filtro=TextoSpecifications.coincidencia("nombre",texto,true,false);
+     return  repository.findAll(filtro);
+
     }
     /**
      * Busca registros sin distinguir entre  mayúsculas y minúsculas (case-insensitive).
      */
     public boolean existePorNombreInsensible(String nombre) {
-        return repository.existsByNombreIgnoreCase(nombre);
+        Specification<OpcionRespuesta> filtro=TextoSpecifications.coincidencia("nombre",nombre,false,true);
+        return  repository.exists(filtro);
+
     }
     public Optional<OpcionRespuesta> obtenerPorId(Long id) {
         return repository.findById(id);

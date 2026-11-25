@@ -3,6 +3,7 @@ package com.practical.consultora_rrhh.dto.response;
 import com.practical.consultora_rrhh.modelo.clases.Competencia;
 import com.practical.consultora_rrhh.modelo.enums.tipoCompetencia;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public record competenciaDto(
@@ -17,7 +18,7 @@ public competenciaDto(Competencia x){
     this(
             x.getId(),
             x.getCodigo(),
-  x.getFactores().stream()
+  x.getFactores().isEmpty()? new ArrayList<>(): x.getFactores().stream()
                     .map(factorDtoSinCompetencia::new)
                     .toList(),
             x.getNombre(),

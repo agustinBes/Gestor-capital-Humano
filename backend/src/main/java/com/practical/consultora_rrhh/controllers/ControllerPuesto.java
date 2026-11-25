@@ -1,5 +1,7 @@
 package com.practical.consultora_rrhh.controllers;
 
+import com.practical.consultora_rrhh.Util.TextoUtils;
+import com.practical.consultora_rrhh.dto.FiltrosBusqueda.puestoFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.puestoDtoCreate;
 import com.practical.consultora_rrhh.dto.response.puestoDto;
 import com.practical.consultora_rrhh.interfaces.controllers.IcontrollerPuesto;
@@ -33,7 +35,7 @@ public class ControllerPuesto implements IcontrollerPuesto {
         return "Servidor de puestoes de Consultora RRHH funcionando";
     }
 
-    @PostMapping()
+    @PostMapping("/new")
     public ResponseEntity<puestoDto> guardar(@Valid @RequestBody puestoDtoCreate dto) {
         puestoDto aux = service.guardar(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(aux);
@@ -41,14 +43,19 @@ public class ControllerPuesto implements IcontrollerPuesto {
 
 
     @PatchMapping("/update/{id}")
-    public ResponseEntity<puestoDto> actualizar(@PathVariable Long id, @Valid @RequestBody puestoDtoCreate dto) {
-        return ResponseEntity.ok(service.actualizar(id, dto));
+    public ResponseEntity<puestoDto> actualizar(@PathVariable String id, @Valid @RequestBody puestoDtoCreate dto) {
+        Long identificador= TextoUtils.identificador(id);
+
+        return ResponseEntity.ok(service.actualizar(identificador, dto));
     }
 
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> eliminar(@PathVariable Long id) {
-        String respuesta=  service.eliminar(id);
+    @Override
+    @DeleteMapping("/delete/{id}/responsable/{idConsultor}")
+    public ResponseEntity<String> eliminar(@PathVariable String id,  @PathVariable  String idConsultor) {
+        Long identificador= TextoUtils.identificador(id);
+        Long consultor= TextoUtils.identificador(idConsultor);
+        String respuesta=  service.eliminar(identificador, consultor);
         return ResponseEntity.ok(respuesta);
     }
 
@@ -58,9 +65,17 @@ public class ControllerPuesto implements IcontrollerPuesto {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<puestoDto> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(service.obtenerPorId(id));
+    public ResponseEntity<puestoDto> obtenerPorId(@PathVariable String id) {
+        Long identificador= TextoUtils.identificador(id);
+
+        return ResponseEntity.ok(service.obtenerPorId(identificador));
     }
 
+    @Override
+    @GetMapping("/buscar")
+    public ResponseEntity<List<puestoDto>> buscar(@ModelAttribute puestoFiltrosDto dto) {
+        List<puestoDto> result=service.buscar(dto);
 
+    return ResponseEntity.ok(result);
+    }
 }

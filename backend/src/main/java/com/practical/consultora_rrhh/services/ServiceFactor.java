@@ -5,6 +5,7 @@ import com.practical.consultora_rrhh.dto.FiltrosBusqueda.factorFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.auditoriaDtoCreate;
 import com.practical.consultora_rrhh.dto.request.factorDtoCreate;
 import com.practical.consultora_rrhh.dto.response.factorDto;
+import com.practical.consultora_rrhh.excepciones.genericas.ColeccionNotFoundException;
 import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
 import com.practical.consultora_rrhh.interfaces.dao.IFactorDao;
 import com.practical.consultora_rrhh.interfaces.services.IserviceAuditoria;
@@ -19,6 +20,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 /**
@@ -141,18 +143,23 @@ return new factorDto(actual);
      * generar nuevo registro de auditoria
      * eliminar logicamente el factor
      *
-     * @return
      */
     @Override
-    public String eliminar(Long id) {
+    public String eliminar(Long id, Long idConsultor) {
+List<String> eliminados=new ArrayList<>();
     Factor factor=this.obtenerEntidad(id);
-    mediatorPreguntas.eliminarPreguntas(id);
+    if(factor.isEliminacion()){
+        String r=auditoria.buscarAuditor(id, factor.getNombre(),tipoAuditoria.FACTOR );
+        return "El factor "+ factor.getNombre()+" ya fue eliminado del sistema por el consultor "+r;
+    }
+        eliminados.add("Los datos del factor: "+factor.getNombre()+" han sido eliminados del sistema");
+
+ eliminados.addAll( mediatorPreguntas.eliminarPreguntas(id,idConsultor));
         LocalDateTime fecha = LocalDateTime.now();
-        auditoriaDtoCreate aux=new auditoriaDtoCreate(null,factor.getNombre(), tipoAuditoria.FACTOR,fecha, "Juan pepe");
+        auditoriaDtoCreate aux=new auditoriaDtoCreate(null,id,factor.getNombre(), tipoAuditoria.FACTOR,fecha,idConsultor);
 auditoria.crearAuditoria(aux);
-String respuesta="Los datos del factor: "+factor.getNombre()+" han sido eliminados del sistema";
 dao.eliminar(factor);
-    return respuesta;}
+    return String.join("\n",eliminados);}
 //--------------------------------------------------------------------------------------------
     /**
      * Obtener Factor en un formato adecuado  para el controlador
@@ -166,20 +173,28 @@ dao.eliminar(factor);
      */
     public Factor obtenerEntidad(Long id) {
         return    dao.obtenerPorId(id).orElseThrow(() ->
-                new EntityNotFoundException("No se encontró el factor con el id: "+id+" en el sistema"));}
+                new EntityNotFoundException(Factor.class,id.toString()));}
 //--------------------------------------------------------------------------------------------
     /**
      * Validar existencia de una entidad mediante su id
      */
      public void validarEntidad(Long id) {
-if(!dao.existePorId(id)){
-    throw new  EntityNotFoundException("No se encontro el factor con el id: "+id);}}
+         if (!dao.existePorId(id)) {
+             throw new EntityNotFoundException(Factor.class, id.toString());
+         }
+     }
 //--------------------------------------------------------------------------------------------
     public List<factorDto> buscar(factorFiltrosDto dto) {
     validators.validarCriterios(dto);
-    return dao.buscar(dto.factor(), dto.competencia())
+
+    List<factorDto> result= dao.buscar(dto.factor(), dto.competencia())
                 .stream().map(factorDto::new)
-                .toList();}
+                .toList();
+
+        if(result.isEmpty()){
+            throw  new ColeccionNotFoundException();}
+        return result;}
+
 //--------------------------------------------------------------------------------------------
 
     @Override

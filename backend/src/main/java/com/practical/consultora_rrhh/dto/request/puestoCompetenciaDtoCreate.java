@@ -1,17 +1,16 @@
 package com.practical.consultora_rrhh.dto.request;
 
+import com.practical.consultora_rrhh.modelo.clases.Competencia;
+import com.practical.consultora_rrhh.modelo.clases.Puesto;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
 public record puestoCompetenciaDtoCreate(
         @NotBlank(message = "Inconsistencia de datos")
-        Long idPuesto,
+        Puesto puesto,
         @NotBlank(message = "Inconsistencia de datos")
-        Long idCompetencia,
-@NotBlank(message = "Se requiere establecer una ponderaicon valida")
-@Min(value = 0,message = "la ponderacion no puede ser negativa")
-@Max(value = 10,message = "La ponderacion no puede ser mayor de 10")
+Competencia competencia,
         short Ponderacion
 ) {
 }

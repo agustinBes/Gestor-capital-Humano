@@ -34,6 +34,6 @@ public record factorDtoCreate(
         String descripcion,
         @NotNull(message = "se requiere establecer un numero de orden")
         @Positive(message = "el numero de ordeno no puede ser 0 o negativo")
-        short nroOrden
+        Short nroOrden
 ) {
 }

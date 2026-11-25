@@ -6,18 +6,20 @@ import java.time.LocalDateTime;
 
 public record auditoriaDto(
         Long id,
+        Long id_entidad,
         String registro,
         String tipo,
         LocalDateTime fecha,
-       consultorDto consultor
+       String consultor
 ) {
     public auditoriaDto(Auditoria x){
         this(
                 x.getId(),
+                x.getId(),
                 x.getRegistroEliminado(),
                 tipoAuditoria.desdeTipo(x.getAuditoria()),
             x.getFecha(),
-            new consultorDto( x.getResponsible())
+        x.getResponsible().getNombre()+" "+x.getResponsible().getApellido()
         );
     }
 

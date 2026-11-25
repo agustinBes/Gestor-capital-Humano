@@ -4,8 +4,9 @@ import com.practical.consultora_rrhh.Util.TextoUtils;
 import com.practical.consultora_rrhh.dto.FiltrosBusqueda.factorFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.factorDtoCreate;
 import com.practical.consultora_rrhh.excepciones.genericas.FiltroVacioException;
+import com.practical.consultora_rrhh.excepciones.genericas.IntegridadComprometidaException;
 import com.practical.consultora_rrhh.interfaces.dao.IFactorDao;
-import com.practical.consultora_rrhh.interfaces.services.IvalidarExistenciaNombreCodigoService;
+import com.practical.consultora_rrhh.interfaces.auxiliares.IvalidarExistenciaNombreCodigoService;
 import com.practical.consultora_rrhh.modelo.clases.Factor;
 import com.practical.consultora_rrhh.modelo.enums.tipo_campo_duplicado;
 import com.practical.consultora_rrhh.validaciones.comunes.DuplicadoValidators;
@@ -46,6 +47,10 @@ public class FactorValidators     extends DuplicadoValidators implements Ivalida
         Map<String, String> map = new HashMap<>();
         boolean nombre = this.CambioTexto(f.getNombre(), dto.nombre());
         boolean descripcion=this.CambioTexto(f.getDescripcion(), dto.descripcion());
+        String codigo=TextoUtils.normalizar(dto.codigo());
+        if(!f.getCodigo().equals(codigo)){
+            throw new IntegridadComprometidaException("Problemas de integridad no se puede modificar el codigo una vez creado el factor");
+        }
         if(nombre){
 
             this.existePorNombreInsensible(dto.nombre());
@@ -65,7 +70,7 @@ public class FactorValidators     extends DuplicadoValidators implements Ivalida
 
         if (!TextoUtils.tieneContenido(dto.competencia()) &&
                 !TextoUtils.tieneContenido(dto.factor())) {
-            throw new FiltroVacioException("Se requiere completar al menos uno de los campos");
+            throw new FiltroVacioException();
         }
     }
 

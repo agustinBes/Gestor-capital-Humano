@@ -3,7 +3,9 @@ package com.practical.consultora_rrhh.dao;
 import com.practical.consultora_rrhh.interfaces.dao.ICompetenciaDao;
 import com.practical.consultora_rrhh.interfaces.repositorio.competenciaRepository;
 import com.practical.consultora_rrhh.modelo.clases.Competencia;
+import com.practical.consultora_rrhh.dao.specifications.TextoSpecifications;
 import jakarta.transaction.Transactional;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,15 +20,19 @@ public class CompetenciaDaoImpl implements ICompetenciaDao {
     }
 
     public List<Competencia> buscar(String nombre) {
-        return repository.findByNombreIgnoreCaseContaining(nombre);
+        Specification<Competencia> filtro= TextoSpecifications.coincidencia("nombre",nombre,true,false);
+        return  repository.findAll(filtro);
+
     }
 
     public boolean existePorNombreInsensible(String nombre) {
-      return  repository.existsByNombreIgnoreCase(nombre);
+        Specification<Competencia> filtro= TextoSpecifications.coincidencia("nombre",nombre,false,true);
+      return  repository.exists(filtro);
     }
 
     public boolean existePorCodigoInsensible(String codigo) {
-      return  repository.existsByCodigoIgnoreCase(codigo);
+      Specification<Competencia> filtro= TextoSpecifications.coincidencia("codigo",codigo,false,true);
+return  repository.exists(filtro);
     }
 
     public Competencia guardar(Competencia competencia) {
@@ -51,6 +57,10 @@ public class CompetenciaDaoImpl implements ICompetenciaDao {
 @Transactional
     public void eliminar(Competencia competencia) {
         competencia.setEliminacion(true);
+    }
+    @Transactional
+    public void reactivar(Competencia c){
+        c.setEliminacion(false);
     }
 
     public Optional<Competencia> obtenerPorId(Long id) {

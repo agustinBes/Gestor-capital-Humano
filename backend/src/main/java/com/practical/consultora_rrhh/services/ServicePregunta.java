@@ -5,6 +5,8 @@ import com.practical.consultora_rrhh.dto.FiltrosBusqueda.preguntaFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.auditoriaDtoCreate;
 import com.practical.consultora_rrhh.dto.request.preguntaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.preguntaDto;
+import com.practical.consultora_rrhh.excepciones.especializadas.atributos.CantidadOpcionesInvalidException;
+import com.practical.consultora_rrhh.excepciones.genericas.ColeccionNotFoundException;
 import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
 import com.practical.consultora_rrhh.interfaces.dao.IPreguntaDao;
 import com.practical.consultora_rrhh.interfaces.services.IserviceAuditoria;
@@ -12,12 +14,15 @@ import com.practical.consultora_rrhh.interfaces.services.IserviceFactor;
 import com.practical.consultora_rrhh.interfaces.services.IservicePregunta;
 import com.practical.consultora_rrhh.modelo.clases.*;
 import com.practical.consultora_rrhh.modelo.enums.tipoAuditoria;
+import com.practical.consultora_rrhh.services.mediator.CuestionarioPreguntaMediator;
+import com.practical.consultora_rrhh.services.mediator.FactorPreguntaMediator;
 import com.practical.consultora_rrhh.services.mediator.PreguntaOpcionRMediator;
 import com.practical.consultora_rrhh.validaciones.internas.PonderacionValidators;
 import com.practical.consultora_rrhh.validaciones.PreguntaValidators;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -45,19 +50,25 @@ public class ServicePregunta implements IservicePregunta {
     private final IPreguntaDao dao;
     private final IserviceFactor serviceFactor;
     private final PreguntaOpcionRMediator mediador;
+    private final FactorPreguntaMediator factorPreguntaMediator;
     private final IserviceAuditoria auditoria;
+    private final CuestionarioPreguntaMediator cuestionarioMediator;
 
-    public ServicePregunta(PreguntaValidators validators, PonderacionValidators ponderacionValidators, IPreguntaDao dao, IserviceFactor serviceFactor, PreguntaOpcionRMediator mediador, IserviceAuditoria auditoria) {
+    public ServicePregunta(PreguntaValidators validators, PonderacionValidators ponderacionValidators, IPreguntaDao dao, IserviceFactor serviceFactor, PreguntaOpcionRMediator mediador, FactorPreguntaMediator factorPreguntaMediator, IserviceAuditoria auditoria, CuestionarioPreguntaMediator cuestionarioMediator) {
         this.validators = validators;
         this.ponderacionValidators = ponderacionValidators;
         this.dao = dao;
         this.serviceFactor = serviceFactor;
         this.mediador = mediador;
+        this.factorPreguntaMediator = factorPreguntaMediator;
         this.auditoria = auditoria;
+        this.cuestionarioMediator = cuestionarioMediator;
     }
     @PostConstruct
     public void init() {
         mediador.registrarServicioA(this);
+        factorPreguntaMediator.registrarServicioB(this);
+        cuestionarioMediator.registrarServicioA(this);
     }
 //---------------------------------------------------------------------------------------
 
@@ -79,6 +90,8 @@ public class ServicePregunta implements IservicePregunta {
 
 
         OpcionRespuesta opcionRespuesta = mediador.obtenerEntidad(dto.id_opcionRespuesta());
+if(opcionRespuesta.getOpciones().size()!=dto.ponderaciones().size()) {
+    throw new CantidadOpcionesInvalidException("La cantidad de opciones enviada no coincide con la cantidad de opciones de la Opcion de Respuesta");}
 
         List<Ponderacion> ponderaciones = ponderacionValidators.construirPonderaciones(dto.ponderaciones(), opcionRespuesta.getOpciones(), dto.id_opcionRespuesta());
         Pregunta nueva = Pregunta.crear(normalizado.get("titulo"), normalizado.get("pregunta"), dto, opcionRespuesta, f, ponderaciones);
@@ -96,6 +109,11 @@ public class ServicePregunta implements IservicePregunta {
         validators.validarCriterio(dto);
 
         List<Pregunta> resultados = dao.buscar(dto);
+
+        if(resultados.isEmpty()){
+            throw  new ColeccionNotFoundException();}
+
+
         return resultados
                 .stream()
                 .map(preguntaDto::new)
@@ -175,34 +193,56 @@ public class ServicePregunta implements IservicePregunta {
                 .toList();}
 //---------------------------------------------------------------------------------------
     /**
-     *  Validar existencia de la entidad
-     *  Validar que no este siendo usada en el sistema
-     *  Crear Auditoria
-     *  Delegar eliminacion logica de la pregunta al DAO {@link PreguntaDaoImpl}
-     *
+     * Validar existencia de la entidad
+     * Validar que no este siendo usada en el sistema
+     * Crear Auditoria
+     * Delegar eliminacion logica de la pregunta al DAO {@link PreguntaDaoImpl}
+     * <p>
      * ************Agregar validaciones de eliminacion cuando implemente el cuestionario****************
-
+     *
+     * @return
      */
-    public void eliminarPorFactor(Long id){
+    public List<String> eliminarPorFactor(Long id, Long idconsultor){
         List<Pregunta> preguntas=dao.obtenerPorFactor(id);
+        List<String> respuestas=new ArrayList<>();
         preguntas.forEach(pregunta ->
+
                 {
-                    auditoriaDtoCreate aux=new auditoriaDtoCreate(null, pregunta.getNombre(),tipoAuditoria.PREGUNTA, LocalDateTime.now(),"juan pepe");
-auditoria.crearAuditoria(aux);
+                    if(pregunta.getEliminacion()){
+                        String r=auditoria.buscarAuditor(pregunta.getId(), pregunta.getNombre(),tipoAuditoria.PREGUNTA );
+                        respuestas.add( "La pregunta: "+ pregunta.getNombre()+" ya fue eliminado del sistema por el consultor "+r);
+                    }
+                    else{
+                    auditoriaDtoCreate aux=new auditoriaDtoCreate(null,pregunta.getId(), pregunta.getNombre(),tipoAuditoria.PREGUNTA, LocalDateTime.now(),idconsultor);
+                    respuestas.add("Los datos de la Pregunta: "+pregunta.getNombre()+" han sido eliminados del sistema");
+
+                    auditoria.crearAuditoria(aux);
                     dao.eliminar(pregunta);
-                });}
+                }}
+                );
+    return respuestas;}
 
-
-    public String eliminar(Long id) {
-        Pregunta eliminar = this.obtenerEntidad(id);
+//resolver un consultor para crear la auditoria
+    public String eliminar(Long id, Long idConsultor) {
+        Pregunta aux = this.obtenerEntidad(id);
         LocalDateTime fecha = LocalDateTime.now();
-        auditoriaDtoCreate aux = new auditoriaDtoCreate(null, eliminar.getNombre(), tipoAuditoria.PREGUNTA, fecha, "Juan pepe");
-        auditoria.crearAuditoria(aux);
-        String respuesta="Los datos de la Pregunta: "+eliminar.getNombre()+" han sido eliminados del sistema";
-        dao.eliminar(eliminar);
+        if(aux.getEliminacion()){
+            String r=auditoria.buscarAuditor(id, aux.getNombre(),tipoAuditoria.PREGUNTA );
+            return "La pregunta: "+ aux.getNombre()+" ya fue eliminado del sistema por el consultor "+r;
+        }
+
+auditoriaDtoCreate nuevo= new auditoriaDtoCreate(null,id,aux.getNombre(),tipoAuditoria.PREGUNTA,fecha,idConsultor);
+        auditoria.crearAuditoria(nuevo);
+        String respuesta="Los datos de la Pregunta: "+aux.getNombre()+" han sido eliminados del sistema";
+        dao.eliminar(aux);
 
     return respuesta;}
-//---------------------------------------------------------------------------------------
+
+    @Override
+    public List<Pregunta> obtenerPorCompetencia(List<Competencia> competencias) {
+        return  dao.obtenerPorCompetencia(competencias.stream().map(Competencia::getId).toList());
+    }
+    //---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
 
     /**
@@ -217,8 +257,7 @@ auditoria.crearAuditoria(aux);
      */
     public Pregunta obtenerEntidad(Long id) {
             return    dao.obtenerPorId(id).orElseThrow(() ->
-                    new EntityNotFoundException("No se encontró la pregunta con el id: "+id+" en el sistema"));
-
+                    new EntityNotFoundException(Pregunta.class,id.toString()));
         }
 
     /**
