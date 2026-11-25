@@ -51,4 +51,9 @@ candidato.setEliminacion(true);
     public boolean existePorId(Long aLong) {
         return repository.existsById(aLong);
     }
+
+    @Override
+    public List<Candidato> obtenerCandidatosPorId(List<Long> identificadores) {
+        return  repository.findAllById(identificadores);
+    }
 }

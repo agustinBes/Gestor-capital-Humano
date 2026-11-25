@@ -112,6 +112,11 @@ return repository.save(pregunta);
         return repository.findAll();
     }
 
+    @Override
+    public List<Pregunta> obtenerPorCompetencia(List<Long> competencias) {
+        return repository.findByFactor_Competencia_IdIn(competencias);
+    }
+
     /**
      * Eliminar logicamente una pregunta
      */

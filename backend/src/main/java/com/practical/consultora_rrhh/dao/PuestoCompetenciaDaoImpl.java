@@ -77,6 +77,8 @@ repository.delete(x);}
 
     @Override
     public List<PuestoCompetencia> obtenerPorPuesto(Long id) {
+
+
         return repository.findByPuesto_Id(id);
     }
 
