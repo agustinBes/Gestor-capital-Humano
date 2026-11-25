@@ -1,6 +1,8 @@
 package com.practical.consultora_rrhh.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.practical.consultora_rrhh.modelo.clases.Candidato;
 import com.practical.consultora_rrhh.modelo.enums.tipoDocumento;
 import jakarta.validation.constraints.*;
@@ -35,6 +37,8 @@ public record candidatoDto(
 
         @NotBlank(message = "El tipo de documento es obligatorio")
         @Pattern(regexp = "^(DNI|LE|LC|PP)$", message = "El tipo de documento debe ser DNI, LE, LC o PP")
+        @JsonProperty("tipo de Documento")
+        @JsonAlias("tipo")
         String tipo,
 
         @NotBlank(message = "El número de documento es obligatorio")
