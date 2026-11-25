@@ -1,6 +1,6 @@
 package com.practical.consultora_rrhh.modelo.clases;
 
-import com.practical.consultora_rrhh.dto.request.itemCuestionarioDtoCreate;
+import com.practical.consultora_rrhh.dto.request.itemCuestionarioDtoCreateItems;
 import com.practical.consultora_rrhh.modelo.id.itemCuestionarioId;
 import jakarta.persistence.*;
 import lombok.*;
@@ -32,7 +32,7 @@ private short NroBloque;
 
 
 
-public ItemCuestionario(itemCuestionarioDtoCreate dto){
+public ItemCuestionario(itemCuestionarioDtoCreateItems dto){
     puntaje=dto.Puntaje();
     pregunta=dto.pregunta();
     opcion=null;

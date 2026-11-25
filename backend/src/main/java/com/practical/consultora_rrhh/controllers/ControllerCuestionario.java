@@ -1,7 +1,8 @@
 package com.practical.consultora_rrhh.controllers;
 
 import com.practical.consultora_rrhh.Util.TextoUtils;
-import com.practical.consultora_rrhh.dto.response.candidatoDto;
+import com.practical.consultora_rrhh.dto.request.cuestionarioDtoCreate;
+import com.practical.consultora_rrhh.dto.response.cuestionarioDto;
 import com.practical.consultora_rrhh.dto.response.evaluadosDto;
 import com.practical.consultora_rrhh.excepciones.genericas.ErrorExportException;
 import com.practical.consultora_rrhh.interfaces.controllers.IcontrollerCuestionario;
@@ -40,4 +41,13 @@ public class ControllerCuestionario implements IcontrollerCuestionario {
                 .contentType(MediaType.parseMediaType("text/csv ; charset=UTF-8"))
                 .body(result);
     }
+
+    @PatchMapping("/cuestionario/{id}/editar")
+    @Override
+    public ResponseEntity<cuestionarioDto> preguntaContestadas(@Valid cuestionarioDtoCreate cuestionario, @PathVariable String id) {
+        Long identificador = TextoUtils.identificador(id);
+cuestionarioDto actual=service.actualizarCuestionario(cuestionario,identificador);
+        return null;
+    }
+
 }

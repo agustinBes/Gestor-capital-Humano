@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 public class Bloque {
     private List<ItemCuestionario> itemCuestionario;
-   private  Integer numeroBloque;
+   private  short numeroBloque;
     private Long idCuestionario;
     boolean completado;
 

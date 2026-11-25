@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  *  Representa una Puesto de trabajo al que van a aplicar los candidatos
@@ -37,4 +38,15 @@ private String empresa;
 @Column()
     private boolean eliminacion;
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Puesto puesto = (Puesto) o;
+        return Objects.equals(id, puesto.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }

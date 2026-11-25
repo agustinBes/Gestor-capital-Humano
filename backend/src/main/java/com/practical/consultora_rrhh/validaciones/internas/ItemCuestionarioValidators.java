@@ -1,6 +1,8 @@
 package com.practical.consultora_rrhh.validaciones.internas;
 
 import com.practical.consultora_rrhh.dto.request.itemCuestionarioDtoCreate;
+import com.practical.consultora_rrhh.dto.request.itemCuestionarioDtoCreateItems;
+import com.practical.consultora_rrhh.modelo.clases.Cuestionario;
 import com.practical.consultora_rrhh.modelo.clases.ItemCuestionario;
 import com.practical.consultora_rrhh.modelo.clases.Pregunta;
 
@@ -21,7 +23,7 @@ int i=1;
 
 if(!lista.isEmpty()){
                 Pregunta pregunta = lista.getFirst();
-                itemCuestionarioDtoCreate nuevo = new itemCuestionarioDtoCreate(pregunta, (short) i);
+                itemCuestionarioDtoCreateItems nuevo = new itemCuestionarioDtoCreateItems(pregunta, (short) i);
                 items.add(new ItemCuestionario(nuevo));
                 lista.removeFirst();
             }}
@@ -29,6 +31,13 @@ if(!lista.isEmpty()){
         return items;
     }
 
+    public static void validarItems(Cuestionario actual, List<itemCuestionarioDtoCreate> items) {
+  Long identificador = actual.getId();
+
+  for (itemCuestionarioDtoCreate item : items) {
+  Long pregunta=item.idpregunta();
+  }
+    }
 }
 
 
