@@ -6,6 +6,8 @@ import lombok.*;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
 import java.util.List;
+import java.util.Objects;
+
 /**
  * Representa una cualidad a evaluar cuando se aplica a un puesto de trabajo
 
@@ -42,4 +44,16 @@ public class Competencia {
     private tipoCompetencia tipoCompetencia;
     @Column (name="eliminacion")
     private boolean eliminacion;
-  }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Competencia that = (Competencia) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+}

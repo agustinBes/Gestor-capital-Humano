@@ -1,13 +1,12 @@
 package com.practical.consultora_rrhh.modelo.clases;
 
 import com.practical.consultora_rrhh.modelo.enums.tipoEstado;
-import jakarta.annotation.Generated;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
 
-import java.lang.invoke.CallSite;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -32,17 +31,124 @@ public class Cuestionario {
     @Column()
     tipoEstado estado;
     @Column(name = "cantidad_bloques")
-private short NroBloques=0;
+private short NroBloques;
     @Column(name = "fecha_inicio")
     private LocalDateTime fechaInicio;
     @Column(name = "fecha_intento")
     private LocalDateTime fechaIntento;
+    @Column(name = "fecha_creacion")
+    private LocalDateTime fechaCreacion;
     @Column
-    private short puntaje=0;
+    private short puntaje;
     @Column
 private String clave;
     @Column(name="nro_acceso")
-    private short NroAccesos=4;
+    private short NroAccesos;
 @OneToMany(mappedBy = "cuestionario", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<ItemCuestionario> items;
+
+public static Cuestionario GenerarCuestioario(Puesto puesto, Candidato candidato, List<ItemCuestionario> items, Short bloques, String clave, short NroAccesos) {
+    Cuestionario nuevo= Cuestionario.builder()
+            .id(null)
+            .candidato(candidato)
+            .estado(tipoEstado.ACTIVO)
+            .fechaInicio(null)
+            .fechaIntento(null)
+            .fechaCreacion(LocalDateTime.now())
+            .puesto(puesto)
+            .NroAccesos(NroAccesos )
+            .NroBloques( bloques)
+            .clave(clave)
+            .items(items)
+            .puntaje((short) 0)
+            .build();
+    items.forEach(item->{item.setCuestionario(nuevo);});
+    return nuevo;
 }
+
+public void validarEstado(Duration tiempoMaximoActivo,Duration tiempoMaximoRealizacion){
+
+    LocalDateTime actual= LocalDateTime.now();
+    switch (estado) {
+        case ACTIVO -> {
+            if (actual.isAfter(fechaCreacion.plus(tiempoMaximoActivo))) {
+                estado = tipoEstado.SIN_CONTESTAR;
+                fechaIntento = actual;
+            }
+        }
+
+        case EN_PROCESO -> {
+            if (actual.isAfter(fechaInicio.plus(tiempoMaximoRealizacion))) {
+                estado = tipoEstado.INCOMPLETO;
+                fechaIntento = actual;
+            }
+        }
+
+        default -> {
+            // No requiere validación temporal.
+        }
+    }
+}
+//Solo para el candidato cuando ingresa por primera vez
+public void primerIngreso(short cantidadAcceso,Duration tiempoMaximoActivo,Duration tiempoMaximoRealizacion){
+    if(cantidadAcceso==NroAccesos){
+                LocalDateTime ahora = LocalDateTime.now();
+
+         superatiempoMaximoActivo(tiempoMaximoActivo);
+         superaTiempoMaximoRealizacion(tiempoMaximoRealizacion);
+         if(estado==tipoEstado.ACTIVO) {
+
+             fechaInicio = ahora;
+             NroAccesos = (short) (NroAccesos - 1);
+             estado = tipoEstado.EN_PROCESO;
+         }
+    }
+}
+
+public void superaTiempoMaximoRealizacion(Duration tiempo) {
+    LocalDateTime actual= LocalDateTime.now();
+
+    if (estado != tipoEstado.INCOMPLETO
+            && estado != tipoEstado.COMPLETADO) {
+    if(actual.isAfter(fechaCreacion.plus(tiempo))) {
+        estado=tipoEstado.INCOMPLETO;
+        fechaIntento = actual;
+           }}
+
+}
+public void superatiempoMaximoActivo(Duration tiempo) {
+    LocalDateTime ahora= LocalDateTime.now();
+if(estado ==tipoEstado.ACTIVO) {
+    if (ahora.isAfter(fechaCreacion.plus(tiempo))) {
+        estado = tipoEstado.SIN_CONTESTAR;
+        fechaIntento = ahora;
+    }
+}}
+//    public String actualizarEstado(Duration tiempoMaximoRealizacion,Duration tiempoMaximoActivo,short cantidadAccesos) {
+//if(NroAccesos==cantidadAccesos){
+//
+//    if(estado==tipoEstado.ACTIVO) { superatiempoMaximoActivo(tiempoMaximoActivo);}
+//    superaTiempoMaximoRealizacion(tiempoMaximoRealizacion);
+//}
+//else{
+//
+//}}
+    public void completado(List<Bloque> bloques){
+
+        long cantidadTotal = bloques.size();
+        long cantidad = bloques.stream()
+                .filter(Bloque::isCompletado)
+                .count();
+if(cantidad==cantidadTotal) {
+    estado = tipoEstado.COMPLETADO;
+    fechaIntento = LocalDateTime.now();
+}
+
+
+
+}
+
+
+
+}
+

@@ -1,16 +1,15 @@
 package com.practical.consultora_rrhh.modelo.clases;
 
+import com.practical.consultora_rrhh.dto.request.itemCuestionarioDtoCreate;
 import com.practical.consultora_rrhh.modelo.id.itemCuestionarioId;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name="item_cuestionario")
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @EqualsAndHashCode
 public class ItemCuestionario {
@@ -31,4 +30,14 @@ private Short opcion;
 @Column(name = "nro_bloque")
 private short NroBloque;
 
+
+
+public ItemCuestionario(itemCuestionarioDtoCreate dto){
+    puntaje=dto.Puntaje();
+    pregunta=dto.pregunta();
+    opcion=null;
+    NroBloque=dto.NroBloque();
+    cuestionario=null;
+    item=null;
+}
 }

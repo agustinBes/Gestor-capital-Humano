@@ -4,6 +4,8 @@ import com.practical.consultora_rrhh.dto.response.factorDto;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Objects;
+
 /**
 *  Representa un factor o aspecto específico de una competencia
 * requerida para un puesto de trabajo.
@@ -49,5 +51,23 @@ private String descripcion;
 @Column()
     private boolean eliminacion;
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Factor factor = (Factor) o;
+        return Objects.equals(id, factor.id);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
+    @Override
+    public String toString() {
+        return "Factor{" +
+                "id=" + id +
+                ", nombre='" + nombre + '\'' +
+                '}';
+    }
 }

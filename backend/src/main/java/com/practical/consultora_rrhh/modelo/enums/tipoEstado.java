@@ -4,7 +4,8 @@ public enum tipoEstado {
     COMPLETADO,
     ACTIVO,
     INCOMPLETO,
-    EN_PROCESO;
+    EN_PROCESO,
+    SIN_CONTESTAR;
 
     public static tipoEstado desdeString(String valor) {
         return tipoEstado.valueOf(valor.toUpperCase());

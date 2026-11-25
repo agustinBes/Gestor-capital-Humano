@@ -62,4 +62,13 @@ public class Pregunta {
                 .eliminacion(false)
                 .build();
     }
+
+    @Override
+    public String toString() {
+        return "Pregunta{" +
+                "id=" + id +
+               factor.toString() +
+                ", nombre='" + nombre + '\'' +
+                ", pregunta='" + pregunta + '\'' ;
+    }
 }
