@@ -22,7 +22,7 @@ public class EntityNotFoundException extends RuntimeException {
                 case "Candidato" -> "el candidato";
                 case "Consultor" -> "el consultor";
                 case "Puesto" -> "el puesto";
-                default -> "el registro";
+                               default -> "el registro";
             };
 
             return String.format("No se encontró %s con el id %s en el sistema", articuloYEntidad, id);

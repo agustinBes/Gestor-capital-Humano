@@ -4,4 +4,7 @@ public class ColeccionNotFoundException extends EntityNotFoundException {
     public ColeccionNotFoundException( ) {
         super("No se encontraron resultados de busqueda");
     }
+    public ColeccionNotFoundException( String message ) {
+        super(message);
+    }
 }

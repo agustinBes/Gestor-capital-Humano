@@ -1,6 +1,7 @@
 package com.practical.consultora_rrhh.excepciones;
 
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
+import com.practical.consultora_rrhh.excepciones.especializadas.atributos.CuestionarioActivoException;
 import com.practical.consultora_rrhh.excepciones.especializadas.atributos.SumaPonderacionesInvalidException;
 import com.practical.consultora_rrhh.excepciones.genericas.*;
 import org.springframework.http.HttpStatus;
@@ -12,14 +13,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
 import tools.jackson.databind.exc.InvalidFormatException;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**Controlador de excepciones globales de excepciones genericas para poder gestionar excepciones de multiples clases
  * aprovecha la generacion de excepciones especializadas que heredan de estas genericas
@@ -29,10 +28,10 @@ import java.util.stream.Collectors;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-//-------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------
 // ----------------Personalizados---------------------------------
 //-------------------------------------------------------------------------------------
-     private ResponseEntity<Map<String, Object>> respuesta(HttpStatus s, String mensaje) {
+    private ResponseEntity<Map<String, Object>> respuesta(HttpStatus s, String mensaje) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("status", s.value());
         body.put("error", s.getReasonPhrase());
@@ -40,41 +39,50 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(s).body(body);
     }
+
     @ExceptionHandler(InvalidFormatException.class)
     public ResponseEntity<Map<String, Object>> invalidFormat(InvalidFormatException e) {
-return  respuesta(HttpStatus.BAD_REQUEST, e.getMessage());    }
-//Duplicados de nombre y codigo
+        return respuesta(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    //Duplicados de nombre y codigo
     @ExceptionHandler(DuplicadoException.class)
     public ResponseEntity<Map<String, Object>> manejarDuplicado(
             DuplicadoException e) {
-return respuesta(HttpStatus.CONFLICT,e.getMessage());
-          }
-          @ExceptionHandler(CorruptFileException.class)
-          public ResponseEntity<Map<String, Object>> handleIOException(IOException e){
-         return respuesta(HttpStatus.UNPROCESSABLE_CONTENT,e.getMessage());
-          }
-//Ponderaciones en la pregunta
+        return respuesta(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(FileException.class)
+    public ResponseEntity<Map<String, Object>> handleIOException(FileException e) {
+        return respuesta(e.getStatus(), e.getMessage());
+    }
+
+    //Ponderaciones en la pregunta
     @ExceptionHandler(SumaPonderacionesInvalidException.class)
     public ResponseEntity<Map<String, Object>> manejarSumaPonderacionesInvalid(SumaPonderacionesInvalidException e) {
 
-        return respuesta(HttpStatus.BAD_REQUEST,e.getMessage());
+        return respuesta(HttpStatus.BAD_REQUEST, e.getMessage());
     }
+
     //Ausencia de entidad con id :x
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<Map<String,Object>> manejarObjectNotFound(EntityNotFoundException e) {
+    public ResponseEntity<Map<String, Object>> manejarObjectNotFound(EntityNotFoundException e) {
         return respuesta(HttpStatus.NOT_FOUND, e.getMessage());
 
     }
+
     @ExceptionHandler(ColeccionNotFoundException.class)
-    public ResponseEntity<Map<String,Object>> manejarColeccionNotFound(ColeccionNotFoundException e) {
-         return respuesta(HttpStatus.NOT_FOUND,e.getMessage());
+    public ResponseEntity<Map<String, Object>> manejarColeccionNotFound(ColeccionNotFoundException e) {
+        return respuesta(HttpStatus.NOT_FOUND, e.getMessage());
     }
+
     @ExceptionHandler(EntidadEnUsoException.class)
-    public ResponseEntity<Map<String, Object>> manejarEntidadEnUso(EntidadEnUsoException e){
-        return respuesta(HttpStatus.CONFLICT,e.getMessage());
+    public ResponseEntity<Map<String, Object>> manejarEntidadEnUso(EntidadEnUsoException e) {
+        return respuesta(HttpStatus.CONFLICT, e.getMessage());
     }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String,Object>> manejarAtributoInvalido(
+    public ResponseEntity<Map<String, Object>> manejarAtributoInvalido(
             MethodArgumentNotValidException e) {
         BindingResult bindingResult = e.getBindingResult();
 
@@ -104,28 +112,30 @@ return respuesta(HttpStatus.CONFLICT,e.getMessage());
     }
 
     @ExceptionHandler(AtributoInvalidoException.class)
-    public ResponseEntity<Map<String,Object>> manejarArgumentoInvalido(AtributoInvalidoException e) {
-        return respuesta(HttpStatus.BAD_REQUEST,e.getMessage());
+    public ResponseEntity<Map<String, Object>> manejarArgumentoInvalido(AtributoInvalidoException e) {
+        return respuesta(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Map<String,Object>> manejarErrorTipo(
+    public ResponseEntity<Map<String, Object>> manejarErrorTipo(
             MethodArgumentTypeMismatchException e) {
         return respuesta(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     @ExceptionHandler(FiltroVacioException.class)
-    public ResponseEntity<Map<String,Object>> manejarFiltro(FiltroVacioException e) {
-        return respuesta(HttpStatus.BAD_REQUEST,e.getMessage()) ;
-      }
-      @ExceptionHandler(IntegridadComprometidaException.class)
-      public ResponseEntity<Map<String,Object>> manejarIntegridad(IntegridadComprometidaException e) {
-         return respuesta(HttpStatus.BAD_REQUEST,e.getMessage());
-      }
+    public ResponseEntity<Map<String, Object>> manejarFiltro(FiltroVacioException e) {
+        return respuesta(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(IntegridadComprometidaException.class)
+    public ResponseEntity<Map<String, Object>> manejarIntegridad(IntegridadComprometidaException e) {
+        return respuesta(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
     //-----------------------------------------------------------------------
     @ExceptionHandler({HttpMessageNotReadableException.class, RuntimeJsonMappingException.class})
-    public ResponseEntity<Map<String,Object>> manejarNumberFormat(Exception e) {
+    public ResponseEntity<Map<String, Object>> manejarNumberFormat(Exception e) {
         String mensajeAmigable = "El formato del JSON es inválido o contiene valores malformados.";
 
         if (e.getMessage().contains("Unrecognized token") || e.getMessage().contains("Unexpected character")) {
@@ -142,14 +152,21 @@ return respuesta(HttpStatus.CONFLICT,e.getMessage());
             return respuesta(HttpStatus.BAD_REQUEST, "El valor está fuera del rango permitido para un short (1 a 32767).");
         }
 
-        return respuesta(HttpStatus.BAD_REQUEST,e.getMessage());
-         }
-         @ExceptionHandler(UnsupportedOperationException.class)
-    public ResponseEntity<Map<String,Object>> manejarUnicode(UnsupportedOperationException e) {
-             Map<String, Object> map = new HashMap<>();
-             map.put("error", HttpStatus.NOT_IMPLEMENTED.value());
-             map.put("mensaje", "Metodo no implementado en esta version");
-             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+        return respuesta(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
 
-         }
+    @ExceptionHandler(UnsupportedOperationException.class)
+    public ResponseEntity<Map<String, Object>> manejarUnicode(UnsupportedOperationException e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("error", HttpStatus.NOT_IMPLEMENTED.value());
+        map.put("mensaje", "Metodo no implementado en esta version");
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(map);
+
+    }
+//------Handlers relacionados con el proceso de creacion del cuestionario-
+
+    @ExceptionHandler(CuestionarioException.class)
+    public ResponseEntity<Map<String, Object>> manejarColeccionCorrupta(CuestionarioException e) {
+        return respuesta(e.getStatus(),e.getMessage());
+    }
 }
