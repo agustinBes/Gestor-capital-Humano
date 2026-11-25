@@ -35,7 +35,7 @@ public record preguntaDtoCreate(
         Long id_opcionRespuesta,
 
         @NotEmpty(message = "Se requiere al menos una ponderación")
-        List<@Positive(message = "Las ponderaciones deben ser mayores a cero") Short> ponderaciones
+        List<@Min(value = 0, message = "Las ponderaciones deben ser 0 o positivas")Short> ponderaciones
 ) {
 
 
