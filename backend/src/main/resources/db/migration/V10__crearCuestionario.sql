@@ -1,15 +1,14 @@
-CREATE TYPE tipo_estado AS ENUM ('ACTIVO',   'COMPLETADO','INCOMPLETO','EN_PROCESO');
+CREATE TYPE tipo_estado AS ENUM ('ACTIVO',   'COMPLETADO','INCOMPLETO','EN_PROCESO','SIN_CONTESTAR');
 
 
 CREATE TABLE cuestionario (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_candidato BIGINT NOT NULL,
     id_puesto BIGINT NOT NULL,
-
     estado tipo_estado NOT NULL DEFAULT 'ACTIVO',
-
     fecha_inicio TIMESTAMP(0),
-    fecha_intento TIMESTAMP,
+    fecha_intento TIMESTAMP(0),
+    fecha_creacion TIMESTAMP(0) NOT NULL ,
     cantidad_bloques SMALLINT NOT NULL,
     puntaje SMALLINT ,
 

@@ -56,12 +56,12 @@ VALUES
 -- Desarrollador Backend (1)
 (1, 3, 4),
 (1, 9, 3),
-(1, 10, 3),
+
 
 -- Desarrollador Frontend (2)
 (2, 3, 5),
 (2, 5, 2),
-(2, 6, 3),
+
 
 -- Analista de Recursos Humanos (3)
 (3, 4, 5),
@@ -80,8 +80,7 @@ VALUES
 
 -- Analista Contable (6)
 (6, 1, 4),
-(6, 8, 3),
-(6, 9, 3),
+
 
 -- Especialista en Marketing Digital (7)
 (7, 1, 3),
