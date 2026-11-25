@@ -1,9 +1,9 @@
-package com.practical.consultora_rrhh.interfaces.auxiliares.auth;
+package com.practical.consultora_rrhh.interfaces.auxiliares;
 
 import com.practical.consultora_rrhh.modelo.clases.Consultor;
 
 public interface Iconsultor {
 
     Consultor obtenerConsultor(Long id);
-    Consultor obtenerConsultor(String usuario);
+   default Consultor obtenerConsultor(String usuario){return  null;};
 }

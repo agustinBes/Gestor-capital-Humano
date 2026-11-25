@@ -5,7 +5,8 @@ import com.practical.consultora_rrhh.dto.FiltrosBusqueda.candidatoFiltrosDto;
 import com.practical.consultora_rrhh.dto.request.candidatoDtoCreate;
 import com.practical.consultora_rrhh.dto.response.candidatoDto;
 import com.practical.consultora_rrhh.excepciones.genericas.CorruptFileException;
-import com.practical.consultora_rrhh.interfaces.auxiliares.auth.Iconsultor;
+
+import com.practical.consultora_rrhh.interfaces.auxiliares.Iconsultor;
 import com.practical.consultora_rrhh.interfaces.controllers.IcontrollerCandidato;
 import com.practical.consultora_rrhh.interfaces.repositorio.archivoRepository;
 import com.practical.consultora_rrhh.interfaces.services.IserviceCandidato;
