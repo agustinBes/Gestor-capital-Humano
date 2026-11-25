@@ -26,6 +26,7 @@ import java.util.Map;
 public class ServiceCompetencia implements IserviceCompetencia {
 
     private final ICompetenciaDao dao;
+
     private final FactorCompetenciaMediator mediatorFactor;
     private final CompetenciaPuestoMediator mediatorPuesto;
     private final CompetenciaValidators validators;
@@ -144,4 +145,5 @@ String respuesta="Los datos de la Competencia: "+competencia.getNombre()+" han s
         }
         return list;
     }
+
 }

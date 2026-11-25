@@ -14,6 +14,7 @@ import com.practical.consultora_rrhh.interfaces.services.IserviceFactor;
 import com.practical.consultora_rrhh.interfaces.services.IservicePregunta;
 import com.practical.consultora_rrhh.modelo.clases.*;
 import com.practical.consultora_rrhh.modelo.enums.tipoAuditoria;
+import com.practical.consultora_rrhh.services.mediator.CuestionarioPreguntaMediator;
 import com.practical.consultora_rrhh.services.mediator.FactorPreguntaMediator;
 import com.practical.consultora_rrhh.services.mediator.PreguntaOpcionRMediator;
 import com.practical.consultora_rrhh.validaciones.internas.PonderacionValidators;
@@ -51,8 +52,9 @@ public class ServicePregunta implements IservicePregunta {
     private final PreguntaOpcionRMediator mediador;
     private final FactorPreguntaMediator factorPreguntaMediator;
     private final IserviceAuditoria auditoria;
+    private final CuestionarioPreguntaMediator cuestionarioMediator;
 
-    public ServicePregunta(PreguntaValidators validators, PonderacionValidators ponderacionValidators, IPreguntaDao dao, IserviceFactor serviceFactor, PreguntaOpcionRMediator mediador, FactorPreguntaMediator factorPreguntaMediator, IserviceAuditoria auditoria) {
+    public ServicePregunta(PreguntaValidators validators, PonderacionValidators ponderacionValidators, IPreguntaDao dao, IserviceFactor serviceFactor, PreguntaOpcionRMediator mediador, FactorPreguntaMediator factorPreguntaMediator, IserviceAuditoria auditoria, CuestionarioPreguntaMediator cuestionarioMediator) {
         this.validators = validators;
         this.ponderacionValidators = ponderacionValidators;
         this.dao = dao;
@@ -60,11 +62,13 @@ public class ServicePregunta implements IservicePregunta {
         this.mediador = mediador;
         this.factorPreguntaMediator = factorPreguntaMediator;
         this.auditoria = auditoria;
+        this.cuestionarioMediator = cuestionarioMediator;
     }
     @PostConstruct
     public void init() {
         mediador.registrarServicioA(this);
         factorPreguntaMediator.registrarServicioB(this);
+        cuestionarioMediator.registrarServicioA(this);
     }
 //---------------------------------------------------------------------------------------
 
@@ -233,7 +237,12 @@ auditoriaDtoCreate nuevo= new auditoriaDtoCreate(null,id,aux.getNombre(),tipoAud
         dao.eliminar(aux);
 
     return respuesta;}
-//---------------------------------------------------------------------------------------
+
+    @Override
+    public List<Pregunta> obtenerPorCompetencia(List<Competencia> competencias) {
+        return  dao.obtenerPorCompetencia(competencias.stream().map(Competencia::getId).toList());
+    }
+    //---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
 
     /**

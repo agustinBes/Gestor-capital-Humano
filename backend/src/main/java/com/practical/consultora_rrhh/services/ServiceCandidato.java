@@ -12,9 +12,11 @@ import com.practical.consultora_rrhh.excepciones.genericas.*;
 import com.practical.consultora_rrhh.interfaces.dao.IcandidatoDao;
 import com.practical.consultora_rrhh.interfaces.services.IserviceCandidato;
 import com.practical.consultora_rrhh.modelo.clases.Candidato;
+import com.practical.consultora_rrhh.services.mediator.CandidatoCuestionarioMediator;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.ConstraintViolation;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import jakarta.validation.Validator;
 import java.io.*;
@@ -49,15 +51,18 @@ public class ServiceCandidato implements IserviceCandidato {
     private  int creados=0;
 private final Validator validador;
 private  final IcandidatoDao dao;
+private final CandidatoCuestionarioMediator cuestionarioaMediator;
 
-
-    public ServiceCandidato(Validator validador, IcandidatoDao dao) {
+    public ServiceCandidato(Validator validador, IcandidatoDao dao, CandidatoCuestionarioMediator cuestionarioaMediator) {
         this.dao = dao;
         this.validador = validador;
+        this.cuestionarioaMediator = cuestionarioaMediator;
     }
 @PostConstruct
 public void inicializar(){
+
         creados=dao.obtenerTodos().size();
+        cuestionarioaMediator.registrarServicioB(this);
 }
 
 
@@ -115,14 +120,14 @@ if(existe>0){return "Algunos Nros de candidatos ya existen en el sistema.Verific
 
 return  "Se crearon todos los candidatos";
         } catch (IOException e) {
-            throw new CorruptFileException("El archivo esta corrupto o dañado");
+            throw new CorruptFileException(HttpStatus.UNPROCESSABLE_CONTENT,"El archivo esta corrupto o dañado");
         }
     }
 
 
 
 
-    public List<candidatoDto> transformarCsv(InputStream inputStream) {
+    public List<candidatoDto> transformarCsv(InputStream inputStream) throws CorruptFileException {
         List<candidatoDto> candidatos = new ArrayList<>();
         CsvSchema candidatoSchema = CsvSchema.emptySchema().withHeader();
         CsvMapper csvMapper = new CsvMapper();
@@ -156,7 +161,7 @@ return  "Se crearon todos los candidatos";
     RuntimeJsonMappingException e) {
         throw e; // Deja que lo maneje @ExceptionHandler y devuelva 400
     } catch (Exception e) {
-        throw new RuntimeException("Error al procesar el archivo CSV: " + e.getMessage(), e);
+        throw new CorruptFileException(HttpStatus.UNPROCESSABLE_CONTENT,"Error al procesar el archivo CSV: " + e.getMessage());
     }
     }
     @Override
@@ -177,7 +182,19 @@ throw new FiltroVacioException();
     }
 
 
-public boolean validarFiltros(candidatoFiltrosDto filtro) {
+
+    @Override
+    public List<Candidato> obtenerCandidatos(List<Long> candidatos) {
+         int cantidad=candidatos.size();
+     List<Candidato> lista=dao.obtenerCandidatosPorId(candidatos);
+if(cantidad!=lista.size()){
+    throw new ColeccionCorruptaException("Hay candidatos que no existen en el sistema, Error de integridad referencial");
+}
+
+return lista;
+   }
+
+    public boolean validarFiltros(candidatoFiltrosDto filtro) {
 return filtro.id()!=null | TextoUtils.tieneContenido(filtro.apellido()) | TextoUtils.tieneContenido(filtro.nombre());}
 
 

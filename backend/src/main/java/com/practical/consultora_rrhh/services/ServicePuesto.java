@@ -5,6 +5,7 @@ import com.practical.consultora_rrhh.dto.request.auditoriaDtoCreate;
 import com.practical.consultora_rrhh.dto.request.puestoCompetenciaDtoCreate;
 import com.practical.consultora_rrhh.dto.request.puestoDtoCreate;
 import com.practical.consultora_rrhh.dto.response.puestoDto;
+import com.practical.consultora_rrhh.excepciones.genericas.ColeccionNotFoundException;
 import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
 import com.practical.consultora_rrhh.excepciones.genericas.FiltroVacioException;
 import com.practical.consultora_rrhh.interfaces.dao.IPuestoDao;
@@ -17,6 +18,7 @@ import com.practical.consultora_rrhh.modelo.clases.Puesto;
 import com.practical.consultora_rrhh.modelo.clases.PuestoCompetencia;
 import com.practical.consultora_rrhh.modelo.enums.tipoAuditoria;
 import com.practical.consultora_rrhh.services.mediator.CompetenciaPuestoMediator;
+import com.practical.consultora_rrhh.services.mediator.PuestoCuestionarioMediator;
 import com.practical.consultora_rrhh.validaciones.PuestoValidators;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ServicePuesto implements IservicePuesto {
@@ -32,18 +35,22 @@ public class ServicePuesto implements IservicePuesto {
     private final CompetenciaPuestoMediator mediatorCompetencia;
     private final PuestoValidators validators;
     private final IserviceAuditoria auditoria;
+    private final PuestoCuestionarioMediator cuestionarioMediator;
 
-    public ServicePuesto(IPuestoDao dao, IpuestoCompetenciaDao puestoCompetenciaDao, CompetenciaPuestoMediator mediatorCompetencia, PuestoValidators validators, IserviceAuditoria auditoria) {
+    public ServicePuesto(IPuestoDao dao, IpuestoCompetenciaDao puestoCompetenciaDao, CompetenciaPuestoMediator mediatorCompetencia, PuestoValidators validators, IserviceAuditoria auditoria, PuestoCuestionarioMediator cuestionarioMediator) {
         this.dao = dao;
         this.puestoCompetenciaDao = puestoCompetenciaDao;
         this.mediatorCompetencia = mediatorCompetencia;
         this.validators = validators;
         this.auditoria = auditoria;
+        this.cuestionarioMediator = cuestionarioMediator;
     }
 
     @PostConstruct
     public void init() {
+
         mediatorCompetencia.registrarServicioB(this);
+       cuestionarioMediator.registrarServicioA(this);
     }
 
 
@@ -187,5 +194,11 @@ List<PuestoCompetencia> respuesta = new ArrayList<>();
             }
         return puestoCompetenciaDao.actualizarPuestoCompetencia(p.getId(),respuesta);
     }
+    public List<PuestoCompetencia> obtenerPorPuesto(Long id) {
+ List<PuestoCompetencia> obtenidos=  puestoCompetenciaDao.obtenerPorPuesto(id);
+    //    System.out.println(obtenidos.stream().map(o->o.getCompetencia().getNombre()).collect(Collectors.joining()));
+    return obtenidos;
+    }
+
     }
 
