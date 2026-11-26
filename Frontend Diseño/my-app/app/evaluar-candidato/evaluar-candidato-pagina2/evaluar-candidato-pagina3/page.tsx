@@ -9,7 +9,7 @@ export default function EvaluarCandidatoPagina3() {
    const [mostrarModal, setMostrarModal] = useState(false);
 
 
-   const [paddingArriba, setPaddingArriba] = useState("17rem");
+   const [paddingArriba, setPaddingArriba] = useState("12rem");
 
    useEffect(() => {const ajustarPadding = () => {if (window.innerWidth < 1400) {setPaddingArriba("1rem");
      } else {setPaddingArriba("12rem");  }};

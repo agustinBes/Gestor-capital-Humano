@@ -8,7 +8,7 @@ import Link from "next/dist/client/link";
 
 export default function EvaluarCandidatoPagina2() {
   const [funcion, setFuncion] = useState("");
-  const [paddingArriba, setPaddingArriba] = useState("17rem");
+  const [paddingArriba, setPaddingArriba] = useState("9rem");
   const opciones = [
     "Consultor",
     "Analista",
@@ -22,7 +22,7 @@ export default function EvaluarCandidatoPagina2() {
      window.addEventListener("resize", ajustarPadding);
     return () => window.removeEventListener("resize", ajustarPadding);}, []);
 
-    
+
   return (
 
     <div style={{
