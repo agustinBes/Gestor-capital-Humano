@@ -21,7 +21,7 @@ import java.util.*;
  * OpcionRespuesta y delega las validaciones específicas de cada
  * opción a {@link OpcionValidators}.
  * Ante el incumplimiento de una regla de negocio, lanza excepciones
- * personalizadas que permiten identificar el tipo de error producido.
+ * personalizadas que permiten identificar el tipoDocumento de error producido.
  *
 * @author  Besigniano Agustin
  @since 1.0

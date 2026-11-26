@@ -8,7 +8,7 @@ import java.util.List;
  *
  * @param <DtoRequest> usado para gestionar creacion y modificacion de entidades
  * @param <DtoResponse> usado para transmitir informacion al usuario
- * @param <Id>  definimos el tipo de clave primaria usada por la entidad
+ * @param <Id>  definimos el tipoDocumento de clave primaria usada por la entidad
  *
  * @author  Besigniano Agustin
  * @since 1.0

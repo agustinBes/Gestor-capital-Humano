@@ -8,7 +8,9 @@ import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -38,8 +40,13 @@ private short NroBloques;
     private LocalDateTime fechaIntento;
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
-    @Column
-    private short puntaje;
+    @ElementCollection
+    @CollectionTable(
+            name = "puntaje_competencia",
+            joinColumns = @JoinColumn(name = "id_cuestionario"))
+    @MapKeyJoinColumn(name = "id_competencia")
+    @Column(name = "puntaje_obtenido", nullable = false)
+    private Map<Competencia, Short> puntajes = new HashMap<>();
     @Column
 private String clave;
     @Column(name="nro_acceso")
@@ -60,7 +67,6 @@ public static Cuestionario GenerarCuestioario(Puesto puesto, Candidato candidato
             .NroBloques( bloques)
             .clave(clave)
             .items(items)
-            .puntaje((short) 0)
             .build();
     items.forEach(item->{item.setCuestionario(nuevo);});
     return nuevo;
@@ -75,7 +81,7 @@ public void validarEstado(Duration tiempoMaximoActivo,Duration tiempoMaximoReali
                 estado = tipoEstado.SIN_CONTESTAR;
                 fechaIntento = actual;
             }
-        }
+                    }
 
         case EN_PROCESO -> {
             if (actual.isAfter(fechaInicio.plus(tiempoMaximoRealizacion))) {
@@ -102,6 +108,9 @@ public void primerIngreso(short cantidadAcceso,Duration tiempoMaximoActivo,Durat
              NroAccesos = (short) (NroAccesos - 1);
              estado = tipoEstado.EN_PROCESO;
          }
+    }
+    else{
+        this.validarEstado(tiempoMaximoActivo,tiempoMaximoRealizacion);
     }
 }
 
@@ -142,6 +151,7 @@ if(estado ==tipoEstado.ACTIVO) {
 if(cantidad==cantidadTotal) {
     estado = tipoEstado.COMPLETADO;
     fechaIntento = LocalDateTime.now();
+
 }
 
 

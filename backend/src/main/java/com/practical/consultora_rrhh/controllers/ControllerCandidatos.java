@@ -2,14 +2,17 @@ package com.practical.consultora_rrhh.controllers;
 
 import com.practical.consultora_rrhh.Util.TextoUtils;
 import com.practical.consultora_rrhh.dto.FiltrosBusqueda.candidatoFiltrosDto;
+import com.practical.consultora_rrhh.dto.request.candidatoDtoAuth;
 import com.practical.consultora_rrhh.dto.request.candidatoDtoCreate;
 import com.practical.consultora_rrhh.dto.response.candidatoDto;
+import com.practical.consultora_rrhh.dto.response.cuestionarioDto;
 import com.practical.consultora_rrhh.excepciones.genericas.CorruptFileException;
 
 import com.practical.consultora_rrhh.interfaces.auxiliares.Iconsultor;
 import com.practical.consultora_rrhh.interfaces.controllers.IcontrollerCandidato;
 import com.practical.consultora_rrhh.interfaces.repositorio.archivoRepository;
 import com.practical.consultora_rrhh.interfaces.services.IserviceCandidato;
+import com.practical.consultora_rrhh.interfaces.services.IserviceCuestionario;
 import com.practical.consultora_rrhh.modelo.clases.Consultor;
 import com.practical.consultora_rrhh.modelo.clases.HistorialArchivo;
 import jakarta.annotation.PostConstruct;
@@ -28,7 +31,7 @@ import java.util.List;
  * Controlador encargado de la importación de candidatos mediante archivos CSV.
  *
  * El archivo debe respetar el siguiente formato de columnas:
- * "id,nombre,apellido,fecha,mail,tipo,documento,nacionalidad,genero,escolaridad".
+ * "id,nombre,apellido,fecha,mail,tipoDocumento,documento,nacionalidad,genero,escolaridad".
  *
  * Tanto el identificador como el documento del candidato deben ser únicos,
  * por lo que no se permiten registros que contengan valores repetidos.
@@ -50,14 +53,17 @@ private List<HistorialArchivo> archivosImportados=new ArrayList<>();
     private final IserviceCandidato service;
     private final Iconsultor iconsultor;
 private final archivoRepository repositorio;
+private final IserviceCuestionario  serviceCuestionario;
 private final    ClassPathResource resource = new ClassPathResource("candidatos.csv");
     @PostConstruct
     public void init(){
         archivosImportados=repositorio.findAll();    }
-    public ControllerCandidatos(IserviceCandidato s, Iconsultor iconsultor, archivoRepository repositorio) {
+    public ControllerCandidatos(IserviceCandidato s, Iconsultor iconsultor, archivoRepository repositorio, IserviceCuestionario serviceCuestionario) {
         this.service = s;
         this.iconsultor = iconsultor;
-        this.repositorio = repositorio;}
+        this.repositorio = repositorio;
+        this.serviceCuestionario = serviceCuestionario;
+    }
 
     private void guardarRegistroArchivo(String archivo,Consultor c){
         HistorialArchivo h=new HistorialArchivo(null, archivo, c);
@@ -132,8 +138,14 @@ private final    ClassPathResource resource = new ClassPathResource("candidatos.
     @PostMapping("/new")
     public ResponseEntity<candidatoDto> guardar(candidatoDtoCreate dto) {
         throw new UnsupportedOperationException();
+    }
 
-   }
+
+    @Override
+    public ResponseEntity<cuestionarioDto> autenticarCandidato(candidatoDtoAuth candidatoDtoAuth) {
+        cuestionarioDto cuestionario=serviceCuestionario.obtenerCuestionarioDto(candidatoDtoAuth);
+return ResponseEntity.ok(cuestionario);
+    }
 
     @Override
     @PatchMapping("/update/{id}")

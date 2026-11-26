@@ -19,12 +19,25 @@ public ItemCuestionarioDaoImpl(itemCuestionarioRepository repository) {
     @Override
     @Transactional
     public ItemCuestionario guardarItem(ItemCuestionario itemCuestionario) {
-return  repository.save(itemCuestionario);
+    return  repository.save(itemCuestionario);
     }
+
 
     @Override
     @Transactional
       public List<ItemCuestionario> guardarItems(List<ItemCuestionario> items) {
-return  repository.saveAll(items);
+        repository.saveAll(items);
+
+        Long idCuestionario = items.getFirst()
+                .getCuestionario()
+                .getId();
+
+        return obtenerItems(idCuestionario);
+    }
+
+
+    @Override
+    public List<ItemCuestionario> obtenerItems(Long idCuestionario) {
+        return repository.findAllByCuestionario_Id(idCuestionario);
     }
 }

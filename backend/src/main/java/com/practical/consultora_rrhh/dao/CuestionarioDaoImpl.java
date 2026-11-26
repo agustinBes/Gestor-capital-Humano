@@ -1,8 +1,10 @@
 package com.practical.consultora_rrhh.dao;
 
+import com.practical.consultora_rrhh.dto.request.candidatoDtoAuth;
 import com.practical.consultora_rrhh.interfaces.dao.IcuestionarioDao;
 import com.practical.consultora_rrhh.interfaces.repositorio.cuestionarioRepository;
 import com.practical.consultora_rrhh.modelo.clases.Cuestionario;
+import com.practical.consultora_rrhh.modelo.enums.tipoDocumento;
 import com.practical.consultora_rrhh.modelo.enums.tipoEstado;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Repository;
@@ -41,13 +43,13 @@ public class CuestionarioDaoImpl implements IcuestionarioDao {
 
     @Override
     public Optional<Cuestionario> obtenerPorClave(String clave) {
-        List<tipoEstado> estados=new ArrayList<>();
-        estados.add(tipoEstado.ACTIVO);
-        estados.add(tipoEstado.EN_PROCESO);
-        return  repository.findByClaveAndEstadoIn(clave,estados);
+        return  repository.findByClave(clave);
     }
 
-
+    @Override
+    public Optional<Cuestionario> obtenerPorClave(candidatoDtoAuth dto) {
+        return repository.findByClaveAndCandidato_TipoAndCandidato_Documento(dto.clave(), tipoDocumento.desdeString(dto.tipoDocumento()),dto.documento());
+    }
 
     @Override
     public List<String> obtenerClaves() { return  obtenerTodos().stream().map(Cuestionario::getClave).toList();}
@@ -63,4 +65,6 @@ public class CuestionarioDaoImpl implements IcuestionarioDao {
     public Optional<Cuestionario> obtenerPorId(Long id) {return repository.findById(id);}
     @Override
     public boolean existePorId(Long aLong) {return repository.existsById(aLong);}
-}
+
+
+    }

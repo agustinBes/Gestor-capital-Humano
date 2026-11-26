@@ -28,7 +28,7 @@ import java.util.List;
  * pertinentes a una {@link OpcionRespuesta}.
  *
  * <p>Las validaciones comprenden aspectos relacionados con el formato,
- * tipo de datos y restricciones de unicidad de determinados campos.</p>
+ * tipoDocumento de datos y restricciones de unicidad de determinados campos.</p>
  *
  * <p>También gestiona las operaciones y validaciones relacionadas con la
  * entidad {@link Opcion}, cuya existencia está sujeta al ciclo de vida

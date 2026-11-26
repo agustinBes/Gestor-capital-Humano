@@ -8,8 +8,8 @@ import com.practical.consultora_rrhh.modelo.enums.tipoDocumento;
 public record evaluadosDto(
         String apellido,
         String nombre,
-        @JsonAlias(value = "tipo")
-        @JsonProperty(value = "tipo de Documento")
+        @JsonAlias(value = "tipoDocumento")
+        @JsonProperty(value = "tipoDocumento de Documento")
         String tipo,
         @JsonProperty(value = "Numero de Documento")
         @JsonAlias("nroDocumento")

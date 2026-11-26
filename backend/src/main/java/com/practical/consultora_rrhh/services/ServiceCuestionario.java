@@ -1,12 +1,12 @@
 package com.practical.consultora_rrhh.services;
 
+import com.practical.consultora_rrhh.dto.request.candidatoDtoAuth;
 import com.practical.consultora_rrhh.dto.request.cuestionarioDtoCreate;
 import com.practical.consultora_rrhh.dto.request.itemCuestionarioDtoCreate;
 import com.practical.consultora_rrhh.dto.response.cuestionarioDto;
 import com.practical.consultora_rrhh.dto.response.evaluadosDto;
-import com.practical.consultora_rrhh.excepciones.especializadas.atributos.ClaveInvalidaException;
+import com.practical.consultora_rrhh.excepciones.especializadas.atributos.CuestionarioActivoException;
 import com.practical.consultora_rrhh.excepciones.genericas.CuestionarioException;
-import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
 import com.practical.consultora_rrhh.excepciones.genericas.ErrorExportException;
 import com.practical.consultora_rrhh.excepciones.genericas.IntegridadComprometidaException;
 import com.practical.consultora_rrhh.interfaces.dao.IcuestionarioDao;
@@ -14,6 +14,7 @@ import com.practical.consultora_rrhh.interfaces.dao.IitemCuestionarioDao;
 import com.practical.consultora_rrhh.interfaces.services.IserviceCuestionario;
 import com.practical.consultora_rrhh.modelo.clases.*;
 import com.practical.consultora_rrhh.modelo.enums.tipoEstado;
+import com.practical.consultora_rrhh.modelo.id.itemCuestionarioId;
 import com.practical.consultora_rrhh.modelo.propiedades.CuestionarioProperties;
 import com.practical.consultora_rrhh.services.mediator.CandidatoCuestionarioMediator;
 import com.practical.consultora_rrhh.services.mediator.CuestionarioPreguntaMediator;
@@ -22,15 +23,20 @@ import com.practical.consultora_rrhh.services.mediator.ServiceExportacionEvaluad
 import com.practical.consultora_rrhh.validaciones.CuestionarioValidators;
 import com.practical.consultora_rrhh.validaciones.internas.ItemCuestionarioValidators;
 import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Servicio que evalua candidatos para un puesto
+ * Recupera cuestionarios para consultar
+ * permite que el candidato complete el cuestionario
+ * calcular el puntaje de cuestionarios finalizados
+ * @author  Besigniano Agustin
+ * @since 1.0
  */
 
 @Service
@@ -67,6 +73,12 @@ generador.inicializar(this.obtenerClaves());
 candidatoMediator.registrarServicioA(this);
 preguntaMediator.registrarServicioB(this);
 }
+  //---------------------------------LISTAR---------------------------------
+//--------------------------------------------------------------------------
+      public List<cuestionarioDto> obtenerCuestionarios(){
+        return dao.obtenerTodos().stream().map(o->
+                new cuestionarioDto(construirBloques(o),o)).toList();}
+//---------------------------EVALUAR CANDIDATOS CU25-----------------------------------------------
 //--------------------------------------------------------------------------
     /**
      * Generador de formularios para un puesto y una lista de candidatos
@@ -98,19 +110,25 @@ validators.ValidarCuestionariosActivos(candidato);
 //---------------------------Totalidad de preguntas para las competencias del puesto--------------------
  List<Pregunta> preguntas=preguntaMediator.obtenerPreguntasPorCompetencias(competencias);
 
+        System.out.println("cantidad de preguntas : " +preguntas.size());
+
         preguntas=validators.validarPreguntas(competencias,preguntas);
 
 
-short bloques=cantidadBloques(preguntas.size());
+short bloques=cantidadBloques(preguntas);
 short accesos=propiedadesCuestionario.getCantidadDeAccesos();
 short preguntasxBloque=propiedadesCuestionario.getPreguntasPorBloque();
+
+        System.out.println("Bloques: "+bloques);
+        System.out.println("cantidad de preguntas : " +preguntas.size());
 
  for(Candidato c:lista){
   List<Pregunta>  generadas=validators.generarPreguntas(competencias,preguntas);
     List<ItemCuestionario> items= ItemCuestionarioValidators.generar(bloques,generadas,preguntasxBloque);
+     System.out.println("cantidad de preguntas : " +items.size());
      String clave=generador.generarClaveUnica();
 Cuestionario nuevo=Cuestionario.GenerarCuestioario(p,c,items,bloques,clave,accesos);
-
+//la cantidad de bloques lo determina la cantidad de factores corregir!!!!
 generados.add(nuevo);
  }
 
@@ -127,94 +145,49 @@ evaluados.add(nuevo);
 
     }
 return evaluados;}
-
-//--------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------
-    private void actualizarCuestionariosVencidos(List<Cuestionario> activos){
-        LocalDateTime ahora = LocalDateTime.now();
-
-        List<Cuestionario> vencidos = activos.stream()
-                .filter(c -> ahora.isAfter(
-                        c.getFechaCreacion().plus(propiedadesCuestionario.getTiempoMaximoActivo())
-                ))
-                .toList();
-
-        vencidos.forEach(c -> {
-            c.setEstado(tipoEstado.SIN_CONTESTAR);
-            c.setFechaIntento(ahora);
-        });
-
-    dao.guardarTodos(vencidos);
-
-    }
-
-
-
-    @Override
-    public cuestionarioDto recuperarCuestionario(String clave, String documento){
-   Optional<Cuestionario> buscado=dao.obtenerPorClave(clave);
-   if(buscado.isPresent()){
-       if(!documento.equals(buscado.get().getCandidato().getDocumento())){
-       throw new ClaveInvalidaException(HttpStatus.FORBIDDEN,"Clave de acceso invalida");
-       }
-       else{}
-                 }
-
-   throw new ClaveInvalidaException(HttpStatus.NOT_FOUND,"credenciales invalidas");
-   }
-//------------------------------------------------------------------------------------------
-
-    @Override
-    public List<Cuestionario> recuperarCuestionarios(List<Long> candidato) {
-        List<Cuestionario> cuestionarios=dao.cuestionariosActivos(candidato);
-if(cuestionarios.isEmpty()){
-    return null;}
-
-else{
-return     actualizarCuestionarios(cuestionarios);
-}
-    }
-
-
-
-
-//estado internamente
-    private List<Cuestionario> actualizarCuestionarios(List<Cuestionario> cuestionarios) {
-        for(Cuestionario c:cuestionarios){
-
-        }
-        return new ArrayList<>(cuestionarios);
-
-    }
-
-    //------------------------------------------------------------------------
+//------------------------------------------------------------------------
+//------------------------------CARGAR CLAVES GENERADAS------------------------------------------------------------
    @Override
    public List<String> obtenerClaves() {  return dao.obtenerClaves(); }
-
-    public byte[] exportar(List<evaluadosDto> lista) throws ErrorExportException {
+//--------------------------Exportar candidatos evaluados
+        public byte[] exportar(List<evaluadosDto> lista) throws ErrorExportException {
         return serviceExportacionEvaluados.exportar(lista);
     }
-//-------------------------------------------------------------------
+//----------------------INTENTO DE CUESTIONARIO DEL USUARIO---------------------------------------------
 @Override
+@Transactional
 public cuestionarioDto actualizarCuestionario(cuestionarioDtoCreate c, Long id) {
-   Cuestionario actual = obtenerEntidad(id);
-Long idCandidato=c.id_candidato();
-Long idPuesto=c.id_puesto();
-List<itemCuestionarioDtoCreate> items=c.items();
-if(actual.getCandidato().getId().equals(idCandidato) && actual.getPuesto().getId().equals(idPuesto)){
+    Cuestionario actual = obtenerEntidad(id);
+    Long idCandidato = c.id_candidato();
+    Long idPuesto = c.id_puesto();
+    List<itemCuestionarioDtoCreate> items = c.items();
+    if (actual.getCandidato().getId().equals(idCandidato) && actual.getPuesto().getId().equals(idPuesto)) {
 
-    ItemCuestionarioValidators.validarItems(actual,items);
+        actual.primerIngreso(propiedadesCuestionario.getCantidadDeAccesos(),propiedadesCuestionario.getTiempoMaximoActivo(),propiedadesCuestionario.getTiempoMaximoRealizacion());
+        ItemCuestionarioValidators.validarItems(actual, items);
+
+        List<Bloque> bloque = construirBloques(actual);
+
+        List<Bloque> copia = ItemCuestionarioValidators.actualizarItems(bloque, items);
+        // List<ItemCuestionario> modificados=new ArrayList<>();
+
+         actualizar(bloque,copia);
+            Long completados = bloque.stream()
+                    .filter(Bloque::isCompletado)
+                    .count();
+
+            if (completados == bloque.size()) {actual.setEstado(tipoEstado.COMPLETADO);}
+            actual.setFechaIntento(LocalDateTime.now());
+            Cuestionario actualizado = dao.guardar(actual);
 
 
+            cuestionarioDto nuevo=new cuestionarioDto(bloque,actualizado);
 
-    return  new cuestionarioDto();}
+            return nuevo;
+        }
 
-throw new IntegridadComprometidaException("El cuestionario recibido no pertenece al usuario");
+        throw new IntegridadComprometidaException("El cuestionario recibido no pertenece al usuario");
     }
-
-
-
 
 
 
@@ -225,35 +198,80 @@ throw new IntegridadComprometidaException("El cuestionario recibido no pertenece
     }
 
     @Override
+    public Optional<Cuestionario> obtenerPorClave(candidatoDtoAuth dto) {
+  return   dao.obtenerPorClave(dto);}
+
+    //------------para CONSULTAS SOLAMENTE---------------------
+    @Override
     public Cuestionario obtenerEntidad(Long id) {
         Optional<Cuestionario> r= dao.obtenerPorId(id);
-
-        if(r.isPresent()){
-            return r.get();
-        }
+        if(r.isPresent()){            return r.get();}
         throw new CuestionarioException("No se encontro el cuestionario",HttpStatus.NOT_FOUND);
-
     }
+//-----------------------------------------OBTENER CUESTIONARIO CANDIDATO-----------------------------------------
+@Transactional
+public cuestionarioDto obtenerCuestionarioDto(candidatoDtoAuth candidatoDtoAuth) {
+
+   Optional<Cuestionario> actual = obtenerPorClave(candidatoDtoAuth);
+if(actual.isPresent()){
+    Cuestionario c=actual.get();
+
+    c.primerIngreso(propiedadesCuestionario.getCantidadDeAccesos(),
+propiedadesCuestionario.getTiempoMaximoActivo(),propiedadesCuestionario.getTiempoMaximoRealizacion());
+
+    List<Bloque> bloques = construirBloques(c);
+tipoEstado estado=c.getEstado();
+     switch (estado) {
+        case EN_PROCESO -> {
+             return new cuestionarioDto(bloques, c);
+         }
+
+        case COMPLETADO -> throw new CuestionarioException(
+                "El cuestionario ya fue completado",
+                HttpStatus.CONFLICT
+        );
+
+        case INCOMPLETO -> throw new CuestionarioException(
+                "El tiempo para completar el cuestionario fue excedido",
+                HttpStatus.GONE
+        );
+
+        case SIN_CONTESTAR -> throw new CuestionarioException(
+                "Se superó el tiempo máximo para un cuestionario activo",
+                HttpStatus.GONE
+        );
+    };
+}
+throw new CuestionarioException("No se encontró el cuestionario", HttpStatus.NOT_FOUND);
+    }
+
 
     //--------------------------------------------------------------------------
     private List<PuestoCompetencia> obtenerPorPuesto(Long idPuesto){
         return  puestoMediator.obtenerPorPuesto(idPuesto);}
-    public short cantidadBloques(int cantidadPregunta){
 
-        short preguntasPorBloque=propiedadesCuestionario.getPreguntasPorBloque();
+    public short cantidadBloques(List<Pregunta> pregunta){
 
-        short cantidadPreguntas=(short) cantidadPregunta;
-        short bloques=0;
-        if(cantidadPreguntas<=preguntasPorBloque){
-            bloques=1;}
-        else{
-            bloques= (short) (cantidadPreguntas /preguntasPorBloque);
-            boolean resto=(cantidadPreguntas%preguntasPorBloque!=0);
-            bloques = (short) (bloques +(short)(resto? 1:0));
-        }
-        return bloques;}
+        int cantidadFactores=pregunta.stream()
+                .map(Pregunta::getFactor)
+                .collect(Collectors.toSet())
+                .size();
+int configuracion=(int)(propiedadesCuestionario.getPreguntasPorBloque());
 
-private List<Bloque> construirBloques(Cuestionario c){
+int cantidad=cantidadFactores*2;
+int extra=cantidad%configuracion;
+
+short bloques=(short)(cantidad/configuracion);
+if(extra==0){return bloques;}
+        return (short) (bloques + 1);
+    }
+
+    /**
+     * Generamos la estructura auxiliar de bloques
+     * @param c entidad de cuestionario
+     * @return devolvemos una lista con la cantidad de bloques del cuestionario
+     */
+    private List<Bloque> construirBloques(Cuestionario c){
         Long idCuestionario=c.getId();
         List<Bloque> bloques=new ArrayList<>();
         short cantidad=c.getNroBloques();
@@ -275,5 +293,122 @@ bloques.add(nuevo);}
 
    }
 
+    /**
+     * Actualizamos bloque con la copia al ser una copia profunda evitamos
+     * actualizar entidades antes de tiempo al estar en un contexto transaccional
+     * @param bloque bloque generado al recuperar el cuestionario
+     * @param copia bloque actualizado con los items completados
+     */
+    private void actualizar(List<Bloque> bloque,List<Bloque> copia) {
+        for (Bloque b : copia) {
+            Short nrobloque = b.getNumeroBloque();
+            boolean aux = bloque.stream()
+                    .filter(o -> o.getNumeroBloque() == nrobloque)
+                    .anyMatch(Bloque::isCompletado);
+
+            if (!aux) {
+                if (b.isCompletado()) {
+                    bloque.stream()
+                            .filter(o -> o.getNumeroBloque() == nrobloque)
+                            .forEach(o -> {
+                                o.setCompletado(true);
+                                actualizarItems(o.getItemCuestionario(), b.getItemCuestionario());
+                            });
+                }
+            }
+        }
+    }
+
+    /**
+     * Actualizamos cada item con su opcion elegida y obtenemos su puntaje
+     * @param actual lista de items del bloque recuperado del cuestionario sin alterar
+     * @param actualizado lista de items actualizadas del bloque copia
+     */
+    private void actualizarItems(List<ItemCuestionario> actual,List<ItemCuestionario> actualizado) {
+
+        for (ItemCuestionario item : actual) {
+            itemCuestionarioId id = item.getItem();
+            Optional<ItemCuestionario> x = actualizado.stream()
+                    .filter(o -> o.getItem().equals(id))
+                    .findFirst();
+            if (x.isPresent()) {
+                ItemCuestionario nuevo = x.get();
+                item.setOpcion(nuevo.getOpcion());
+                item.setPuntaje(nuevo.getPuntaje());
+            }}
+    }
+@Transactional
+    private void CalcularPuntaje(Long idCuestionario) {
+    Cuestionario c = obtenerEntidad(idCuestionario);
+    if (c.getEstado().equals(tipoEstado.COMPLETADO)) {
+        Map<Factor, List<ItemCuestionario>> factores = obtenerPorFactor(c);
+
+        Map<Factor, Short> puntajePorfactor = puntajePorFactor(factores);
+        Map<Competencia, List<Factor>> competencias = obtenerPorCompetencia(c);
+        Map<Competencia, Short> puntajePorcompetencia = puntajePorCompetencia(competencias, puntajePorfactor);
+    c.setPuntajes(puntajePorcompetencia);
+
+    }
+throw new CuestionarioActivoException("El cuestionario aun no ha sido completado");
 }
+    private Map<Factor,Short> puntajePorFactor(Map<Factor,List<ItemCuestionario>> factores) {
+        Map <Factor,Short> puntajePorfactor = new HashMap<>();
+       for (Factor f : factores.keySet()) {
+           int puntaje = factores.get(f)
+                   .stream()
+                   .mapToInt(ItemCuestionario::getPuntaje)
+                   .sum();
+           short puntos = (short) (puntaje / 2);
+           puntajePorfactor.put(f, puntos);
+       }
+       return puntajePorfactor;
+   }
+   private Map<Competencia,Short> puntajePorCompetencia(Map<Competencia,List<Factor>> competencias,Map<Factor,Short> puntajePorfactor) {
+       Map<Competencia,Short> puntajePorcompetencia = new HashMap<>();
+        for (Competencia ls : competencias.keySet()) {
+           List<Factor> lfc = competencias.get(ls);
+           int cantidad = lfc.size();
+           int puntaje = 0;
+           for (Factor f : lfc) {
+               puntaje = puntaje + puntajePorfactor.get(f);
+           }
+           int resultado = puntaje / cantidad;
+           puntajePorcompetencia.put(ls, (short) resultado);
+       }
+return puntajePorcompetencia;   }
+
+
+
+
+//-----------------------------------------------------------------------------------------------
+    private Map<Factor, List<ItemCuestionario>> obtenerPorFactor(Cuestionario c) {
+        return c.getItems().stream()
+                .collect(Collectors.groupingBy(
+                        o -> o.getPregunta().getFactor()
+                ));}
+    private Map<Competencia, List<Factor>> obtenerPorCompetencia(Cuestionario c) {
+        return c.getItems().stream()
+                .map(o -> o.getPregunta().getFactor())
+                .distinct()
+                .collect(Collectors.groupingBy(Factor::getCompetencia));
+    }
+    private Map<Competencia,Short> obtenerPonderaciones(Long puesto,List<Competencia> competencias) {
+        Map<Competencia,Short> puntajePorcompetencia = new HashMap<>();
+        List<PuestoCompetencia> pc=obtenerPorPuesto(puesto);
+        for(Competencia ls : competencias) {
+            PuestoCompetencia aux=pc.stream()
+                    .filter(o->o.getCompetencia().equals(ls))
+                    .findFirst().orElse(null);
+
+            if(aux!=null) {
+                puntajePorcompetencia.put(ls, aux.getPonderacion());
+            }
+        }
+        return puntajePorcompetencia;
+    }
+}
+
+
+
+
 

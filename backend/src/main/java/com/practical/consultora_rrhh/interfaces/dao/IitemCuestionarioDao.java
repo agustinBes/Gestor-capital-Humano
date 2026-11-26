@@ -9,4 +9,6 @@ public interface IitemCuestionarioDao  {
     ItemCuestionario guardarItem(ItemCuestionario itemCuestionario);
 
     List<ItemCuestionario> guardarItems(List<ItemCuestionario> items);
+
+    List<ItemCuestionario> obtenerItems(Long idCuestionario);
 }

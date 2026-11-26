@@ -196,6 +196,10 @@ List<PuestoCompetencia> respuesta = new ArrayList<>();
     }
     public List<PuestoCompetencia> obtenerPorPuesto(Long id) {
  List<PuestoCompetencia> obtenidos=  puestoCompetenciaDao.obtenerPorPuesto(id);
+
+ if(obtenidos.isEmpty()){
+     throw new EntityNotFoundException(Puesto.class,id.toString());
+ }
     //    System.out.println(obtenidos.stream().map(o->o.getCompetencia().getNombre()).collect(Collectors.joining()));
     return obtenidos;
     }

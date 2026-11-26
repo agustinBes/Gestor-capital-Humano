@@ -35,10 +35,8 @@ public record candidatoDto(
         @Size(max = 150, message = "El mail no puede superar los 150 caracteres")
         String mail,
 
-        @NotBlank(message = "El tipo de documento es obligatorio")
-        @Pattern(regexp = "^(DNI|LE|LC|PP)$", message = "El tipo de documento debe ser DNI, LE, LC o PP")
-        @JsonProperty("tipo de Documento")
-        @JsonAlias("tipo")
+        @NotBlank(message = "El tipoDocumento de documento es obligatorio")
+        @Pattern(regexp = "^(DNI|LE|LC|PP)$", message = "El tipoDocumento de documento debe ser DNI, LE, LC o PP")
         String tipo,
 
         @NotBlank(message = "El número de documento es obligatorio")
@@ -74,13 +72,13 @@ public candidatoDto(Candidato x){
 
         @Override
         public String toString() {
-                return "candidatoDto{" +
+                return "candidatoDtoAuth{" +
                         "id=" + id +
                         ", nombre='" + nombre + '\'' +
                         ", apellido='" + apellido + '\'' +
                         ", fecha=" + fecha +
                         ", mail='" + mail + '\'' +
-                        ", tipo=" + tipo +
+                        ", tipoDocumento=" + tipo +
                         ", documento='" + documento + '\'' +
                         ", nacionalidad='" + nacionalidad + '\'' +
                         ", genero=" + genero +

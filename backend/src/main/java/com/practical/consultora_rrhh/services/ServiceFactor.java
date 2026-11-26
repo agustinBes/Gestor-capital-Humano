@@ -28,7 +28,7 @@ import java.util.Map;
  * pertinentes a un {@link Factor}.
  *
  * <p>Las validaciones comprenden aspectos relacionados con el formato,
- * el tipo de datos, las restricciones de unicidad de determinados campos
+ * el tipoDocumento de datos, las restricciones de unicidad de determinados campos
  * la relacion de un factor con una {@link Competencia}
  *
  *

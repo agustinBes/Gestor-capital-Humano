@@ -28,7 +28,7 @@ import org.springframework.data.jpa.domain.Specification;
  */
 public class TextoSpecifications {
 
-    /**Busca coincidencias en la base de datos sobre campos de tipo String,
+    /**Busca coincidencias en la base de datos sobre campos de tipoDocumento String,
      * @param atributo Establece el atributo sobre el que vamos a buscar
      * @param texto El texto a buscar se normaliza durante la construccion del predicado
      * @param parcial Establece si el metodo considera busquedas exactas o parciales

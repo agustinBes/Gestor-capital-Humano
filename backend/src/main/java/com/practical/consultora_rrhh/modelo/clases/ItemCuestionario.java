@@ -11,6 +11,7 @@ import lombok.*;
 @Setter
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 @EqualsAndHashCode
 public class ItemCuestionario {
 @EmbeddedId
@@ -26,7 +27,7 @@ private Pregunta pregunta;
 @Column
 private short puntaje;
 @Column
-private Short opcion;
+private short opcion;
 @Column(name = "nro_bloque")
 private short NroBloque;
 
@@ -35,9 +36,18 @@ private short NroBloque;
 public ItemCuestionario(itemCuestionarioDtoCreateItems dto){
     puntaje=dto.Puntaje();
     pregunta=dto.pregunta();
-    opcion=null;
+    opcion=0;
     NroBloque=dto.NroBloque();
     cuestionario=null;
     item=null;
 }
+
+    public ItemCuestionario(ItemCuestionario original) {
+        this.item = new itemCuestionarioId(original.getCuestionario().getId(),original.getPregunta().getId());
+        this.cuestionario = original.getCuestionario();
+        this.pregunta = original.getPregunta();
+        this.puntaje = original.getPuntaje();
+        this.opcion = original.getOpcion();
+        this.NroBloque = original.getNroBloque();
+    }
 }

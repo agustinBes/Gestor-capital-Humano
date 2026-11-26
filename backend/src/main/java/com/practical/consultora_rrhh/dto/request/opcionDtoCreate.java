@@ -13,7 +13,7 @@ import jakarta.validation.constraints.*;
  *
  */
 public record opcionDtoCreate(
-        @NotNull(message = "La fila no puede ser null y debe ser de tipo entero")
+        @NotNull(message = "La fila no puede ser null y debe ser de tipoDocumento entero")
         @Min(value = 1, message = "La fila debe ser mayor a cero")
         @Max(value = 32767, message = "El valor máximo es 32767")
         Short fila,

@@ -31,7 +31,7 @@ import java.util.Map;
  * pertinentes a una {@link Pregunta}.
  *
  * <p>Las validaciones comprenden aspectos relacionados con el formato,
- * el tipo de datos, las restricciones de unicidad de determinados campos
+ * el tipoDocumento de datos, las restricciones de unicidad de determinados campos
  * y la integridad referencial entre un {@link Factor} y la
  *    {@link Competencia} asociada.</p>
  *
@@ -260,6 +260,7 @@ auditoriaDtoCreate nuevo= new auditoriaDtoCreate(null,id,aux.getNombre(),tipoAud
                     new EntityNotFoundException(Pregunta.class,id.toString()));
         }
 
+
     /**
      * Validar existencia de otra entidad para otro servicio que lo requiera
      */
@@ -274,7 +275,6 @@ auditoriaDtoCreate nuevo= new auditoriaDtoCreate(null,id,aux.getNombre(),tipoAud
     public boolean existeOpcionRespuestaEnUso(Long id) {
         return dao.existeOpcionRespuestaEnuso(id);
     }
-
 
 
 }

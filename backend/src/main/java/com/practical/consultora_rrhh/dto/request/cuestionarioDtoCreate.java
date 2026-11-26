@@ -1,10 +1,8 @@
 package com.practical.consultora_rrhh.dto.request;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 
@@ -18,7 +16,7 @@ public record cuestionarioDtoCreate(
         @Min(value=1,message="No puede ser 0")
         Long id_puesto,
         @NotEmpty(message = "Se requiere un conjunto de respuestas")
-                List<@Valid itemCuestionarioDtoCreate> items
+                    List<@Valid itemCuestionarioDtoCreate> items
 ) {
 
 

@@ -140,7 +140,7 @@ return  "Se crearon todos los candidatos";
             int numeroFila = 1;
             while (candidato.hasNext()) {
                 numeroFila++;
-                // Aquí Jackson intenta convertir la fila actual a candidatoDto
+                // Aquí Jackson intenta convertir la fila actual a candidatoDtoAuth
                 candidatoDto fila = candidato.next();
                 Set<ConstraintViolation<candidatoDto>> errores = validador.validate(fila);
                 System.out.println(fila);
