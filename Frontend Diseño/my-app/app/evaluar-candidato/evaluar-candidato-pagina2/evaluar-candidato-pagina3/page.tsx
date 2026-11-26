@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Boton from "../../../../componentes/boton";
 import Tabla from "../../../../componentes/tabla";
 
@@ -9,6 +9,16 @@ export default function EvaluarCandidatoPagina3() {
    const [mostrarModal, setMostrarModal] = useState(false);
 
 
+   const [paddingArriba, setPaddingArriba] = useState("17rem");
+
+   useEffect(() => {const ajustarPadding = () => {if (window.innerWidth < 1400) {setPaddingArriba("1rem");
+     } else {setPaddingArriba("12rem");  }};
+    ajustarPadding(); 
+     window.addEventListener("resize", ajustarPadding);
+    return () => window.removeEventListener("resize", ajustarPadding);}, []);
+
+
+
   return (
 
     <div style={{
@@ -16,7 +26,7 @@ export default function EvaluarCandidatoPagina3() {
     display: "flex",
     justifyContent: "center",
     alignItems: "flex-start", 
-  paddingTop: "12rem"
+  paddingTop: paddingArriba
   }}> 
 
      

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Boton from "../../componentes/boton";
 import Input from "../../componentes/input";
 import Tabla from "../../componentes/tabla";
@@ -31,6 +31,12 @@ export default function EvaluarCandidato() {
     setAEvaluar([...aEvaluar, ...nuevos]);
     setSeleccionados([]);
   };
+
+  useEffect(() => {const ajustarPadding = () => {if (window.innerWidth < 1400) {setPaddingArriba("4rem");
+   } else {setPaddingArriba("17rem");  }};
+  ajustarPadding(); 
+   window.addEventListener("resize", ajustarPadding);
+  return () => window.removeEventListener("resize", ajustarPadding);}, []);
 
   return (
 
@@ -72,15 +78,20 @@ export default function EvaluarCandidato() {
 
       {mostrarTablas && (
 
-      <div style={{ marginTop: "2rem"}}>
+      <div style={{ marginTop: "2rem",width: "100%"}}>
       <hr style={{ 
-      width: "342.3%",
+      width: "100%",
       border: "none",
       borderTop: "2px solid #1E2A1C",
-      margin: "0.5rem -2rem 1.5rem -26rem",
+      margin: "0.5rem 0rem 1.5rem 0rem",
       alignSelf: "stretch"
       }} />
+      </div>
+       )}
 
+
+       {mostrarTablas && (
+        <div style={{ marginTop: "2rem"}}>
       <h3 style={{fontSize: "1.5rem" }}>Candidatos encontrados</h3>
        <div style={{ position: "relative", display: "inline-block"}}>
       
