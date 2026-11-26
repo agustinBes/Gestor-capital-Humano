@@ -3,7 +3,7 @@
 
 type Props = {
   texto: string;
-  onClick: () => void;
+  onClick?: () => void;
   padding?: string;
 };
 
