@@ -6,13 +6,12 @@ type Props = {
   onClick?: () => void;
   padding?: string;
   type?: "button" | "submit" | "reset";
-  formaction?: string;
 };
 
 
-export default function Boton({texto, onClick, padding, type, formaction}: Props) {
+export default function Boton({texto, onClick, padding, type}: Props) {
   return (
-    <button onClick={onClick} type={type} formAction={formaction}
+    <button onClick={onClick} type={type}
     style={{
         padding: padding || "10px 20px",
         background: "#233622",
