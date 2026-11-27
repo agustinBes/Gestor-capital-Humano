@@ -101,4 +101,12 @@ public class CuestionarioDaoImpl implements IcuestionarioDao {
     public List<Cuestionario> buscarxIds(List<Long> cuestionarios) {
         return  repository.findAllById(cuestionarios);
     }
+
+    @Override
+    public boolean existePuestoEnUso(Long idPuesto) {
+        List<tipoEstado> estados=new ArrayList<>();
+        estados.add(tipoEstado.ACTIVO);
+        estados.add(tipoEstado.EN_PROCESO);
+        return repository.existsByPuesto_IdAndEstadoIn(idPuesto,estados);
+    }
 }

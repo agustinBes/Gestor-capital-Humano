@@ -31,4 +31,6 @@ public interface cuestionarioRepository extends JpaRepository<Cuestionario, Long
     List<Cuestionario> findAllByPuesto_IdIn(List<Long> puestos);
 
     List<Cuestionario> findByPuesto_Id(Long id);
+
+    boolean existsByPuesto_IdAndEstadoIn(Long idPuesto, List<tipoEstado> estados);
 }

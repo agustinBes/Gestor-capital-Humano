@@ -30,4 +30,6 @@ List<cuestionarioDto> obtenerCuestionarios();
     List<Cuestionario> listarPorPuesto(Long id);
 
     List<Cuestionario> obtenerxIdsCuestionario(List<Long> cuestionarios);
+
+boolean existePuestoEnUso(Long idPuesto);
 }

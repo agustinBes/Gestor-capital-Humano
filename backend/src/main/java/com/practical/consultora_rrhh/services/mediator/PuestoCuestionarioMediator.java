@@ -25,9 +25,12 @@ protected IservicePuesto servicePuesto(){
     protected IserviceCuestionario serviceCuestionario(){
     return servicioB;
     }
-public List<PuestoCompetencia> obtenerPorPuesto(Long id){
+
+    public List<PuestoCompetencia> obtenerPorPuesto(Long id){
     return servicePuesto().obtenerPorPuesto(id);
     }
 
-
+public boolean existePuestoEnUso(Long id){
+    return serviceCuestionario().existePuestoEnUso(id);
+}
 }

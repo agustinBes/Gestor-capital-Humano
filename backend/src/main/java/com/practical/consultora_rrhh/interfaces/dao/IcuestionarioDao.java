@@ -25,4 +25,6 @@ List<Cuestionario> guardarTodos(List<Cuestionario> cuestionarios);
     List<Cuestionario> buscarXPuesto(Long id);
 
     List<Cuestionario> buscarxIds(List<Long> cuestionarios);
+
+    boolean existePuestoEnUso(Long idPuesto);
 }

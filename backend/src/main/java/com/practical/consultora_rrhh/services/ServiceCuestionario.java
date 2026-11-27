@@ -456,6 +456,11 @@ List<Cuestionario> resultados=dao.buscarPorPuesto(puestos);
      throw new  ColeccionNotFoundException("No se encontraron cuestionarios");}
  return lc;
     }
+
+    @Override
+    public boolean existePuestoEnUso(Long idPuesto) {
+        return dao.existePuestoEnUso(idPuesto);
+    }
 }
 
 

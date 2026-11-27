@@ -6,6 +6,7 @@ import com.practical.consultora_rrhh.dto.request.puestoCompetenciaDtoCreate;
 import com.practical.consultora_rrhh.dto.request.puestoDtoCreate;
 import com.practical.consultora_rrhh.dto.response.puestoDto;
 import com.practical.consultora_rrhh.excepciones.genericas.ColeccionNotFoundException;
+import com.practical.consultora_rrhh.excepciones.genericas.EntidadEnUsoException;
 import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
 import com.practical.consultora_rrhh.excepciones.genericas.FiltroVacioException;
 import com.practical.consultora_rrhh.interfaces.dao.IPuestoDao;
@@ -132,7 +133,10 @@ if(puesto.isEliminacion()){
     String r=auditoria.buscarAuditor(id, puesto.getNombre(),tipoAuditoria.PUESTO );
     return "El Puesto "+ puesto.getNombre()+" ya fue eliminado del sistema por el consultor "+r;
 }
-        //logica para ver si esta en uso-> cuestionario
+boolean Enuso=cuestionarioMediator.existePuestoEnUso(id);
+if(Enuso){
+    throw new EntidadEnUsoException("El puesto  esta siendo usado por otros recursos en el sistema");
+}
         dao.eliminar(puesto);
 
         String respuesta = "Los datos del puesto: " + puesto.getNombre() + " han sido eliminados del sistema";
