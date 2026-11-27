@@ -8,7 +8,11 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ * Creacion de filtros de busqueda combinados entre los filtros recibidio de {@link puestoFiltrosDto }
+ * @author Besigniano Agustin
+ * @since  1.0
+ */
 public class PuestoSpecifications {
     public static Specification<Puesto> buscar(puestoFiltrosDto dto) {
         return (root, query, cb) -> {

@@ -1,9 +1,8 @@
 package com.practical.consultora_rrhh.validaciones.internas;
 
 import com.practical.consultora_rrhh.dto.request.itemCuestionarioDtoCreate;
-import com.practical.consultora_rrhh.dto.request.itemCuestionarioDtoCreateItems;
+import com.practical.consultora_rrhh.dto.itemCuestionarioDtoCreateItems;
 import com.practical.consultora_rrhh.excepciones.especializadas.atributos.BloqueCompletadoException;
-import com.practical.consultora_rrhh.excepciones.genericas.ColeccionCorruptaException;
 import com.practical.consultora_rrhh.excepciones.genericas.IntegridadComprometidaException;
 import com.practical.consultora_rrhh.modelo.clases.*;
 import org.springframework.http.HttpStatus;

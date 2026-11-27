@@ -18,6 +18,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controlador para gestionar peticiones relacionadas a los cuestionarios
+ * @author  Besigniano Agustin
+ * @since 1.0
+ */
 @Controller
 @RestController
 public class ControllerCuestionario implements IcontrollerCuestionario {
@@ -26,9 +31,13 @@ public class ControllerCuestionario implements IcontrollerCuestionario {
 
     public ControllerCuestionario(IserviceCuestionario service, CuestionarioProperties propiedades) {
         this.service = service;
-        this.propiedades = propiedades;
-    }
+        this.propiedades = propiedades;}
 
+    /**
+     * Proceso de evaluacion de candidatos para un puesto
+     * @param candidatos lista con los id de los candidatos
+     * @param idPuesto Identificador del puesto a evaluar
+     */
     @Override
     @PostMapping("/gestion-cuestionarios/nuevo-cuestionario/{idPuesto}")
     public ResponseEntity<List<evaluadosDto>> evaluarCandidatos( @RequestBody List<Long> candidatos, @PathVariable String idPuesto) {
@@ -36,6 +45,11 @@ public class ControllerCuestionario implements IcontrollerCuestionario {
         List<evaluadosDto> result = service.generarCuestionario(identificador, candidatos);
         return ResponseEntity.ok().body(result);
     }
+
+    /**
+     * Peticion para exportar los candidatos evaluados para un puesto
+     * Para saber mas visitar {@link  evaluadosDto}
+     */
 
     @Override
     @PostMapping("/gestion-cuestionarios/candidatos/export")
@@ -47,6 +61,11 @@ public class ControllerCuestionario implements IcontrollerCuestionario {
                 .body(result);
     }
 
+    /**
+     * recibimos preguntas por cada seccion completa por parte del candidato y la actualizamos en el sistema
+     * para saber mas revisar {@link cuestionarioDtoCreate}
+     */
+
     @PatchMapping("/cuestionario/{id}/editar")
     @Override
     public ResponseEntity<cuestionarioDto> preguntaContestadas(@Valid cuestionarioDtoCreate cuestionario, @PathVariable String id) {
@@ -57,6 +76,10 @@ public class ControllerCuestionario implements IcontrollerCuestionario {
 cuestionarioDto actual=service.actualizarCuestionario(cuestionario,identificador);
         return ResponseEntity.ok().body(actual);
     }
+
+    /**
+     * Listar todos los cuestionarios
+     */
     @GetMapping("/cuestionarios/list")
     public  ResponseEntity<List<cuestionarioDto>> obtenerCuestionarios(){
        List<cuestionarioDto> lista= service.obtenerCuestionarios();

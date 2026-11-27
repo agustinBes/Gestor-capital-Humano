@@ -5,6 +5,14 @@ import com.practical.consultora_rrhh.modelo.clases.Cuestionario;
 
 import java.util.List;
 
+/**
+ * Formato para presentar los datos del cuestionario al candidato usando
+ * la estructura auxiliar de bloques {@link bloqueDto}
+ * @param idCuestionario
+ * @param idCandidato
+ * @param idPuesto
+ * @param bloques
+ */
 public record cuestionarioDto(
         Long idCuestionario,
         Long idCandidato,

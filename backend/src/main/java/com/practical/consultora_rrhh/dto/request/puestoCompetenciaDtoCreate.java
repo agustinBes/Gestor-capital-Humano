@@ -6,6 +6,12 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * Estructura para representar las caracteristicas de un puesto a nivel de servicios
+ * @param puesto puesto asociado
+ * @param competencia competencia asociada
+ * @param Ponderacion puntaje requerido
+ */
 public record puestoCompetenciaDtoCreate(
         @NotBlank(message = "Inconsistencia de datos")
         Puesto puesto,

@@ -13,7 +13,18 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
+/**
+ Implementación de la interfaz DAO para operaciones CRUD y consultas
+ * personalizadas sobre la entidad {@link Factor}.
+ *
+ * <p>Se abstrae el acceso a datos mediante
+ * <a href="https://spring.io/projects/spring-data-jpa#overview">
+ * Spring Data JPA</a>, delegando las operaciones de persistencia y busqueda
+ * en su correspondiente Repository.</p>
+ *
+ * @author  Besigniano Agustin
+ * @since 1.0
+ */
 @Repository
 public class FactorDaoImpl implements IFactorDao {
     private final factorRepository repository;
@@ -70,6 +81,11 @@ return  repository.existsById(id);
         return repository.existsByIdAndCompetencia_Id(id, idCompetencia);
     }
 
+    /**
+     * Busqueda usando la interfaz especification para consultas dinamicas entre el factor y la competencia
+     * {@link Factor} y {@link Competencia}
+     */
+
     @Override
     public List<Factor> buscar(String factor, String competencia) {
 
@@ -85,17 +101,29 @@ public boolean existePorNombreInsensible(String nombre) {
         return repository.exists(filtro);
 
    }
+    /**
+     * Busqueda a traves del codigo ignorando mayusculas, ignorando espacios extra
+     * Ignorando los acentos que pudiera contener
+     */
 @Override
-
 public boolean existePorCodigoInsensible(String codigo) {
     Specification<Factor> filtro= TextoSpecifications.coincidencia("codigo",codigo,false,true);
     return repository.exists(filtro);
 }
-@Override
+
+    /** Consultar la disponibilidad del nro de orden asociado
+     *  a una competencia
+     *  Solo se considera entidades que no han sido eliminadas
+     */
+    @Override
 public boolean existeNroOrdenPorCompetencia(short id, Long idCompetencia) {
 return  repository.existsByOrdenAndCompetencia_IdAndEliminacionIsFalse(id,idCompetencia);
 }
-@Override
+
+    /**
+     * Validar si la competencia esta siendo usada en el sistema
+     */
+    @Override
 public boolean existeCompetenciaEnUso(Long idCompetencia) {
         return repository.existsByCompetencia_IdAndEliminacionIsFalse(idCompetencia);
     }

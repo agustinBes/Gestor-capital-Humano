@@ -5,6 +5,7 @@ import com.practical.consultora_rrhh.excepciones.especializadas.atributos.Cuesti
 import com.practical.consultora_rrhh.excepciones.especializadas.atributos.SumaPonderacionesInvalidException;
 import com.practical.consultora_rrhh.excepciones.genericas.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
@@ -37,7 +38,7 @@ public class GlobalExceptionHandler {
         body.put("error", s.getReasonPhrase());
         body.put("mensaje", mensaje);
 
-        return ResponseEntity.status(s).body(body);
+        return ResponseEntity.status(s).contentType(MediaType.APPLICATION_JSON).body(body);
     }
 
     @ExceptionHandler(InvalidFormatException.class)
@@ -168,5 +169,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CuestionarioException.class)
     public ResponseEntity<Map<String, Object>> manejarColeccionCorrupta(CuestionarioException e) {
         return respuesta(e.getStatus(),e.getMessage());
+    }
+    @ExceptionHandler(IndexOutOfBoundsException.class)
+    public ResponseEntity<Map<String, Object>> manejarColeccionCorrupta(IndexOutOfBoundsException e) {
+        return respuesta(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 }

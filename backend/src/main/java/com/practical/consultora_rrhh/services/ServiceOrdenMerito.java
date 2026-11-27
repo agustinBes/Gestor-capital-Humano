@@ -2,7 +2,7 @@ package com.practical.consultora_rrhh.services;
 
 import com.practical.consultora_rrhh.dto.FiltrosBusqueda.puestoFiltrosDto;
 import com.practical.consultora_rrhh.dto.response.reporte.evaluacionesOrdenMeritoDto;
-import com.practical.consultora_rrhh.dto.response.puestoOrdenMeritoDto;
+import com.practical.consultora_rrhh.dto.response.reporte.puestoOrdenMeritoDto;
 import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
 import com.practical.consultora_rrhh.interfaces.services.IserviceOrdenMerito;
 import com.practical.consultora_rrhh.modelo.clases.*;
@@ -56,7 +56,7 @@ List<puestoOrdenMeritoDto> resultados=new ArrayList<>();
                     .filter(c -> c.getEstado().equals(tipoEstado.COMPLETADO))
                     .count();
 
-            resultados.add(new puestoOrdenMeritoDto(p.getCodigo(), p.getNombre(), p.getEmpresa(), (int)(candidatos),(int)(completado)));
+            resultados.add(new puestoOrdenMeritoDto(p.getId(),p.getCodigo(), p.getNombre(), p.getEmpresa(), (int)(candidatos),(int)(completado)));
 
         }
         return resultados;}
@@ -80,23 +80,48 @@ List<puestoOrdenMeritoDto> resultados=new ArrayList<>();
     }
 
     @Override
-    public byte[] exportar(List<Long> cuestionarios) {
-        List<Cuestionario> cuestionario=cuestionarioMediator.obtenerCuestionarios(cuestionarios);
-    List<Cuestionario> completados=cuestionario.stream()
+    public byte[] exportarchequear(List<Long> cuestionarios, Long identificador) {
+        List<Cuestionario> cuestionario = cuestionarioMediator.obtenerCuestionarios(cuestionarios);
+        if(cuestionario.size()!=cuestionarios.size()) {
+            throw new EntityNotFoundException("No existen todos los cuestionarios recibidos");
+        }
+
+        long cantidad=cuestionario.stream()
+                .filter(o->o.getPuesto().getId().equals(identificador))
+                .count();
+        if(cantidad!=cuestionarios.size()) {
+            throw new IndexOutOfBoundsException("Los cuestionarios no provienen de un unico puesto");
+        }
+
+
+        return exportar(cuestionario);
+    }
+
+
+    @Override
+    public byte[] exportar(List<Cuestionario> cuestionario) {
+
+//        Puesto p = cuestionario.getFirst().getPuesto();
+//        Long cantidad = cuestionario.stream()
+//                .filter(o -> o.getPuesto().equals(p)).count();
+//        if (cantidad != cuestionario.size()) {
+//    throw new IntegridadComprometidaException("No todos los cuestionarios pertenecen al mismo puesto");
+//}
+        List<Cuestionario> completados=cuestionario.stream()
             .filter(o->o.getEstado().equals(tipoEstado.COMPLETADO))
             .toList();
     List<Cuestionario> incompletos=cuestionario.stream()
             .filter(o->o.getEstado().equals(tipoEstado.INCOMPLETO))
             .toList();
-    List<Cuestionario> sinContestar=cuestionario.stream()
-            .filter(o->o.getEstado().equals(tipoEstado.SIN_CONTESTAR))
-            .toList();
+        List<Cuestionario> resto = cuestionario.stream()
+                .filter(o -> List.of(tipoEstado.SIN_CONTESTAR, tipoEstado.EN_PROCESO,tipoEstado.ACTIVO).contains(o.getEstado()))
+                .toList();
 List<Candidato>  candidatos=cuestionario
         .stream()
         .map(Cuestionario::getCandidato)
         .distinct()
         .toList();
-byte[] nuevo=generarReporte(completados,incompletos,sinContestar);
+byte[] nuevo=generarReporte(completados,incompletos,resto);
 return nuevo;
    }
 public
@@ -112,7 +137,7 @@ public
   //Obtener las competencias asociadas al puesto
         List<PuestoCompetencia> competencias=puestoMediator.obtenerCompetencias(puesto.getId());
 //obtener las competencias evaluadas en el cuestionario
-        List<Competencia>   competenciasEvaluadas=completo.getFirst().getPuntajes().keySet().stream().toList();
+        List<Competencia>   competenciasEvaluadas=cualquiera.getPuntajes().keySet().stream().toList();
 //obtener ponderaciones de competencias evaluadas en el cuestionario descartando las no evaluadas
 List<PuestoCompetencia> evaluadas=new ArrayList<>();
 for(Competencia c:competenciasEvaluadas) {

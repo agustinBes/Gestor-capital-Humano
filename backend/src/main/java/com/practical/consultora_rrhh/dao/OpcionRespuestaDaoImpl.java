@@ -16,7 +16,8 @@ import java.util.Optional;
 /**
  Implementación de la interfaz DAO para operaciones CRUD y consultas
  * personalizadas sobre la entidad {@link OpcionRespuesta}.
- *
+ *No solo gestiona esta entidad sino tambien {@link Opcion}
+ * Una opcion no puede existir sin una opcion de respuesta asociada
  * <p>Se abstrae el acceso a datos mediante
  * <a href="https://spring.io/projects/spring-data-jpa#overview">
  * Spring Data JPA</a>, delegando las operaciones de persistencia

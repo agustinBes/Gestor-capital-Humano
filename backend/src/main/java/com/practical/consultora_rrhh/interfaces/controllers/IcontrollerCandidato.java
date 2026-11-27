@@ -9,6 +9,14 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 
+/**
+ * Interfaz que hereda de las operaciones genericas de insercion,actualizacion
+ * eliminacion y lista que ofrece la interfaz {@link IControllerCRUD}
+ a su vez agrega los metodos especificos que esta obligado a implementar el
+ controlador especifico y los tipos de retornos con los que opera
+ @author Besigniano Agustin
+ @since 1.0
+ */
 public interface IcontrollerCandidato extends IControllerCRUD<candidatoDto, candidatoDtoCreate> {
 
 

@@ -42,6 +42,8 @@ import java.util.List;
  * Considerando el contexto del enunciado, se asume que la importación
  * responde a un proceso de migración de candidatos desde otro sistema
  * utilizado por la empresa.
+ * Es por esta razon que los id(representando el Nro de candidato) no son autogenerados,
+ * vienen desde el sistema principal
  * @author Besigniano Agustin
  * @since  1.0
  */
@@ -65,24 +67,38 @@ private final    ClassPathResource resource = new ClassPathResource("candidatos.
         this.serviceCuestionario = serviceCuestionario;
     }
 
+    /**
+     * Una entidad que registra el nombre de los archivos importados y niega el acceso a la capa de servicio
+     * si ya existe
+     * @param archivo representa el nombre del archivo
+     * @param c representa el consultor responsable de la importacion
+     */
+
     private void guardarRegistroArchivo(String archivo,Consultor c){
         HistorialArchivo h=new HistorialArchivo(null, archivo, c);
         HistorialArchivo guardado=repositorio.save(h);
-        archivosImportados.add(guardado);
-    }
+        archivosImportados.add(guardado);}
+
+    /**
+     * Proporcionamos a modo de prueba un archivo con candidatos para importar pueden enviarlo cargandolo
+     * o solo enviar la solicitud y el sistema procede a importarlo la primera vez
+     * @throws CorruptFileException gestionar excepciones si fallo al abrir o algo en la lectura del archivo
+     */
     private String proporcionarCandidatos(Consultor c) throws CorruptFileException {
         String    r = service.importarCandidatos(resource);
             guardarRegistroArchivo(resource.getFilename(),c);
-
         return r;}
 
+    /**
+     * Peticion que recibe un archivo en formato csv para la importacion de candidatos se debe respetar la columna de encabezado
+     */
     @PostMapping(value = "/import/{idConsultor}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> importarCandidatos(@RequestParam(required = false) MultipartFile file,@PathVariable String  idConsultor) throws CorruptFileException {
+
         Long consultor = TextoUtils.identificador(idConsultor);
         Consultor c = iconsultor.obtenerConsultor(consultor);
                boolean existe = archivosImportados.stream()
-                    .anyMatch(archivo ->
-                            archivo.getNombre().equals(resource.getFilename()));
+                    .anyMatch(archivo ->archivo.getNombre().equals(resource.getFilename()));
                //Archivo null y no existe el archivo local
             if (file == null && !existe) {
                 proporcionarCandidatos(c);
@@ -117,36 +133,46 @@ private final    ClassPathResource resource = new ClassPathResource("candidatos.
 
                             return ResponseEntity.ok("Importamos con exito el conjunto de datos" + r);
                         }
+                    }}}}
 
-                    }
-                }
-            }}
-
-
-@GetMapping("/lista")
+    /**
+     * Listar todos los candidatos existentes en el sistema
+     */
+    @GetMapping("/lista")
     public ResponseEntity<List<candidatoDto>> obtenerTodos(){
         List<candidatoDto> candidatos=service.obtenerTodos();
-        return ResponseEntity.ok(candidatos);
-}
+        return ResponseEntity.ok(candidatos);}
 
-@GetMapping("/buscar")
+    /**
+     * Filtro de busqueda de candidatos. Para saber los campos de busqueda consultar {@link candidatoFiltrosDto}
+     */
+    @GetMapping("/buscar")
     public ResponseEntity<List<candidatoDto>> buscarCandidatos(@Valid @ModelAttribute candidatoFiltrosDto filtro){
                List<candidatoDto> result=service.buscarCandidatos(filtro);
         return ResponseEntity.ok(result);
 }
+
+    /**
+     * Operacion no soportada en esta version del sistema
+     */
     @Override
     @PostMapping("/new")
     public ResponseEntity<candidatoDto> guardar(candidatoDtoCreate dto) {
         throw new UnsupportedOperationException();
     }
 
-
+    /**
+     * Peticion para acceder al sistema por parte de un candidato. Consultar los campos requeridos en {@link candidatoDtoAuth}
+     */
     @Override
     public ResponseEntity<cuestionarioDto> autenticarCandidato(candidatoDtoAuth candidatoDtoAuth) {
         cuestionarioDto cuestionario=serviceCuestionario.obtenerCuestionarioDto(candidatoDtoAuth);
 return ResponseEntity.ok(cuestionario);
     }
 
+    /**
+     * Operacion no soportada en esta version del sistema
+     */
     @Override
     @PatchMapping("/update/{id}")
 
@@ -154,12 +180,19 @@ return ResponseEntity.ok(cuestionario);
        throw new UnsupportedOperationException();
     }
 
+    /**
+     * Operacion no soportada en esta version del sistema
+     */
     @Override
     @DeleteMapping("/delete/{id}/responsable/{idConsultor}")
 
     public ResponseEntity<String> eliminar(String id, String idConsultor) {
         throw new UnsupportedOperationException();
     }
+
+    /**
+     * Operacion no soportada en esta version del sistema
+     */
     @Override
     @GetMapping("/{id}")
     public ResponseEntity<candidatoDto> obtenerPorId(String id) {

@@ -5,6 +5,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.practical.consultora_rrhh.modelo.clases.Candidato;
 import com.practical.consultora_rrhh.modelo.enums.tipoDocumento;
 
+/**
+ * Formato de los candidatos evaluados para un puesto que se presenta al usuario
+ * luego de evaluar candidatos en el CU 25
+ * @author  Besigniano Agustin
+ * @since  1.0
+ */
 public record evaluadosDto(
         String apellido,
         String nombre,

@@ -4,6 +4,7 @@ import com.practical.consultora_rrhh.dao.specifications.PuestoSpecifications;
 import com.practical.consultora_rrhh.dto.FiltrosBusqueda.puestoFiltrosDto;
 import com.practical.consultora_rrhh.interfaces.dao.IPuestoDao;
 import com.practical.consultora_rrhh.interfaces.repositorio.puestoRepository;
+import com.practical.consultora_rrhh.modelo.clases.Factor;
 import com.practical.consultora_rrhh.modelo.clases.Puesto;
 import com.practical.consultora_rrhh.dao.specifications.TextoSpecifications;
 import jakarta.transaction.Transactional;
@@ -14,6 +15,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 @Repository
+/**
+ Implementación de la interfaz DAO para operaciones CRUD y consultas
+ * personalizadas sobre la entidad {@link Puesto}.
+ *
+ * <p>Se abstrae el acceso a datos mediante
+ * <a href="https://spring.io/projects/spring-data-jpa#overview">
+ * Spring Data JPA</a>, delegando las operaciones de persistencia y busqueda
+ * en su correspondiente Repository.</p>
+ *
+ * @author  Besigniano Agustin
+ * @since 1.0
+ */
 public class PuestoDaoImpl implements IPuestoDao {
     private final puestoRepository repository;
 
@@ -77,13 +90,20 @@ public class PuestoDaoImpl implements IPuestoDao {
         Specification<Puesto> filtro = TextoSpecifications.coincidencia("nombre", nombre, false, true);
         return repository.exists(filtro);
     }
-
+    /**
+     * Busqueda a traves del codigo ignorando mayusculas, ignorando espacios extra
+     * Ignorando los acentos que pudiera contener
+     * Considerando filas eliminadas(logicamente)
+     */
     @Override
     public boolean existePorCodigoInsensible(String codigo) {
         Specification<Puesto> filtro = TextoSpecifications.coincidencia("codigo", codigo, false, true);
         return repository.exists(filtro);
     }
 
+    /**
+     * Busqueda dinamica a trave de la clase Specification
+     */
     @Override
     public List<Puesto> buscar(puestoFiltrosDto dto) {
         Specification<Puesto> filtros= PuestoSpecifications.buscar(dto);

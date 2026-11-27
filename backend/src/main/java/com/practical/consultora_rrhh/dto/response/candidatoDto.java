@@ -9,6 +9,10 @@ import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
 
+/**
+ * Formato para la importacion decandidatos coincidiendo con el esquema de los archivos CSV
+ * requeridos para permitir importar mediante archivos
+ */
 public record candidatoDto(
         @NotNull(message = "El id es obligatorio")
         @Positive(message = "Se espera un número entero positivo")

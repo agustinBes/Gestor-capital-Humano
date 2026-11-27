@@ -2,6 +2,8 @@ package com.practical.consultora_rrhh.dao;
 
 import com.practical.consultora_rrhh.interfaces.dao.IpuestoCompetenciaDao;
 import com.practical.consultora_rrhh.interfaces.repositorio.puestoCompetenciaRepository;
+import com.practical.consultora_rrhh.modelo.clases.Competencia;
+import com.practical.consultora_rrhh.modelo.clases.Puesto;
 import com.practical.consultora_rrhh.modelo.clases.PuestoCompetencia;
 import com.practical.consultora_rrhh.modelo.id.PuestoCompetenciaId;
 import jakarta.transaction.Transactional;
@@ -13,7 +15,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
+/**
+ Implementación de la interfaz DAO para operaciones CRUD y consultas
+ * personalizadas sobre la entidad {@link PuestoCompetencia}.
+ * Representa una clase asociacion entre el Puesto y la competencia
+ * {@link Puesto} y {@link Competencia}
+ *
+ * <p>Se abstrae el acceso a datos mediante
+ * <a href="https://spring.io/projects/spring-data-jpa#overview">
+ * Spring Data JPA</a>, delegando las operaciones de persistencia y busqueda
+ * en su correspondiente Repository.</p>
+ * Tiene gestion propia pero la misma no puede existir sin un puesto y competencia asociados entre si
+ *
+ * @author  Besigniano Agustin
+ * @since 1.0
+ */
 @Repository
 public class PuestoCompetenciaDaoImpl implements IpuestoCompetenciaDao {
     private final puestoCompetenciaRepository repository;
@@ -109,7 +125,9 @@ repository.delete(x);}
         return repository.existsById(puestoCompetenciaId);
     }
 
-
+    /**
+     * Determinar si una competencia esta siendo usada en el sistema como caracteristica de un puesto
+     */
     @Override
     public boolean existeCompetenciaEnUso(Long id) {
         return repository.existsByCompetencia_Id(id);

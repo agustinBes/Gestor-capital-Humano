@@ -76,6 +76,17 @@ generador.inicializar(this.obtenerClaves());
 candidatoMediator.registrarServicioA(this);
 preguntaMediator.registrarServicioB(this);
 ordenMeritoMediator.registrarServicioB(this);
+
+this.actualizarEstados();
+
+}
+@Transactional
+public void actualizarEstados(){
+    List<Cuestionario> cuestionarios=dao.obtenerTodos();
+    cuestionarios.forEach(cuestionario->{ cuestionario.validarEstadoGeneral(
+propiedadesCuestionario.getTiempoMaximoActivo(),
+propiedadesCuestionario.getTiempoMaximoRealizacion(),
+propiedadesCuestionario.getCantidadDeAccesos());});
 }
   //---------------------------------LISTAR---------------------------------
 //--------------------------------------------------------------------------

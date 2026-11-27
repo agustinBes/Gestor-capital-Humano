@@ -1,14 +1,14 @@
 WITH datos_cuestionario AS (
     SELECT *
     FROM (VALUES
-        (1, 0, 0, 3),
+        (1, 0, 0, 0),
         (2, 1, 1, 2),
         (3, 2, 4, 1),
-        (4, 3, 2, 0),
-        (5, 4, 1, 3),
-        (6, 6, 3, 2),
-        (7, 8, 2, 1),
-        (8, 10, 4, 0)
+        (4, 3, 2, 1),
+        (5, 4, 1, 2),
+        (6, 6, 3, 1),
+        (7, 8, 2, 2),
+        (8, 10, 4, 1)
     ) AS datos(id_candidato, dias_inicio, dias_hasta_intento, nro_acceso)
 )
 UPDATE cuestionario c

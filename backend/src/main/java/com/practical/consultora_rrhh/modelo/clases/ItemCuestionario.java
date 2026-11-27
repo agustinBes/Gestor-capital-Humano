@@ -1,6 +1,6 @@
 package com.practical.consultora_rrhh.modelo.clases;
 
-import com.practical.consultora_rrhh.dto.request.itemCuestionarioDtoCreateItems;
+import com.practical.consultora_rrhh.dto.itemCuestionarioDtoCreateItems;
 import com.practical.consultora_rrhh.modelo.id.itemCuestionarioId;
 import jakarta.persistence.*;
 import lombok.*;

@@ -6,6 +6,9 @@ import com.practical.consultora_rrhh.modelo.enums.tipoCompetencia;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Devolucion de una competencia con los factores asociados a la misma
+ */
 public record competenciaDto(
         Long id,
         String codigo,

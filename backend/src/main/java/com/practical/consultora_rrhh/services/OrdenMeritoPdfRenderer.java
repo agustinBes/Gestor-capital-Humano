@@ -14,6 +14,7 @@ import com.practical.consultora_rrhh.modelo.clases.Candidato;
 import com.practical.consultora_rrhh.modelo.clases.Cuestionario;
 import com.practical.consultora_rrhh.modelo.clases.Puesto;
 import com.practical.consultora_rrhh.modelo.clases.PuestoCompetencia;
+import com.practical.consultora_rrhh.modelo.propiedades.CuestionarioProperties;
 import org.openpdf.pdf.ITextRenderer;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
@@ -26,6 +27,7 @@ import org.thymeleaf.context.Context;
  */
 @Component
 public class OrdenMeritoPdfRenderer {
+    private final CuestionarioProperties propiedades;
 
     // ---- Modelos de vista (todo ya formateado como String para el template) -------------
     public record Minimo(String nombre, String valor) {}
@@ -44,7 +46,8 @@ public class OrdenMeritoPdfRenderer {
 
     private final TemplateEngine templateEngine;
 
-    public OrdenMeritoPdfRenderer(TemplateEngine templateEngine) {
+    public OrdenMeritoPdfRenderer(CuestionarioProperties propiedades, TemplateEngine templateEngine) {
+        this.propiedades = propiedades;
         this.templateEngine = templateEngine;
     }
 
@@ -56,6 +59,9 @@ public class OrdenMeritoPdfRenderer {
                              List<Cuestionario> noAprobados,
                              List<Cuestionario> incompletos,
                              List<Cuestionario> sinContestar) {
+        aprobados = aprobados.stream()
+                .sorted((a, b) -> puntaje(b).compareTo(puntaje(a)))
+                .toList();
 
         List<FilaMerito> filasAprobados = new ArrayList<>();
         for (int i = 0; i < aprobados.size(); i++) {
@@ -109,7 +115,8 @@ public class OrdenMeritoPdfRenderer {
             if (!cumple) fallas.add(nombre);
             comps.add(new CompFila(nombre, num(obtenido), num(minimo), cumple, barra(obtenido, minimo, cumple)));
         }
-
+        short aux= propiedades.getCantidadDeAccesos();
+        short intentos= (short) (aux-c.getNroAccesos());
         return new FilaMerito(
                 pos == null ? "-" : String.valueOf(pos),
                 pos != null && pos <= 3 ? COLOR_POS[pos - 1] : COLORES[3],
@@ -118,13 +125,15 @@ public class OrdenMeritoPdfRenderer {
                 num(puntaje(c)),
                 comps, fallas,
                 fecha(c.getFechaInicio()),
-                fecha(c.getFechaIntento()),   // no existe fechaFin en tu entidad: se usa el último intento
-                String.valueOf(c.getNroAccesos()));
+                fecha(c.getFechaIntento()),
+                String.valueOf(intentos));
     }
 
     private FilaSimple filaSimple(Cuestionario c) {
+        short aux= propiedades.getCantidadDeAccesos();
+        short intentos= (short) (aux-c.getNroAccesos());
         return new FilaSimple(documento(c.getCandidato()), nombreCompleto(c.getCandidato()),
-                fecha(c.getFechaInicio()), fecha(c.getFechaIntento()), String.valueOf(c.getNroAccesos()));
+                fecha(c.getFechaInicio()), fecha(c.getFechaIntento()), String.valueOf(intentos));
     }
 
     /**
@@ -157,7 +166,9 @@ public class OrdenMeritoPdfRenderer {
 
     // ---- Helpers --------------------------------------------------------------------------
 
-    /** Mismo cálculo que calcularPuntaje de tu servicio (promedio de competencias). */
+    /**
+     * Mismo cálculo que calcularPuntaje de tu servicio (promedio de competencias).
+     */
     private BigDecimal puntaje(Cuestionario c) {
         var valores = c.getPuntajes().values();
         if (valores.isEmpty()) return BigDecimal.ZERO;

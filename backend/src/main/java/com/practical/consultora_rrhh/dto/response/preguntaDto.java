@@ -4,6 +4,9 @@ import com.practical.consultora_rrhh.modelo.clases.Pregunta;
 
 import java.util.List;
 
+/**
+ * Formato usado para mostrar una pregunta al usuario
+ */
 public record preguntaDto(
         Long id,
         String nombre,

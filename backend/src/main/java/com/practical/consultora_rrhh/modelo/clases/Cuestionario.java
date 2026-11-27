@@ -72,49 +72,44 @@ public static Cuestionario GenerarCuestioario(Puesto puesto, Candidato candidato
     items.forEach(item-> item.setCuestionario(nuevo));
     return nuevo;
 }
+//------------------------------------------------------------------------------
+    //Solo para el candidato cuando ingresa por primera vez
+    public void primerIngreso(short cantidadAcceso,Duration tiempoMaximoActivo,Duration tiempoMaximoRealizacion){
+        if(cantidadAcceso==NroAccesos){
+            LocalDateTime ahora = LocalDateTime.now();
 
-public void validarEstado(Duration tiempoMaximoActivo,Duration tiempoMaximoRealizacion){
+            superatiempoMaximoActivo(tiempoMaximoActivo);
+            superaTiempoMaximoRealizacion(tiempoMaximoRealizacion);
+            if(estado==tipoEstado.ACTIVO) {
 
-    LocalDateTime actual= LocalDateTime.now();
-    switch (estado) {
-        case ACTIVO -> {
-            if (actual.isAfter(fechaCreacion.plus(tiempoMaximoActivo))) {
-                estado = tipoEstado.SIN_CONTESTAR;
-                fechaIntento = actual;
-            }
-                    }
-
-        case EN_PROCESO -> {
-            if (actual.isAfter(fechaInicio.plus(tiempoMaximoRealizacion))) {
-                estado = tipoEstado.INCOMPLETO;
-                fechaIntento = actual;
+                fechaInicio = ahora;
+                NroAccesos = (short) (NroAccesos - 1);
+                estado = tipoEstado.EN_PROCESO;
             }
         }
-
-        default -> {
-            // No requiere validación temporal.
+        else{
+            this.validarEstado(tiempoMaximoActivo,tiempoMaximoRealizacion);
         }
     }
-}
-//Solo para el candidato cuando ingresa por primera vez
-public void primerIngreso(short cantidadAcceso,Duration tiempoMaximoActivo,Duration tiempoMaximoRealizacion){
-    if(cantidadAcceso==NroAccesos){
-                LocalDateTime ahora = LocalDateTime.now();
+//Solo para el candidato
+public void validarEstado(Duration tiempoMaximoActivo,Duration tiempoMaximoRealizacion) {
 
-         superatiempoMaximoActivo(tiempoMaximoActivo);
-         superaTiempoMaximoRealizacion(tiempoMaximoRealizacion);
-         if(estado==tipoEstado.ACTIVO) {
-
-             fechaInicio = ahora;
-             NroAccesos = (short) (NroAccesos - 1);
-             estado = tipoEstado.EN_PROCESO;
-         }
+    LocalDateTime actual = LocalDateTime.now();
+    if (estado == tipoEstado.EN_PROCESO) {
+        if (NroAccesos == 0) {
+            estado = tipoEstado.INCOMPLETO;
+            fechaIntento = actual;
+        } else {
+            NroAccesos = (short) (NroAccesos - 1);
+        }
     }
-    else{
-        this.validarEstado(tiempoMaximoActivo,tiempoMaximoRealizacion);
+else{
+    if(estado == tipoEstado.SIN_CONTESTAR){
+        superatiempoMaximoActivo(tiempoMaximoActivo);
+    }
     }
 }
-
+//----------------------------------------------------------------
 public void superaTiempoMaximoRealizacion(Duration tiempo) {
     LocalDateTime actual= LocalDateTime.now();
 
@@ -124,7 +119,6 @@ public void superaTiempoMaximoRealizacion(Duration tiempo) {
         estado=tipoEstado.INCOMPLETO;
         fechaIntento = actual;
            }}
-
 }
 public void superatiempoMaximoActivo(Duration tiempo) {
     LocalDateTime ahora= LocalDateTime.now();
@@ -132,8 +126,7 @@ if(estado ==tipoEstado.ACTIVO) {
     if (ahora.isAfter(fechaCreacion.plus(tiempo))) {
         estado = tipoEstado.SIN_CONTESTAR;
         fechaIntento = ahora;
-    }
-}}
+    }}}
 
     public void completado(List<Bloque> bloques){
 
@@ -145,13 +138,22 @@ if(cantidad==cantidadTotal) {
     estado = tipoEstado.COMPLETADO;
     fechaIntento = LocalDateTime.now();
 
+}}
+
+    //al iniciar la aplicacion
+    public void validarEstadoGeneral(Duration tiempoMaximoActivo,Duration tiempoMaximoRealizacion,short accesos){
+        superatiempoMaximoActivo(tiempoMaximoActivo);
+        superaTiempoMaximoRealizacion(tiempoMaximoRealizacion);
+if(estado==tipoEstado.EN_PROCESO){
+    if(NroAccesos==(short)(0)){
+        estado = tipoEstado.INCOMPLETO;
+    }
+}
+    }
+
 }
 
 
 
-}
 
-
-
-}
 
