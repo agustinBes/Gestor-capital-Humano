@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Boton from "../../../componentes/boton";
 import Tabla from "../../../componentes/tabla";
-import Link from "next/dist/client/link";
+import Link from "next/link";
 
 // Paso 7: valores requeridos por la función vs obtenidos por el candidato.
 // Data de prueba (escala 1 a 5). Después lo reemplazás por tu fetch.
@@ -15,29 +16,10 @@ const competencias = [
 
 const ESCALA_MAX = 5;
 
-export default function ReporteComparativo() {
-  const [paddingArriba, setPaddingArriba] = useState("17rem");
-  const [funcion, setFuncion] = useState("");
-  const [candidato, setCandidato] = useState("");
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setFuncion(params.get("funcion") ?? "");
-    setCandidato(params.get("candidato") ?? "");
-  }, []);
-
-  useEffect(() => {
-    const ajustarPadding = () => {
-      if (window.innerWidth < 1400) {
-        setPaddingArriba("4rem");
-      } else {
-        setPaddingArriba("4rem");
-      }
-    };
-    ajustarPadding();
-    window.addEventListener("resize", ajustarPadding);
-    return () => window.removeEventListener("resize", ajustarPadding);
-  }, []);
+function ReporteComparativoContenido() {
+  const searchParams = useSearchParams();
+  const funcion = searchParams.get("funcion") ?? "";
+  const candidato = searchParams.get("candidato") ?? "";
 
   // Paso 8: imprimir el reporte con el gráfico y la tabla
   const imprimir = () => window.print();
@@ -48,7 +30,7 @@ export default function ReporteComparativo() {
       display: "flex",
       justifyContent: "center",
       alignItems: "flex-start",
-      paddingTop: paddingArriba
+      paddingTop: "4rem"
     }}>
       {/* Al imprimir se ocultan los botones */}
       <style>{`@media print { .no-imprimir { display: none !important; } }`}</style>
@@ -118,5 +100,13 @@ export default function ReporteComparativo() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ReporteComparativo() {
+  return (
+    <Suspense fallback={null}>
+      <ReporteComparativoContenido />
+    </Suspense>
   );
 }

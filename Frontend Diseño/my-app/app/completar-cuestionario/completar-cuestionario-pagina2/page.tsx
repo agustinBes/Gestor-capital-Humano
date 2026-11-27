@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Boton from "../../../componentes/boton";
 
@@ -88,27 +88,53 @@ const factoresEjemplo: Factor[] = [
 
 const TIEMPO_TOTAL = 600;
 
+type ProgresoCuestionario = {
+  factorActual: number;
+  respuestas: Record<number, string>;
+  puntuacionTotal: number;
+  tiempoRestante: number;
+};
+
+const suscribirHidratacion = () => () => {};
+const obtenerEstadoCliente = () => true;
+const obtenerEstadoServidor = () => false;
+
+function leerProgresoInicial(): ProgresoCuestionario {
+  const predeterminado: ProgresoCuestionario = {
+    factorActual: 0,
+    respuestas: {},
+    puntuacionTotal: 0,
+    tiempoRestante: TIEMPO_TOTAL,
+  };
+
+  if (typeof window === "undefined") return predeterminado;
+
+  const guardado = localStorage.getItem("progresoCuestionario");
+  if (!guardado) return predeterminado;
+
+  const data = JSON.parse(guardado) as Partial<ProgresoCuestionario>;
+  return {
+    factorActual: data.factorActual || 0,
+    respuestas: data.respuestas || {},
+    puntuacionTotal: data.puntuacionTotal || 0,
+    tiempoRestante: data.tiempoRestante || TIEMPO_TOTAL,
+  };
+}
+
 export default function PreguntasPorFactor() {
   const router = useRouter();
   const [paddingArriba, setPaddingArriba] = useState("9rem");
-  const [factorActual, setFactorActual] = useState(0);
-  const [respuestas, setRespuestas] = useState<Record<number, string>>({});
-  const [puntuacionTotal, setPuntuacionTotal] = useState(0);
-  const [tiempoRestante, setTiempoRestante] = useState(TIEMPO_TOTAL);
-  const [cargado, setCargado] = useState(false);
+  const [progresoInicial] = useState(leerProgresoInicial);
+  const [factorActual, setFactorActual] = useState(progresoInicial.factorActual);
+  const [respuestas, setRespuestas] = useState(progresoInicial.respuestas);
+  const [puntuacionTotal, setPuntuacionTotal] = useState(progresoInicial.puntuacionTotal);
+  const [tiempoRestante, setTiempoRestante] = useState(progresoInicial.tiempoRestante);
+  const cargado = useSyncExternalStore(
+    suscribirHidratacion,
+    obtenerEstadoCliente,
+    obtenerEstadoServidor
+  );
   const [errorBloque, setErrorBloque] = useState(false);
-
-  useEffect(() => {
-    const guardado = localStorage.getItem("progresoCuestionario");
-    if (guardado) {
-      const data = JSON.parse(guardado);
-      setFactorActual(data.factorActual || 0);
-      setRespuestas(data.respuestas || {});
-      setPuntuacionTotal(data.puntuacionTotal || 0);
-      setTiempoRestante(data.tiempoRestante || TIEMPO_TOTAL);
-    }
-    setCargado(true);
-  }, []);
 
   useEffect(() => {
     if (!cargado) return;
@@ -148,12 +174,7 @@ export default function PreguntasPorFactor() {
       respuestas[pregunta.id] !== null &&
       respuestas[pregunta.id] !== ""
   );
-
-  useEffect(() => {
-    if (todasRespondidas && errorBloque) {
-      setErrorBloque(false);
-    }
-  }, [todasRespondidas, errorBloque]);
+  const mostrarErrorBloque = errorBloque && !todasRespondidas;
 
   const manejarRespuesta = (preguntaId: number, valor: string, puntos: number) => {
     const respuestaAnterior = respuestas[preguntaId];
@@ -307,7 +328,7 @@ export default function PreguntasPorFactor() {
             padding="10px 30px"
           />
 
-          {errorBloque && (
+          {mostrarErrorBloque && (
             <p style={{ color: "#d9534f", fontSize: "0.9rem", marginTop: "10px", fontWeight: "500" }}>
               ⚠️ Tenés que responder todas las preguntas de este bloque para continuar.
             </p>

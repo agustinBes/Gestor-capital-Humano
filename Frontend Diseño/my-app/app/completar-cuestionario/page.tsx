@@ -36,7 +36,7 @@ export default function CompletarCuestionario() {
       alignSelf: "stretch"
       }} />
       <label style={{ margin: "1rem", fontSize: "1.2rem", textAlign: "center" }}>
-      Por favor, lea cuidadosamente las instrucciones antes de comenzar el cuestionario. Asegúrese de tener suficiente tiempo y un ambiente tranquilo para completar todas las preguntas. Una vez que haya terminado, haga clic en "Finalizar" para enviar sus respuestas.
+      Por favor, lea cuidadosamente las instrucciones antes de comenzar el cuestionario. Asegúrese de tener suficiente tiempo y un ambiente tranquilo para completar todas las preguntas. Una vez que haya terminado, haga clic en &quot;Finalizar&quot; para enviar sus respuestas.
       </label>
       <div style={{display: "flex", gap: "150px", textAlign: "center", margin: "1rem 0" }}>
       <Boton texto="Cancelar" onClick={() => alert("Guardado")} padding="10px 20px" />

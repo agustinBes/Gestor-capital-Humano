@@ -1,3 +1,5 @@
+import type { ChangeEvent } from "react";
+
 type Props = {
   label: string;
   placeholder?: string;
