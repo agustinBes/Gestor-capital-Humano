@@ -20,7 +20,6 @@ type Factor = {
   preguntas: Pregunta[];
 };
 
-// Datos de muestra
 const factoresEjemplo: Factor[] = [
   {
     id: 1,
@@ -87,18 +86,18 @@ const factoresEjemplo: Factor[] = [
   },
 ];
 
-const TIEMPO_TOTAL = 600; // 10 minutos en segundos (ajustá el número que quieras)
+const TIEMPO_TOTAL = 600;
 
 export default function PreguntasPorFactor() {
   const router = useRouter();
-
+  const [paddingArriba, setPaddingArriba] = useState("9rem");
   const [factorActual, setFactorActual] = useState(0);
   const [respuestas, setRespuestas] = useState<Record<number, string>>({});
   const [puntuacionTotal, setPuntuacionTotal] = useState(0);
   const [tiempoRestante, setTiempoRestante] = useState(TIEMPO_TOTAL);
   const [cargado, setCargado] = useState(false);
+  const [errorBloque, setErrorBloque] = useState(false);
 
-  // Cargar progreso guardado al montar
   useEffect(() => {
     const guardado = localStorage.getItem("progresoCuestionario");
     if (guardado) {
@@ -111,7 +110,6 @@ export default function PreguntasPorFactor() {
     setCargado(true);
   }, []);
 
-  // Guardar progreso cada vez que cambia algo
   useEffect(() => {
     if (!cargado) return;
     const data = {
@@ -123,7 +121,6 @@ export default function PreguntasPorFactor() {
     localStorage.setItem("progresoCuestionario", JSON.stringify(data));
   }, [factorActual, respuestas, puntuacionTotal, tiempoRestante, cargado]);
 
-  // Temporizador
   useEffect(() => {
     if (!cargado) return;
 
@@ -132,7 +129,7 @@ export default function PreguntasPorFactor() {
         if (prev <= 1) {
           clearInterval(intervalo);
           localStorage.removeItem("progresoCuestionario");
-          router.push("/instrucciones"); // ← cambiá esta ruta por la de tu pantalla de instrucciones
+          router.push("/completar-cuestionario");
           return 0;
         }
         return prev - 1;
@@ -144,6 +141,19 @@ export default function PreguntasPorFactor() {
 
   const factor = factoresEjemplo[factorActual];
   const esUltimo = factorActual === factoresEjemplo.length - 1;
+
+  const todasRespondidas = factor.preguntas.every(
+    (pregunta) =>
+      respuestas[pregunta.id] !== undefined &&
+      respuestas[pregunta.id] !== null &&
+      respuestas[pregunta.id] !== ""
+  );
+
+  useEffect(() => {
+    if (todasRespondidas && errorBloque) {
+      setErrorBloque(false);
+    }
+  }, [todasRespondidas, errorBloque]);
 
   const manejarRespuesta = (preguntaId: number, valor: string, puntos: number) => {
     const respuestaAnterior = respuestas[preguntaId];
@@ -160,80 +170,149 @@ export default function PreguntasPorFactor() {
   };
 
   const siguiente = () => {
+    if (!todasRespondidas) {
+      setErrorBloque(true);
+      return;
+    }
+
     if (!esUltimo) {
       setFactorActual(factorActual + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       localStorage.removeItem("progresoCuestionario");
       console.log("Puntuación final:", puntuacionTotal);
       console.log("Respuestas:", respuestas);
-      // acá después mandás los resultados a la base
-      router.push("/instrucciones"); // o a una pantalla de resultados
+      router.push("/completar-cuestionario");
     }
   };
 
   const formatearTiempo = (segundos: number) => {
     const m = Math.floor(segundos / 60);
     const s = segundos % 60;
-    return `\( {m}: \){s.toString().padStart(2, "0")}`;
+    return `${m}:${s.toString().padStart(2, "0")}`;
   };
+
+  useEffect(() => {
+    const ajustarPadding = () => {
+      if (window.innerWidth < 1400) {
+        setPaddingArriba("1rem");
+      } else {
+        setPaddingArriba("9rem");
+      }
+    };
+    ajustarPadding();
+    window.addEventListener("resize", ajustarPadding);
+    return () => window.removeEventListener("resize", ajustarPadding);
+  }, []);
 
   if (!cargado) return null;
 
   return (
     <div
       style={{
-        maxWidth: "700px",
-        margin: "2rem auto",
-        padding: "2rem",
-        border: "2px solid #1E2A1C",
-        borderRadius: "8px",
-        background: "#F5F5F5",
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        paddingTop: paddingArriba,
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-        <span>Puntos: {puntuacionTotal}</span>
-        <span style={{ fontWeight: "bold", color: tiempoRestante < 60 ? "red" : "#1E2A1C" }}>
-          Tiempo: {formatearTiempo(tiempoRestante)}
-        </span>
-      </div>
-
-      <h2 style={{ textAlign: "center", marginBottom: "0.5rem" }}>
-        {factor.nombre}
-      </h2>
-      <p style={{ textAlign: "center", color: "#555", marginBottom: "2rem" }}>
-        Factor {factorActual + 1} de {factoresEjemplo.length}
-      </p>
-
-      {factor.preguntas.map((pregunta) => (
-        <div key={pregunta.id} style={{ marginBottom: "2rem" }}>
-          <p style={{ fontWeight: "bold", marginBottom: "0.8rem" }}>
-            {pregunta.texto}
+      <div
+        className="flex flex-col flex-1"
+        style={{
+          display: "flex",
+          maxWidth: "800px",
+          margin: "2rem auto",
+          border: "2px solid #1E2A1C",
+          borderRadius: "8px",
+          background: "#F5F5F5",
+          alignItems: "center",
+          width: "100%",
+          paddingBottom: "2rem",
+        }}
+      >
+        <h2 style={{ display: "flex", margin: "1rem auto 0.5rem", fontSize: "2rem" }}>
+          <img
+            src="/lupa.png"
+            alt="Lupa"
+            style={{
+              width: "30px",
+              height: "30px",
+              objectFit: "contain",
+              marginRight: "0.5rem",
+              marginTop: "0.5rem",
+            }}
+          />
+          Cuestionario de Candidato
+        </h2>
+        <hr
+          style={{
+            width: "100%",
+            border: "none",
+            borderTop: "2px solid #1E2A1C",
+            margin: "0.5rem 0rem 1.5rem 0rem",
+            alignSelf: "stretch",
+          }}
+        />
+        <div style={{ position: "relative", width: "100%", textAlign: "center", marginBottom: "1.5rem" }}>
+          <p style={{ color: "#555", marginBottom: "0.5rem", marginTop: "0", fontSize: "1.1rem" }}>
+            Factor {factorActual + 1} de {factoresEjemplo.length}
           </p>
 
-          {pregunta.opciones.map((opcion) => (
-            <label
-              key={opcion.texto}
-              style={{ display: "block", marginBottom: "0.5rem", cursor: "pointer" }}
-            >
-              <input
-                type="radio"
-                name={`pregunta-${pregunta.id}`}
-                value={opcion.texto}
-                checked={respuestas[pregunta.id] === opcion.texto}
-                onChange={() => manejarRespuesta(pregunta.id, opcion.texto, opcion.puntos)}
-              />{" "}
-              {opcion.texto}
-            </label>
-          ))}
+          <div
+            style={{
+              position: "absolute",
+              right: "30px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "#f8f9fa",
+              border: "1px solid #e2e8f0",
+              padding: "6px 12px",
+              borderRadius: "8px",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+            }}
+          >
+            <span style={{ fontWeight: "bold", fontSize: "0.9rem", color: tiempoRestante < 60 ? "red" : "#1E2A1C" }}>
+              ⏱️ {formatearTiempo(tiempoRestante)}
+            </span>
+          </div>
         </div>
-      ))}
 
-      <div style={{ textAlign: "center", marginTop: "2rem" }}>
-        <Boton
-          texto={esUltimo ? "Finalizar" : "Siguiente"}
-          onClick={siguiente}
-          padding="10px 30px"
-        />
+        {factor.preguntas.map((pregunta) => (
+          <div key={pregunta.id} style={{ marginBottom: "2rem", width: "85%", textAlign: "left" }}>
+            <p style={{ fontWeight: "bold", marginBottom: "0.8rem" }}>{pregunta.texto}</p>
+
+            {pregunta.opciones.map((opcion) => (
+              <label
+                key={opcion.texto}
+                style={{ display: "block", marginBottom: "0.5rem", cursor: "pointer" }}
+              >
+                <input
+                  type="radio"
+                  name={`pregunta-${pregunta.id}`}
+                  value={opcion.texto}
+                  checked={respuestas[pregunta.id] === opcion.texto}
+                  onChange={() => manejarRespuesta(pregunta.id, opcion.texto, opcion.puntos)}
+                />{" "}
+                {opcion.texto}
+              </label>
+            ))}
+          </div>
+        ))}
+
+        <div style={{ textAlign: "center", marginTop: "1rem" }}>
+          <Boton
+            texto={esUltimo ? "Finalizar" : "Siguiente"}
+            onClick={siguiente}
+            padding="10px 30px"
+          />
+
+          {errorBloque && (
+            <p style={{ color: "#d9534f", fontSize: "0.9rem", marginTop: "10px", fontWeight: "500" }}>
+              ⚠️ Tenés que responder todas las preguntas de este bloque para continuar.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

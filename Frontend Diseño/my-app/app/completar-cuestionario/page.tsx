@@ -40,7 +40,7 @@ export default function CompletarCuestionario() {
       </label>
       <div style={{display: "flex", gap: "150px", textAlign: "center", margin: "1rem 0" }}>
       <Boton texto="Cancelar" onClick={() => alert("Guardado")} padding="10px 20px" />
-      <Link href="/completar-cuestionario/cuestionario">
+      <Link href="/completar-cuestionario/completar-cuestionario-pagina2">
       <Boton texto="Aceptar" padding="10px 20px" />
       </Link>
       </div>
