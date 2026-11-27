@@ -13,11 +13,18 @@ const formInicial = {
   empresa: "",
 };
 
+const filasIniciales = () => [
+  { id: 1, competenciaId: "", ponderacion: "" },
+  { id: 2, competenciaId: "", ponderacion: "" },
+];
+
 export default function AltaPuesto() {
   const [formData, setFormData] = useState(formInicial);
   const [competencias, setCompetencias] = useState([]);
-  const [ponderaciones, setPonderaciones] = useState({});
+  const [filas, setFilas] = useState(filasIniciales);
+  const [siguienteFilaId, setSiguienteFilaId] = useState(3);
   const [cargandoCatalogo, setCargandoCatalogo] = useState(true);
+  const [errorCatalogo, setErrorCatalogo] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
   const [puestoCreado, setPuestoCreado] = useState(null);
@@ -29,7 +36,7 @@ export default function AltaPuesto() {
         if (activo) setCompetencias(resultado);
       })
       .catch((errorSolicitud) => {
-        if (activo) setError(getErrorMessage(errorSolicitud));
+        if (activo) setErrorCatalogo(getErrorMessage(errorSolicitud));
       })
       .finally(() => {
         if (activo) setCargandoCatalogo(false);
@@ -44,23 +51,32 @@ export default function AltaPuesto() {
     setFormData((actual) => ({ ...actual, [campo]: event.target.value }));
   };
 
-  const seleccionarCompetencia = (id, seleccionada) => {
-    setPonderaciones((actuales) => {
-      const resultado = { ...actuales };
-      if (seleccionada) {
-        resultado[id] = "";
-      } else {
-        delete resultado[id];
-      }
-      return resultado;
-    });
+  const actualizarFila = (id, campo, valor) => {
+    setFilas((actuales) =>
+      actuales.map((fila) =>
+        fila.id === id ? { ...fila, [campo]: valor } : fila
+      )
+    );
+  };
+
+  const agregarFila = () => {
+    setFilas((actuales) => [
+      ...actuales,
+      { id: siguienteFilaId, competenciaId: "", ponderacion: "" },
+    ]);
+    setSiguienteFilaId((actual) => actual + 1);
+  };
+
+  const quitarFila = (id) => {
+    setFilas((actuales) =>
+      actuales.length > 2 ? actuales.filter((fila) => fila.id !== id) : actuales
+    );
   };
 
   const crearPuesto = async (event) => {
     event.preventDefault();
     setError("");
 
-    const seleccionadas = Object.entries(ponderaciones);
     if (formData.codigo.trim().length === 0 || formData.codigo.length > 30) {
       setError("El código es obligatorio y no puede superar 30 caracteres.");
       return;
@@ -77,19 +93,30 @@ export default function AltaPuesto() {
       setError("La empresa es obligatoria y no puede superar 50 caracteres.");
       return;
     }
-    if (seleccionadas.length < 2) {
-      setError("Seleccioná al menos dos competencias recuperadas del backend.");
+    if (filas.length < 2 || filas.some((fila) => !fila.competenciaId)) {
+      setError("Elegí una competencia en cada fila; se requieren al menos dos.");
+      return;
+    }
+
+    const idsCompetencia = filas.map((fila) => fila.competenciaId);
+    if (new Set(idsCompetencia).size !== idsCompetencia.length) {
+      setError("Cada competencia solo puede seleccionarse una vez.");
       return;
     }
 
     const caracteristicas = {};
-    for (const [id, valor] of seleccionadas) {
-      const ponderacion = Number(valor);
-      if (!Number.isInteger(ponderacion) || ponderacion < 0 || ponderacion > 10) {
+    for (const fila of filas) {
+      const ponderacion = Number(fila.ponderacion);
+      if (
+        fila.ponderacion === "" ||
+        !Number.isInteger(ponderacion) ||
+        ponderacion < 0 ||
+        ponderacion > 10
+      ) {
         setError("Cada ponderación debe ser un número entero entre 0 y 10.");
         return;
       }
-      caracteristicas[id] = ponderacion;
+      caracteristicas[Number(fila.competenciaId)] = ponderacion;
     }
 
     setGuardando(true);
@@ -115,10 +142,16 @@ export default function AltaPuesto() {
 
   const reiniciar = () => {
     setFormData(formInicial);
-    setPonderaciones({});
+    setFilas(filasIniciales());
+    setSiguienteFilaId(3);
     setPuestoCreado(null);
     setError("");
   };
+
+  const competenciasDisponibles = competencias.filter(
+    (competencia) =>
+      !filas.some((fila) => fila.competenciaId === String(competencia.id))
+  );
 
   return (
     <main style={{ minHeight: "100vh", padding: "4rem 1rem" }}>
@@ -134,8 +167,8 @@ export default function AltaPuesto() {
       >
         <h2 style={{ textAlign: "center", fontSize: "2rem" }}>Dar de alta puesto</h2>
         {cargandoCatalogo && <p role="status">Cargando competencias...</p>}
-        {!cargandoCatalogo && competencias.length === 0 && !error && (
-          <p>No hay competencias disponibles en el backend.</p>
+        {!cargandoCatalogo && competencias.length < 2 && !errorCatalogo && (
+          <p>El backend debe devolver al menos dos competencias para crear un puesto.</p>
         )}
 
         <form onSubmit={crearPuesto}>
@@ -167,52 +200,142 @@ export default function AltaPuesto() {
           </div>
 
           <fieldset style={{ margin: "1.5rem 0", border: "1px solid #1E2A1C", padding: "1rem" }}>
-            <legend>Competencias y ponderaciones del DTO del puesto</legend>
-            {competencias.map((competencia) => {
-              const seleccionada = Object.prototype.hasOwnProperty.call(
-                ponderaciones,
-                competencia.id
-              );
-              return (
-                <label
-                  key={competencia.id}
-                  style={{ display: "flex", alignItems: "center", gap: "0.5rem", margin: "0.5rem 0" }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={seleccionada}
-                    onChange={(event) =>
-                      seleccionarCompetencia(competencia.id, event.target.checked)
-                    }
-                  />
-                  {competencia.nombre}
-                  {seleccionada && (
-                    <input
-                      type="number"
-                      min="0"
-                      max="10"
-                      step="1"
-                      aria-label={`Ponderación de ${competencia.nombre}`}
-                      value={ponderaciones[competencia.id]}
-                      onChange={(event) =>
-                        setPonderaciones((actuales) => ({
-                          ...actuales,
-                          [competencia.id]: event.target.value,
-                        }))
-                      }
-                    />
-                  )}
-                </label>
-              );
-            })}
+            <legend>Competencias requeridas y ponderaciones</legend>
+            <p style={{ marginBottom: "1rem" }}>
+              Elegí al menos dos competencias y asigná a cada una una ponderación de 0 a 10.
+            </p>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "520px" }}>
+                <thead>
+                  <tr style={{ background: "#E0E4D3" }}>
+                    <th scope="col" style={{ border: "1px solid #1E2A1C", padding: "0.65rem", textAlign: "left" }}>
+                      Competencia
+                    </th>
+                    <th scope="col" style={{ border: "1px solid #1E2A1C", padding: "0.65rem", textAlign: "left" }}>
+                      Ponderación
+                    </th>
+                    <th scope="col" style={{ border: "1px solid #1E2A1C", padding: "0.65rem" }}>
+                      Acción
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filas.map((fila, index) => {
+                    const seleccionadasEnOtrasFilas = new Set(
+                      filas
+                        .filter(
+                          (otraFila) =>
+                            otraFila.id !== fila.id && otraFila.competenciaId
+                        )
+                        .map((otraFila) => otraFila.competenciaId)
+                    );
+
+                    return (
+                      <tr key={fila.id}>
+                        <td style={{ border: "1px solid #1E2A1C", padding: "0.5rem" }}>
+                          <select
+                            aria-label={`Competencia de la fila ${index + 1}`}
+                            value={fila.competenciaId}
+                            onChange={(event) =>
+                              actualizarFila(fila.id, "competenciaId", event.target.value)
+                            }
+                            required
+                            disabled={cargandoCatalogo || Boolean(errorCatalogo)}
+                            style={{
+                              width: "100%",
+                              padding: "0.55rem",
+                              border: "1px solid #1E2A1C",
+                              borderRadius: "4px",
+                              background: "white",
+                            }}
+                          >
+                            <option value="">Seleccioná una competencia</option>
+                            {competencias.map((competencia) => (
+                              <option
+                                key={competencia.id}
+                                value={String(competencia.id)}
+                                disabled={seleccionadasEnOtrasFilas.has(String(competencia.id))}
+                              >
+                                {competencia.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td style={{ border: "1px solid #1E2A1C", padding: "0.5rem" }}>
+                          <input
+                            type="number"
+                            aria-label={`Ponderación de la fila ${index + 1}`}
+                            min="0"
+                            max="10"
+                            step="1"
+                            value={fila.ponderacion}
+                            onChange={(event) =>
+                              actualizarFila(fila.id, "ponderacion", event.target.value)
+                            }
+                            required
+                            style={{
+                              width: "100%",
+                              padding: "0.55rem",
+                              border: "1px solid #1E2A1C",
+                              borderRadius: "4px",
+                            }}
+                          />
+                        </td>
+                        <td style={{ border: "1px solid #1E2A1C", padding: "0.5rem", textAlign: "center" }}>
+                          <button
+                            type="button"
+                            onClick={() => quitarFila(fila.id)}
+                            disabled={filas.length <= 2}
+                            aria-label={`Quitar fila ${index + 1}`}
+                            style={{
+                              padding: "0.5rem",
+                              border: "1px solid #1E2A1C",
+                              borderRadius: "4px",
+                              background: filas.length <= 2 ? "#D5D8D0" : "#F5F5F5",
+                              cursor: filas.length <= 2 ? "not-allowed" : "pointer",
+                            }}
+                          >
+                            Quitar
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.75rem" }}>
+              <button
+                type="button"
+                onClick={agregarFila}
+                disabled={cargandoCatalogo || competenciasDisponibles.length === 0}
+                style={{
+                  padding: "0.6rem 0.9rem",
+                  border: "1px solid #1E2A1C",
+                  borderRadius: "4px",
+                  background: competenciasDisponibles.length === 0 ? "#D5D8D0" : "#E0E4D3",
+                  cursor: competenciasDisponibles.length === 0 ? "not-allowed" : "pointer",
+                }}
+              >
+                Agregar competencia
+              </button>
+            </div>
           </fieldset>
 
+          {errorCatalogo && (
+            <p role="alert">No se pudieron cargar las competencias: {errorCatalogo}</p>
+          )}
           {error && <p role="alert">No se pudo crear el puesto: {error}</p>}
           <div style={{ display: "flex", justifyContent: "center", gap: "1rem" }}>
             <Boton
               type="submit"
               texto={guardando ? "Guardando..." : "Aceptar"}
-              disabled={guardando || cargandoCatalogo || competencias.length === 0}
+              disabled={
+                guardando ||
+                cargandoCatalogo ||
+                Boolean(errorCatalogo) ||
+                competencias.length < 2
+              }
             />
             <Link href="/gestionar-puestos">
               <Boton texto="Cancelar" type="button" />
