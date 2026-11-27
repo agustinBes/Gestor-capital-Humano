@@ -2,7 +2,7 @@ CREATE TYPE tipo_competencia AS ENUM ('TECNICA', 'ACTITUDINAL', 'GENERICA');
 
 CREATE TABLE competencia(
                             id  BIGINT GENERATED ALWAYS AS IDENTITY  PRIMARY KEY,
-                            codigo VARCHAR(30) NOT NULL UNIQUE,
+                            codigo VARCHAR(30) NOT NULL,
                             nombre VARCHAR(50) NOT NULL  ,
                             descripcion VARCHAR(300),
                             tipo tipo_competencia NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE competencia(
 );
 CREATE TABLE factor(
                        id  BIGINT GENERATED ALWAYS AS IDENTITY  PRIMARY KEY,
-                       codigo VARCHAR(30) NOT NULL UNIQUE,
+                       codigo VARCHAR(30) NOT NULL ,
                        nombre VARCHAR(50) NOT NULL  ,
                        descripcion VARCHAR(300),
                        eliminacion Bool NOT NULL DEFAULT  FALSE,

@@ -4,13 +4,27 @@ import com.practical.consultora_rrhh.interfaces.dao.IFactorDao;
 import com.practical.consultora_rrhh.interfaces.repositorio.factorRepository;
 import com.practical.consultora_rrhh.modelo.clases.Competencia;
 import com.practical.consultora_rrhh.modelo.clases.Factor;
+import com.practical.consultora_rrhh.dao.specifications.FactorSpecifications;
+import com.practical.consultora_rrhh.dao.specifications.TextoSpecifications;
 import jakarta.transaction.Transactional;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
+/**
+ Implementación de la interfaz DAO para operaciones CRUD y consultas
+ * personalizadas sobre la entidad {@link Factor}.
+ *
+ * <p>Se abstrae el acceso a datos mediante
+ * <a href="https://spring.io/projects/spring-data-jpa#overview">
+ * Spring Data JPA</a>, delegando las operaciones de persistencia y busqueda
+ * en su correspondiente Repository.</p>
+ *
+ * @author  Besigniano Agustin
+ * @since 1.0
+ */
 @Repository
 public class FactorDaoImpl implements IFactorDao {
     private final factorRepository repository;
@@ -50,6 +64,10 @@ return factor;}
     public void eliminar(Factor factor) {
         factor.setEliminacion(true);
     }
+    @Transactional
+    public void reactivar(Factor factor) {
+        factor.setEliminacion(false);
+    }
 
     public Optional<Factor> obtenerPorId(Long id) {
         return repository.findById(id);
@@ -63,37 +81,49 @@ return  repository.existsById(id);
         return repository.existsByIdAndCompetencia_Id(id, idCompetencia);
     }
 
-    @Override
-    public List<Factor> buscar(String factor,String competencia) {
-        if(factor!=null && competencia!=null) {
-            return repository.findByNombreIgnoreCaseAndCompetencia_NombreIgnoreCase(factor, competencia);
-        }
-        else {
-            if (factor != null) {
-                return repository.findByNombreIgnoreCase(factor);
-            }
-        }
-        return repository.findByCompetencia_NombreIgnoreCase(competencia);
+    /**
+     * Busqueda usando la interfaz especification para consultas dinamicas entre el factor y la competencia
+     * {@link Factor} y {@link Competencia}
+     */
 
-        }
+    @Override
+    public List<Factor> buscar(String factor, String competencia) {
+
+        Specification<Factor> filtro= FactorSpecifications.buscar(factor, competencia);
+
+return         repository.findAll(filtro);
+    }
 //----------------------------------------------------------------------------
     @Override
 
 public boolean existePorNombreInsensible(String nombre) {
+        Specification<Factor> filtro = TextoSpecifications.coincidencia("nombre", nombre,false,true);
+        return repository.exists(filtro);
 
-        return repository.existsByNombreIgnoreCase(nombre);
-}
+   }
+    /**
+     * Busqueda a traves del codigo ignorando mayusculas, ignorando espacios extra
+     * Ignorando los acentos que pudiera contener
+     */
 @Override
-
 public boolean existePorCodigoInsensible(String codigo) {
+    Specification<Factor> filtro= TextoSpecifications.coincidencia("codigo",codigo,false,true);
+    return repository.exists(filtro);
+}
 
-        return   repository.existsByCodigoIgnoreCase(codigo);
-}
-@Override
+    /** Consultar la disponibilidad del nro de orden asociado
+     *  a una competencia
+     *  Solo se considera entidades que no han sido eliminadas
+     */
+    @Override
 public boolean existeNroOrdenPorCompetencia(short id, Long idCompetencia) {
-return  repository.existsByOrdenAndCompetencia_Id(id,idCompetencia);
+return  repository.existsByOrdenAndCompetencia_IdAndEliminacionIsFalse(id,idCompetencia);
 }
-@Override
+
+    /**
+     * Validar si la competencia esta siendo usada en el sistema
+     */
+    @Override
 public boolean existeCompetenciaEnUso(Long idCompetencia) {
         return repository.existsByCompetencia_IdAndEliminacionIsFalse(idCompetencia);
     }

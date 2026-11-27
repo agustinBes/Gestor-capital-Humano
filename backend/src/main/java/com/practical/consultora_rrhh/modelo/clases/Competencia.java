@@ -1,14 +1,13 @@
 package com.practical.consultora_rrhh.modelo.clases;
 
-import com.practical.consultora_rrhh.dto.response.competenciaDto;
 import com.practical.consultora_rrhh.modelo.enums.tipoCompetencia;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
-
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 /**
  * Representa una cualidad a evaluar cuando se aplica a un puesto de trabajo
 
@@ -44,5 +43,17 @@ public class Competencia {
     @Column(name = "tipo")
     private tipoCompetencia tipoCompetencia;
     @Column (name="eliminacion")
-    private Boolean eliminacion;
-  }
+    private boolean eliminacion;
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Competencia that = (Competencia) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+}

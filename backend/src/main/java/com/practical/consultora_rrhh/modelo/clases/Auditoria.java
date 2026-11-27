@@ -24,7 +24,9 @@ public class Auditoria {
 @GeneratedValue(strategy= GenerationType.IDENTITY)
 private Long id;
 @Column(name = "nombre_registro")
-private String RegistroEliminado;
+private String registroEliminado;
+@Column(name = "id_entidad")
+private Long idEntidad;
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "tipo_auditoria", columnDefinition = "tipo_auditoria")
@@ -36,19 +38,14 @@ private LocalDateTime fecha;
 private Consultor responsible;
 
 
-public Auditoria(auditoriaDto dto){
-    id=dto.id();
-    RegistroEliminado=dto.registro();
-    auditoria=tipoAuditoria.valueOf(dto.tipo());
-    fecha=dto.fecha();
-    responsible =new Consultor();
-}
-public Auditoria(auditoriaDtoCreate dto){
+
+public Auditoria(auditoriaDtoCreate dto,Consultor c){
     id=null;
-    RegistroEliminado=dto.registro();
+    idEntidad=dto.id_entidad();
+    registroEliminado=dto.registro();
     auditoria=dto.tipoAuditoria();
     fecha=dto.fecha();
-    responsible =null;
+    responsible =c;
 }
 
 

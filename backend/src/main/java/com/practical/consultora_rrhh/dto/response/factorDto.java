@@ -2,25 +2,29 @@ package com.practical.consultora_rrhh.dto.response;
 
 import com.practical.consultora_rrhh.modelo.clases.Factor;
 
+/**
+ * Devolvemos un factor con su competencia asociada.
+ * No devolvemos la lista de factores que conoce la competencia
+ * para evitar la recursion infinita
+ * @param competencia formato de competencia en donde no se recuperan los factores asociados
+ */
 public record factorDto(
         Long id,
         String codigo,
-        competenciaDtoSinFactores competencia,
         String nombre,
         String descripcion,
         short orden,
-        boolean eliminacion
+        competenciaDtoSinFactores competencia
 
 ) {
 
      public factorDto(Factor x) {
        this(         x.getId(),
                 x.getCodigo(),
-                new competenciaDtoSinFactores(x.getCompetencia()),
                 x.getNombre(),
-                x.getDescripcion(),
-                x.getOrden(),
-                x.isEliminacion()
+               x.getDescripcion(),
+               x.getOrden(),
+         new competenciaDtoSinFactores(x.getCompetencia())
         );
     }
 }

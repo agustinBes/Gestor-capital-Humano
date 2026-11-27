@@ -7,6 +7,17 @@ import com.practical.consultora_rrhh.modelo.clases.Competencia;
 import com.practical.consultora_rrhh.modelo.clases.Factor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+/**
+ * Clase que hereda de la clase abstracta {@link GenericMediator}
+ * establece un metodo para que se registren los servicios que requieren interactuar
+ entre si con el fin de evitar dependencias circulares
+ Se implementan los metodos requeridos en la comunicacion con otro servicio
+ se evita interactuar con la capa de persistencia
+ y se evita la comunicacion directa con otro servicio
+ @author  Besigniano Agustin
+ @since 1.0
+ */
 @Component
 public class FactorPreguntaMediator extends GenericMediator<IserviceFactor, IservicePregunta> {
 
@@ -29,8 +40,8 @@ public class FactorPreguntaMediator extends GenericMediator<IserviceFactor, Iser
     public Factor obtenerFactor(Long id) {
         return this.serviceFactor().obtenerEntidad(id);
     }
-    public void eliminarPreguntas(Long id){
-        this.servicePregunta().eliminarPorFactor(id);
+    public List<String> eliminarPreguntas(Long id, Long idConsultor){
+   return   servicePregunta().eliminarPorFactor(id,idConsultor);
     }
 
 }

@@ -4,31 +4,32 @@ import com.practical.consultora_rrhh.modelo.clases.Pregunta;
 
 import java.util.List;
 
+/**
+ * Formato usado para mostrar una pregunta al usuario
+ */
 public record preguntaDto(
         Long id,
-        factorDto factor,
         String nombre,
         String pregunta,
         String descripcion,
         opcionRespuestaDto respuesta,
-        List<ponderacionDto> ponderaciones,
-        boolean eliminacion
+        factorDto factor,
+        List<ponderacionDto> ponderaciones
 ) {
 
     public preguntaDto(Pregunta x){
 
         this(
                 x.getId(),
-                new factorDto(x.getFactor()),
                 x.getNombre(),
                 x.getPregunta(),
                 x.getDescripcion(),
                 new opcionRespuestaDto(x.getOpcionRespuesta()),
+                new factorDto(x.getFactor()),
                 x.getPonderaciones()
                         .stream()
                         .map(ponderacionDto::new)
-                        .toList(),
-                x.getEliminacion()
+                        .toList()
                 );
     }
 

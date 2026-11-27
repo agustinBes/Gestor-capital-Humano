@@ -1,7 +1,6 @@
 package com.practical.consultora_rrhh.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.util.Map;
 
@@ -18,7 +17,10 @@ public record puestoDtoCreate(
         @NotBlank
         @Size(max = 50, message = "Longitud excedida")
 String empresa,
-
-        Map<Long,Short> caracteristicas
+        @NotEmpty(message = "se requiere al menos una competencia")
+        @Size(min = 2,message = "se requieren al menos dos competencias para dar de alta un puesto")
+        Map<@Positive @Min(value = 1, message = "el identificador no puede ser negativo o 0") Long, @Min(value = 0,message = "una calificacion no puede ser negativa")
+        @Max(value=10,message = "Una calificacion no puede ponderar por encima de 10 puntos")
+                Short> caracteristicas
         ) {
 }

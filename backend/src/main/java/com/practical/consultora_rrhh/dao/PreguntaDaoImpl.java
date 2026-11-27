@@ -6,7 +6,7 @@ import com.practical.consultora_rrhh.interfaces.repositorio.preguntaRepository;
 import com.practical.consultora_rrhh.modelo.clases.OpcionRespuesta;
 import com.practical.consultora_rrhh.modelo.clases.Ponderacion;
 import com.practical.consultora_rrhh.modelo.clases.Pregunta;
-import com.practical.consultora_rrhh.modelo.specifications.PreguntaSpecifications;
+import com.practical.consultora_rrhh.dao.specifications.PreguntaSpecifications;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
@@ -58,7 +58,8 @@ public class PreguntaDaoImpl  implements IPreguntaDao {
      * Lanzar una excepción en caso de detectar una coincidencia.
      */
     public boolean existeNombrePorFactorInsensible(String nombre, Long idFactor, Long idCompetencia) {
-        return  repository.existsByNombreIgnoreCaseAndFactor_IdAndFactor_Competencia_Id(nombre,idFactor,idCompetencia);
+        Specification<Pregunta>  filtros=PreguntaSpecifications.existeNombre(nombre,idFactor,idCompetencia);
+return  repository.exists(filtros);
     }
 
     /**
@@ -67,9 +68,9 @@ public class PreguntaDaoImpl  implements IPreguntaDao {
      * Lanzar una excepción en caso de detectar una coincidencia.
      */
     public boolean existePreguntaPorFactorInsensible(String nombre, Long idFactor, Long competencia) {
-        return  repository.existsByPreguntaIgnoreCaseAndFactor_IdAndFactor_Competencia_Id(nombre,idFactor,competencia);
+        Specification<Pregunta>  filtros=PreguntaSpecifications.existePregunta(nombre,idFactor,competencia);
+        return  repository.exists(filtros);
     }
-
 
     public Pregunta guardar(Pregunta pregunta) {
         return repository.save(pregunta);
@@ -94,13 +95,16 @@ public class PreguntaDaoImpl  implements IPreguntaDao {
             }
         }
         if (respuesta != null) {
+            pregunta.getPonderaciones().clear();
+repository.saveAndFlush(pregunta);
             pregunta.setOpcionRespuesta(respuesta);
-            pregunta.setPonderaciones(ponderaciones);
+            pregunta.getPonderaciones().addAll(ponderaciones);
         } else if (ponderaciones != null) {
             pregunta.setPonderaciones(ponderaciones);
         }
 return repository.save(pregunta);
     }
+
 
 //-----------------------------------------------------------------------
 
@@ -108,12 +112,24 @@ return repository.save(pregunta);
         return repository.findAll();
     }
 
+    @Override
+    public List<Pregunta> obtenerPorCompetencia(List<Long> competencias) {
+        return repository.findByFactor_Competencia_IdIn(competencias);
+    }
+
     /**
      * Eliminar logicamente una pregunta
      */
-
+@Transactional
     public void eliminar(Pregunta pregunta) {
         pregunta.setEliminacion(true);
+    if (pregunta.getPonderaciones() != null) {
+        pregunta.getPonderaciones().clear();}
+        repository.saveAndFlush(pregunta);
+}
+@Transactional
+public void reactivar(Pregunta p) {
+p.setEliminacion(false);
 }
         //-----------------------------------------------------------------------------------
         public Optional<Pregunta> obtenerPorId(Long id) {
