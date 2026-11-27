@@ -100,6 +100,11 @@ Una vez se hayan configurado estos datos ya esta disponible el servidor para ser
 Pueden realizar peticiones desde alguna herramienta como INSOMNIA o Postman
 Tambien puede usar la que genera swagger-ui 
 
+### Pasando el proyecto a produccion 
+ejecutar desde la carpeta backend ./mvnw clean package
+generar javadoc  .\mvnw.cmd javadoc:javadoc -Ddoclint=none
+acceder al javadoc start target\reports\apidocs\index.html
+iniciando el proyecto java -jar target/consultora-rrhh-0.0.1-SNAPSHOT.jar
 ---
 ## Capa de Frontend
 
