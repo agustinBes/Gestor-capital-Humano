@@ -1,6 +1,20 @@
 export const AUTHENTICATED_QUESTIONNAIRE_SESSION_KEY =
   "cuestionario-candidato-autenticado";
 
+const JAVA_LONG_MAX_VALUE = "9223372036854775807";
+
+export function isPositiveLongIdentifier(value: string): boolean {
+  if (!/^\d+$/.test(value)) return false;
+
+  const normalized = value.replace(/^0+/, "") || "0";
+  return (
+    normalized !== "0" &&
+    (normalized.length < JAVA_LONG_MAX_VALUE.length ||
+      (normalized.length === JAVA_LONG_MAX_VALUE.length &&
+        normalized <= JAVA_LONG_MAX_VALUE))
+  );
+}
+
 export type CandidatoDto = {
   id: number;
   nombre: string;
@@ -20,6 +34,14 @@ export type PuestoCompetenciaDto = {
   ponderacion: number;
 };
 
+export type PuestoDtoCreate = {
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  empresa: string;
+  caracteristicas: Record<number, number>;
+};
+
 export type PuestoDto = {
   idPuesto: number;
   codigo: string;
@@ -27,6 +49,35 @@ export type PuestoDto = {
   descripcion: string;
   empresa: string;
   caracteristicas: PuestoCompetenciaDto[];
+};
+
+export type TipoCompetencia = "TECNICA" | "ACTITUDINAL" | "GENERICA";
+
+export type FactorDtoSinCompetencia = {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  orden: number;
+};
+
+export type CompetenciaDtoSinFactores = {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  tipo: TipoCompetencia;
+};
+
+export type CompetenciaDto = CompetenciaDtoSinFactores & {
+  factores: FactorDtoSinCompetencia[];
+};
+
+export type CompetenciaDtoCreate = {
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  tipo: TipoCompetencia;
 };
 
 export type PuestoOrdenMeritoDto = {
@@ -52,13 +103,15 @@ export type FactorDto = {
   nombre: string;
   descripcion: string;
   orden: number;
-  competencia: {
-    id: number;
-    codigo: string;
-    nombre: string;
-    descripcion: string;
-    tipo: string;
-  };
+  competencia: CompetenciaDtoSinFactores;
+};
+
+export type FactorDtoCreate = {
+  id_competencia: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  nroOrden: number;
 };
 
 export type OpcionDto = {
@@ -74,6 +127,18 @@ export type OpcionRespuestaDto = {
   opciones: OpcionDto[];
 };
 
+export type OpcionDtoCreate = {
+  fila: number;
+  orden: number;
+  descripcion: string;
+};
+
+export type OpcionRespuestaDtoCreate = {
+  nombre: string;
+  descripcion: string;
+  opciones: OpcionDtoCreate[];
+};
+
 export type PreguntaDto = {
   id: number;
   nombre: string;
@@ -86,6 +151,20 @@ export type PreguntaDto = {
     opcion: number;
     puntaje: number;
   }[];
+};
+
+export type PreguntaDtoCreate = {
+  idFactor: number;
+  titulo: string;
+  pregunta: string;
+  descripcion: string;
+  id_opcionRespuesta: number;
+  ponderaciones: number[];
+};
+
+export type ItemPuestoCompetencia = {
+  idCompetencia: number;
+  ponderacion: number;
 };
 
 export type ItemCuestionarioDto = {

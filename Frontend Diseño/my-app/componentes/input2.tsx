@@ -6,14 +6,29 @@ type Props = {
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   name?: string;
+  type?: "text" | "number";
+  min?: number;
+  step?: number;
 };
 
-export default function Input2({ label, placeholder, value, onChange, name }: Props) {
+export default function Input2({
+  label,
+  placeholder,
+  value,
+  onChange,
+  name,
+  type = "text",
+  min,
+  step,
+}: Props) {
   return (
     <div>
       <label style={{ marginRight: "2px" }}>{label}</label>
       <input
         name={name}
+        type={type}
+        min={min}
+        step={step}
         placeholder={placeholder}
         value={value}
         onChange={onChange}

@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import Boton from "../../componentes/boton";
 import Input2 from "../../componentes/input2";
 import Tabla from "../../componentes/tabla";
-import { backendRequest, getErrorMessage, type CandidatoDto } from "@/lib/backend-api";
+import {
+  backendRequest,
+  getErrorMessage,
+  isPositiveLongIdentifier,
+  type CandidatoDto,
+} from "@/lib/backend-api";
 
 export default function EvaluarCandidato() {
   const router = useRouter();
@@ -20,8 +25,17 @@ export default function EvaluarCandidato() {
   const [error, setError] = useState("");
 
   const buscarCandidatos = async () => {
+    const idCandidato = numero.trim();
+    if (idCandidato && !isPositiveLongIdentifier(idCandidato)) {
+      setError("El ID del candidato debe ser un entero positivo dentro del rango Long.");
+      setCandidatos([]);
+      setSeleccionados([]);
+      setBusquedaRealizada(false);
+      return;
+    }
+
     const parametros = new URLSearchParams();
-    if (numero.trim()) parametros.set("id", numero.trim());
+    if (idCandidato) parametros.set("id", idCandidato);
     if (nombre.trim()) parametros.set("nombre", nombre.trim());
     if (apellido.trim()) parametros.set("apellido", apellido.trim());
 
@@ -87,6 +101,9 @@ export default function EvaluarCandidato() {
             label="Nro. candidato"
             placeholder="ID del candidato"
             value={numero}
+            type="number"
+            min={1}
+            step={1}
             onChange={(event) => setNumero(event.target.value)}
           />
           <Input2

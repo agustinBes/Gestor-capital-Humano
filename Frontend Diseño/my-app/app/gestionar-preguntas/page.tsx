@@ -5,7 +5,13 @@ import Input from "../../componentes/input";
 import Input2 from "../../componentes/input2";
 import Tabla from "../../componentes/tabla";
 import Link from "next/dist/client/link";
-import { backendRequest, getErrorMessage, type PreguntaDto } from "@/lib/backend-api";
+import {
+  backendRequest,
+  getErrorMessage,
+  isPositiveLongIdentifier,
+  type PreguntaDto,
+  type PreguntaDtoCreate,
+} from "@/lib/backend-api";
 
 export default function EvaluarCandidato() {
   const [nombrePregunta, setNombrePregunta] = useState("");
@@ -19,6 +25,15 @@ export default function EvaluarCandidato() {
   const [errorBusqueda, setErrorBusqueda] = useState("");
 
   const [seleccionados, setSeleccionados] = useState<number[]>([]);
+  const [preguntaEnEdicion, setPreguntaEnEdicion] = useState<PreguntaDto | null>(null);
+  const [formularioEdicion, setFormularioEdicion] = useState({
+    titulo: "",
+    pregunta: "",
+    descripcion: "",
+    ponderaciones: {} as Record<number, string>,
+  });
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
+  const [errorEdicion, setErrorEdicion] = useState("");
 
   const seleccionDeFilas = (index: number) => {
     if (seleccionados[0] === index) {
@@ -73,12 +88,21 @@ export default function EvaluarCandidato() {
     if (!preguntaSeleccionada) return;
     const idConsultor = window.prompt("Ingresá el ID del consultor responsable de la eliminación.");
     if (!idConsultor?.trim()) return;
+    const idPregunta = String(preguntaSeleccionada.id);
+    const idConsultorLimpio = idConsultor.trim();
+    if (
+      !isPositiveLongIdentifier(idPregunta) ||
+      !isPositiveLongIdentifier(idConsultorLimpio)
+    ) {
+      setErrorBusqueda("Los IDs de pregunta y consultor deben ser enteros positivos válidos.");
+      return;
+    }
 
     setCargando(true);
     setErrorBusqueda("");
     try {
       await backendRequest<string>(
-        `/gestionar-preguntas/delete/${preguntaSeleccionada.id}/responsable/${encodeURIComponent(idConsultor.trim())}`,
+        `/gestionar-preguntas/delete/${encodeURIComponent(idPregunta)}/responsable/${encodeURIComponent(idConsultorLimpio)}`,
         { method: "DELETE" }
       );
       setPreguntas((actuales) =>
@@ -89,6 +113,90 @@ export default function EvaluarCandidato() {
       setErrorBusqueda(getErrorMessage(errorEliminacion));
     } finally {
       setCargando(false);
+    }
+  };
+
+  const abrirEdicion = () => {
+    const pregunta = preguntas[seleccionados[0]];
+    if (!pregunta) return;
+
+    const ponderaciones = Object.fromEntries(
+      pregunta.respuesta.opciones.map((opcion) => {
+        const ponderacion = pregunta.ponderaciones.find(
+          (actual) => actual.opcion === opcion.fila
+        );
+        return [opcion.fila, String(ponderacion?.puntaje ?? "")];
+      })
+    );
+    setFormularioEdicion({
+      titulo: pregunta.nombre,
+      pregunta: pregunta.pregunta,
+      descripcion: pregunta.descripcion ?? "",
+      ponderaciones,
+    });
+    setPreguntaEnEdicion(pregunta);
+    setErrorEdicion("");
+  };
+
+  const guardarModificacionPregunta = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!preguntaEnEdicion) return;
+
+    const titulo = formularioEdicion.titulo.trim();
+    const textoPregunta = formularioEdicion.pregunta.trim();
+    const descripcion = formularioEdicion.descripcion.trim();
+    if (!titulo || titulo.length > 80 || !textoPregunta || textoPregunta.length > 150 || descripcion.length > 300) {
+      setErrorEdicion("Revisá los campos: título hasta 80, pregunta hasta 150 y descripción hasta 300 caracteres.");
+      return;
+    }
+
+    const opciones = preguntaEnEdicion.respuesta.opciones;
+    const valoresPonderacion = opciones.map((opcion) =>
+      Number(formularioEdicion.ponderaciones[opcion.fila])
+    );
+    if (
+      valoresPonderacion.some(
+        (valor, index) =>
+          formularioEdicion.ponderaciones[opciones[index].fila] === undefined ||
+          formularioEdicion.ponderaciones[opciones[index].fila].trim() === "" ||
+          !Number.isInteger(valor) ||
+          valor < 0
+      ) ||
+      valoresPonderacion.reduce((total, valor) => total + valor, 0) !== 10
+    ) {
+      setErrorEdicion("Ingresá una ponderación entera no negativa para cada opción; la suma debe ser 10.");
+      return;
+    }
+
+    const body: PreguntaDtoCreate = {
+      idFactor: preguntaEnEdicion.factor.id,
+      titulo,
+      pregunta: textoPregunta,
+      descripcion,
+      id_opcionRespuesta: preguntaEnEdicion.respuesta.id,
+      ponderaciones: valoresPonderacion,
+    };
+
+    setGuardandoEdicion(true);
+    setErrorEdicion("");
+    try {
+      const actualizada = await backendRequest<PreguntaDto>(
+        `/gestionar-preguntas/update/${encodeURIComponent(String(preguntaEnEdicion.id))}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      );
+      setPreguntas((actuales) =>
+        actuales.map((item) => (item.id === actualizada.id ? actualizada : item))
+      );
+      setSeleccionados([]);
+      setPreguntaEnEdicion(null);
+    } catch (errorSolicitud: unknown) {
+      setErrorEdicion(getErrorMessage(errorSolicitud));
+    } finally {
+      setGuardandoEdicion(false);
     }
   };
 
@@ -251,7 +359,7 @@ export default function EvaluarCandidato() {
                 />
                 <Boton
                   texto="Modificar pregunta"
-                  onClick={() => alert("CU no implementado")}
+                  onClick={abrirEdicion}
                   padding="10px 10px"
                   disabled={seleccionados.length === 0}
                 />
@@ -269,6 +377,128 @@ export default function EvaluarCandidato() {
         )}
       </div>
 
+      {preguntaEnEdicion && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="titulo-edicion-pregunta"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1000,
+            display: "grid",
+            placeItems: "center",
+            padding: "1rem",
+            background: "rgba(0,0,0,0.5)",
+          }}
+        >
+          <section
+            style={{
+              width: "100%",
+              maxWidth: "700px",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              background: "#F5F5F5",
+              borderRadius: "8px",
+              padding: "1.5rem",
+            }}
+          >
+            <h2 id="titulo-edicion-pregunta" style={{ textAlign: "center" }}>
+              Modificar pregunta
+            </h2>
+            <p>
+              Competencia: {preguntaEnEdicion.factor.competencia.nombre} — Factor:{" "}
+              {preguntaEnEdicion.factor.nombre}. Estas asociaciones no se pueden modificar.
+            </p>
+            <p>Configuración de respuesta: {preguntaEnEdicion.respuesta.nombre}</p>
+            <form onSubmit={guardarModificacionPregunta}>
+              <label style={{ display: "block", margin: "0.75rem 0" }}>
+                Título
+                <input
+                  value={formularioEdicion.titulo}
+                  onChange={(event) =>
+                    setFormularioEdicion((actual) => ({
+                      ...actual,
+                      titulo: event.target.value,
+                    }))
+                  }
+                  maxLength={80}
+                  required
+                  style={{ width: "100%", padding: "0.6rem" }}
+                />
+              </label>
+              <label style={{ display: "block", margin: "0.75rem 0" }}>
+                Pregunta
+                <textarea
+                  value={formularioEdicion.pregunta}
+                  onChange={(event) =>
+                    setFormularioEdicion((actual) => ({
+                      ...actual,
+                      pregunta: event.target.value,
+                    }))
+                  }
+                  maxLength={150}
+                  required
+                  rows={3}
+                  style={{ width: "100%", padding: "0.6rem" }}
+                />
+              </label>
+              <label style={{ display: "block", margin: "0.75rem 0" }}>
+                Descripción (opcional)
+                <textarea
+                  value={formularioEdicion.descripcion}
+                  onChange={(event) =>
+                    setFormularioEdicion((actual) => ({
+                      ...actual,
+                      descripcion: event.target.value,
+                    }))
+                  }
+                  maxLength={300}
+                  rows={3}
+                  style={{ width: "100%", padding: "0.6rem" }}
+                />
+              </label>
+              <h3>Ponderaciones de las opciones</h3>
+              {preguntaEnEdicion.respuesta.opciones.map((opcion) => (
+                <label key={opcion.fila} style={{ display: "block", margin: "0.75rem 0" }}>
+                  {opcion.descripcion}
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={formularioEdicion.ponderaciones[opcion.fila] ?? ""}
+                    onChange={(event) =>
+                      setFormularioEdicion((actual) => ({
+                        ...actual,
+                        ponderaciones: {
+                          ...actual.ponderaciones,
+                          [opcion.fila]: event.target.value,
+                        },
+                      }))
+                    }
+                    required
+                    style={{ display: "block", width: "100%", padding: "0.6rem" }}
+                  />
+                </label>
+              ))}
+              {errorEdicion && <p role="alert">{errorEdicion}</p>}
+              <div style={{ display: "flex", justifyContent: "center", gap: "0.75rem", marginTop: "1rem" }}>
+                <Boton
+                  texto={guardandoEdicion ? "Guardando..." : "Guardar cambios"}
+                  type="submit"
+                  disabled={guardandoEdicion}
+                />
+                <Boton
+                  texto="Cancelar"
+                  type="button"
+                  onClick={() => setPreguntaEnEdicion(null)}
+                  disabled={guardandoEdicion}
+                />
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

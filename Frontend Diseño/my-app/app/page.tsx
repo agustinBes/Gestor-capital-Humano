@@ -68,6 +68,36 @@ export default function MenuPrincipal({ username = 'admin' }: MenuPrincipalProps
         </svg>
       ),
     },
+    {
+      id: 'gestionar-competencias',
+      title: 'Gestionar Competencias',
+      route: '/gestionar-competencias',
+      icon: (
+        <svg className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3.75 14.8 9.2l6.02.87-4.36 4.25 1.03 6-5.49-2.89-5.49 2.89 1.05-6L3.2 10.07l6.02-.87L12 3.75Z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'gestionar-factores',
+      title: 'Gestionar Factores',
+      route: '/gestionar-factores',
+      icon: (
+        <svg className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h15M7.5 4.5v4.5m9-1.5v4.5m-6 1.5v4.5" />
+        </svg>
+      ),
+    },
+    {
+      id: 'gestionar-opciones-respuesta',
+      title: 'Gestionar Opciones de Respuesta',
+      route: '/gestionar-opciones-respuesta',
+      icon: (
+        <svg className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m9 12.75 2.25 2.25L15 10.5m-9.75-6h13.5A2.25 2.25 0 0 1 21 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 17.25V6.75A2.25 2.25 0 0 1 5.25 4.5Z" />
+        </svg>
+      ),
+    },
   ];
 
   return (
@@ -82,8 +112,7 @@ export default function MenuPrincipal({ username = 'admin' }: MenuPrincipalProps
         </p>
       </div>
 
-      {/* Contenedor de botones (Grid adaptable para 5 elementos) */}
-      <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 justify-items-center">
+      <div className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 justify-items-center">
         {options.map((item) => (
           <button
             key={item.id}

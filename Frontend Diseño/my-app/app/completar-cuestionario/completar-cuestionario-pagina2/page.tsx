@@ -112,7 +112,7 @@ function ResponderBloque() {
     setErrorGuardado("");
     try {
       const actualizado = await backendRequest<CuestionarioDto>(
-        `/cuestionario/${idCuestionario}/editar`,
+        `/cuestionario/${encodeURIComponent(idCuestionario)}/editar`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
