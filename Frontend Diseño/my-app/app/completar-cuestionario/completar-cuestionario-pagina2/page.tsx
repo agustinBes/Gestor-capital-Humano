@@ -93,27 +93,35 @@ function ResponderBloque() {
 
   const guardarBloque = async () => {
     if (!cuestionario || !bloqueActual) return;
-    const parametros = new URLSearchParams();
-    parametros.set("id_candidato", String(cuestionario.idCandidato));
-    parametros.set("id_puesto", String(cuestionario.idPuesto));
+    const items: { idpregunta: number; NroBloque: number; opcion: number }[] = [];
 
-    for (const [index, item] of bloqueActual.items.entries()) {
+    for (const item of bloqueActual.items) {
       const opcion = respuestas[item.idPregunta] ?? item.opcionSeleccionada;
       if (opcion === null || opcion === undefined) {
         setErrorGuardado("Respondé todas las preguntas del bloque antes de continuar.");
         return;
       }
-      parametros.set(`items[${index}].idpregunta`, String(item.idPregunta));
-      parametros.set(`items[${index}].NroBloque`, String(bloqueActual.numero));
-      parametros.set(`items[${index}].opcion`, String(opcion));
+      items.push({
+        idpregunta: item.idPregunta,
+        NroBloque: bloqueActual.numero,
+        opcion,
+      });
     }
 
     setGuardando(true);
     setErrorGuardado("");
     try {
       const actualizado = await backendRequest<CuestionarioDto>(
-        `/cuestionario/${idCuestionario}/editar?${parametros.toString()}`,
-        { method: "PATCH" }
+        `/cuestionario/${idCuestionario}/editar`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id_candidato: cuestionario.idCandidato,
+            id_puesto: cuestionario.idPuesto,
+            items,
+          }),
+        }
       );
       setResultado({
         id: idCuestionario,
