@@ -1,106 +1,97 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useState, useSyncExternalStore } from "react";
 import Boton from "../../../../componentes/boton";
 import Tabla from "../../../../componentes/tabla";
+import { getErrorMessage, type EvaluadosDto } from "@/lib/backend-api";
 
+const suscribirHidratacion = () => () => {};
+const obtenerEstadoCliente = () => true;
+const obtenerEstadoServidor = () => false;
+
+function leerEvaluados(): EvaluadosDto[] {
+  if (typeof window === "undefined") return [];
+  const datos = sessionStorage.getItem("candidatosEvaluadosDto");
+  return datos ? (JSON.parse(datos) as EvaluadosDto[]) : [];
+}
 
 export default function EvaluarCandidatoPagina3() {
-  
-   const [mostrarModal, setMostrarModal] = useState(false);
+  const hidratado = useSyncExternalStore(
+    suscribirHidratacion,
+    obtenerEstadoCliente,
+    obtenerEstadoServidor
+  );
+  const [evaluados] = useState(leerEvaluados);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState("");
 
+  const exportar = async () => {
+    setCargando(true);
+    setError("");
+    try {
+      const response = await fetch("/api/backend/gestion-cuestionarios/candidatos/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(evaluados),
+      });
+      if (!response.ok) {
+        const detail = await response.text();
+        throw new Error(detail || `Error del backend (${response.status})`);
+      }
 
-   const [paddingArriba, setPaddingArriba] = useState("12rem");
+      const archivo = await response.blob();
+      const url = URL.createObjectURL(archivo);
+      const enlace = document.createElement("a");
+      enlace.href = url;
+      enlace.download = "evaluados.csv";
+      enlace.click();
+      URL.revokeObjectURL(url);
+    } catch (errorExportacion: unknown) {
+      setError(getErrorMessage(errorExportacion));
+    } finally {
+      setCargando(false);
+    }
+  };
 
-   useEffect(() => {const ajustarPadding = () => {if (window.innerWidth < 1400) {setPaddingArriba("1rem");
-     } else {setPaddingArriba("12rem");  }};
-    ajustarPadding(); 
-     window.addEventListener("resize", ajustarPadding);
-    return () => window.removeEventListener("resize", ajustarPadding);}, []);
-
-
+  if (!hidratado) return null;
 
   return (
-
-    <div style={{
-    minHeight: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "flex-start", 
-  paddingTop: paddingArriba
-  }}> 
-
-     
-
-
-
-    <div className="flex flex-col flex-1" style={{display: "flex",maxWidth: "800px", margin: "2rem auto", border: "2px solid #1E2A1C", borderRadius: "8px", background: "#F5F5F5", alignItems: "center",width: "100%",paddingBottom: "2rem"}}>
-          <h2 style={{ display: "flex",margin: "1rem auto 0.5rem", fontSize: "2rem" }}>
-          <img src="/lupa.png" alt="Lupa" style={{ width: "30px", height: "30px", objectFit: "contain",marginRight: "0.5rem",marginTop: "0.5rem" }} />
-          Lista de Candidatos a Evaluar
-          </h2> 
-      <hr style={{ 
-      width: "100%",
-      border: "none",
-      borderTop: "2px solid #1E2A1C",
-      margin: "0.5rem 0rem 1.5rem  0rem",
-      alignSelf: "stretch"
-      }} />
-      <div style={{ margin: "2rem" }}>  
-      <Tabla
-        columnas={["Nombre", "Apellido requerida","Clave de Ingreso","Nro de Documento","Tipo de Documento"]}
-        datos={[
-          ["","","","",""],["","","","",""],["","","","",""],["","","","",""],["","","","",""],["","","","",""],["","","","",""],["","","","",""],["","","","",""],["","","","",""]
-        ]}
-      />
-      </div>
-      <div style={{display: "flex", gap: "150px", textAlign: "center", margin: "1rem 0" }}>
-      <Boton texto="Cancelar" onClick={() => alert("Guardado")} padding="10px 20px" />
-      <Boton texto="Finalizar" onClick={() => setMostrarModal(true)} padding="10px 20px" />
-      </div>
-      </div>
-    
-
-     {mostrarModal && (
-  <div style={{
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100vw",
-    height: "100vh",
-    background: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000
-  }}>
-    <div style={{
-      background: "#f1f1f1",
-      padding: "2rem",
-      border: "1px solid #333",
-      borderRadius: "4px",
-      textAlign: "center",
-      maxWidth: "400px"
-    }}>
-      <p>¿Desea exportar los datos de los candidatos con sus claves a un archivo Excel?</p>
-      <div style={{ display: "flex", gap: "1rem", justifyContent: "center", marginTop: "1.5rem" }}>
-        <Boton texto="Cancelar" onClick={() => setMostrarModal(false)} />
-        <Boton texto="Aceptar" onClick={() => setMostrarModal(false)} />
-      </div>
-    </div>
-  </div>
-)}
-
-
-
-
-
-    </div>
-    
-     
-    
-    
-
-
-    
+    <main style={{ minHeight: "100vh", padding: "4rem 1rem" }}>
+      <section
+        style={{
+          maxWidth: "1000px",
+          margin: "0 auto",
+          border: "2px solid #1E2A1C",
+          borderRadius: "8px",
+          background: "#F5F5F5",
+          padding: "1rem",
+        }}
+      >
+        <h2 style={{ textAlign: "center", fontSize: "2rem" }}>
+          Candidatos incluidos en la evaluación
+        </h2>
+        <Tabla
+          columnas={["Nombre", "Apellido", "Tipo de documento", "Documento", "Clave de ingreso"]}
+          datos={evaluados.map((candidato) => [
+            candidato.nombre,
+            candidato.apellido,
+            candidato["tipoDocumento de Documento"],
+            candidato["Numero de Documento"],
+            candidato["clave de ingreso"],
+          ])}
+        />
+        {evaluados.length === 0 && (
+          <p role="alert">No hay una respuesta DTO disponible. Generá los cuestionarios desde el paso anterior.</p>
+        )}
+        {error && <p role="alert">No se pudo exportar el archivo: {error}</p>}
+        <div style={{ display: "flex", justifyContent: "center", margin: "1.5rem" }}>
+          <Boton
+            texto={cargando ? "Exportando..." : "Exportar candidatos"}
+            onClick={exportar}
+            disabled={cargando || evaluados.length === 0}
+          />
+        </div>
+      </section>
+    </main>
   );
 }

@@ -1,112 +1,175 @@
 "use client";
-import { Suspense } from "react";
+
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Boton from "../../../componentes/boton";
 import Tabla from "../../../componentes/tabla";
-import Link from "next/link";
+import {
+  backendRequest,
+  getErrorMessage,
+  type CandidatoDto,
+  type CuestionarioDto,
+  type PuestoDto,
+} from "@/lib/backend-api";
 
-// Paso 7: valores requeridos por la función vs obtenidos por el candidato.
-// Data de prueba (escala 1 a 5). Después lo reemplazás por tu fetch.
-const competencias = [
-  { nombre: "Comunicación", requerido: 4, obtenido: 3 },
-  { nombre: "Trabajo en equipo", requerido: 5, obtenido: 4 },
-  { nombre: "Liderazgo", requerido: 3, obtenido: 4 },
-  { nombre: "Resolución de problemas", requerido: 4, obtenido: 5 },
-];
+type DatosReporte = {
+  puesto: PuestoDto;
+  cuestionario: CuestionarioDto;
+  candidato: CandidatoDto | undefined;
+};
 
-const ESCALA_MAX = 5;
-
-function ReporteComparativoContenido() {
+function DetalleReporte() {
   const searchParams = useSearchParams();
-  const funcion = searchParams.get("funcion") ?? "";
-  const candidato = searchParams.get("candidato") ?? "";
+  const idPuesto = searchParams.get("idPuesto") ?? "";
+  const idCuestionario = searchParams.get("idCuestionario") ?? "";
+  const clave = `${idPuesto}:${idCuestionario}`;
+  const [resultado, setResultado] = useState<{
+    clave: string;
+    datos: DatosReporte | null;
+    error: string;
+    ready: boolean;
+  }>({ clave: "", datos: null, error: "", ready: false });
 
-  // Paso 8: imprimir el reporte con el gráfico y la tabla
+  useEffect(() => {
+    if (!idPuesto || !idCuestionario) return;
+
+    let activo = true;
+    Promise.all([
+      backendRequest<PuestoDto>(`/puestos/${encodeURIComponent(idPuesto)}`),
+      backendRequest<CuestionarioDto[]>("/cuestionarios/list"),
+      backendRequest<CandidatoDto[]>("/gestionar-candidatos/lista"),
+    ])
+      .then(([puesto, cuestionarios, candidatos]) => {
+        const cuestionario = cuestionarios.find(
+          (item) =>
+            String(item.idCuestionario) === idCuestionario &&
+            String(item.idPuesto) === idPuesto
+        );
+        if (!cuestionario) {
+          throw new Error("El backend no devolvió el cuestionario para el puesto seleccionado.");
+        }
+
+        if (activo) {
+          setResultado({
+            clave,
+            datos: {
+              puesto,
+              cuestionario,
+              candidato: candidatos.find((item) => item.id === cuestionario.idCandidato),
+            },
+            error: "",
+            ready: true,
+          });
+        }
+      })
+      .catch((solicitudError: unknown) => {
+        if (activo) {
+          setResultado({
+            clave,
+            datos: null,
+            error: getErrorMessage(solicitudError),
+            ready: true,
+          });
+        }
+      });
+
+    return () => {
+      activo = false;
+    };
+  }, [clave, idCuestionario, idPuesto]);
+
+  const cargando = !resultado.ready || resultado.clave !== clave;
+  const error = !idPuesto || !idCuestionario
+    ? "Falta el identificador del puesto o del cuestionario."
+    : cargando
+      ? ""
+      : resultado.error;
+  const datos = cargando ? null : resultado.datos;
+  const respuestas =
+    datos?.cuestionario.bloques.flatMap((bloque) =>
+      bloque.items.map((item) => {
+        const opcion = item.opciones.find((actual) => actual.fila === item.opcionSeleccionada);
+        return [
+          bloque.numero,
+          item.titulo,
+          item.pregunta,
+          opcion?.descripcion ?? "Sin respuesta registrada",
+        ];
+      })
+    ) ?? [];
+
   const imprimir = () => window.print();
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "flex-start",
-      paddingTop: "4rem"
-    }}>
-      {/* Al imprimir se ocultan los botones */}
+    <main style={{ minHeight: "100vh", padding: "4rem 1rem" }}>
+      <section
+        style={{
+          maxWidth: "1100px",
+          margin: "0 auto",
+          border: "2px solid #1E2A1C",
+          borderRadius: "8px",
+          background: "#F5F5F5",
+          padding: "1rem",
+        }}
+      >
+        <h2 style={{ textAlign: "center", fontSize: "2rem" }}>Datos de evaluación</h2>
+        {cargando && <p role="status">Cargando DTOs del backend...</p>}
+        {error && <p role="alert">No se pudo cargar el reporte: {error}</p>}
+        {datos && (
+          <>
+            <p>
+              <strong>Puesto:</strong> {datos.puesto.nombre} — {datos.puesto.empresa}
+            </p>
+            <p>
+              <strong>Candidato:</strong>{" "}
+              {datos.candidato
+                ? `${datos.candidato.nombre} ${datos.candidato.apellido}`
+                : `ID ${datos.cuestionario.idCandidato}`}
+            </p>
+            <p>
+              <strong>Cuestionario:</strong> {datos.cuestionario.idCuestionario}
+            </p>
+            <p role="note">
+              El backend todavía no expone un endpoint de reporte comparativo. A continuación
+              se muestran los datos reales disponibles en los DTOs de puesto y cuestionario.
+            </p>
+
+            <h3>Competencias requeridas por el puesto</h3>
+            <Tabla
+              columnas={["Competencia", "Ponderación"]}
+              datos={datos.puesto.caracteristicas.map((caracteristica) => [
+                caracteristica.nombreCompetencia,
+                caracteristica.ponderacion,
+              ])}
+            />
+            {datos.puesto.caracteristicas.length === 0 && (
+              <p>El DTO del puesto no incluye competencias asociadas.</p>
+            )}
+
+            <h3 style={{ marginTop: "2rem" }}>Respuestas registradas</h3>
+            <Tabla
+              columnas={["Bloque", "Título", "Pregunta", "Opción elegida"]}
+              datos={respuestas}
+            />
+            {respuestas.length === 0 && (
+              <p>El DTO del cuestionario no contiene respuestas.</p>
+            )}
+          </>
+        )}
+
+        <div className="no-imprimir" style={{ display: "flex", justifyContent: "center", margin: "1.5rem" }}>
+          <Boton texto="Imprimir" onClick={imprimir} disabled={!datos} />
+        </div>
+      </section>
       <style>{`@media print { .no-imprimir { display: none !important; } }`}</style>
-
-      <div className="flex flex-col flex-1" style={{
-        display: "flex",
-        maxWidth: "1100px",
-        margin: "2rem auto",
-        border: "2px solid #1E2A1C",
-        borderRadius: "8px",
-        background: "#F5F5F5",
-        alignItems: "center",
-        width: "100%",
-        paddingBottom: "2rem"
-      }}>
-        <h2 style={{ display: "flex", margin: "1rem auto 0.5rem", fontSize: "2rem" }}>
-          <img src="/lupa.png" alt="Lupa" style={{ width: "30px", height: "30px", objectFit: "contain", marginRight: "0.5rem", marginTop: "0.5rem" }} />
-          Reporte Comparativo
-        </h2>
-
-        <hr style={{
-          width: "100%",
-          border: "none",
-          borderTop: "2px solid #1E2A1C",
-          margin: "0.5rem 0rem 1.5rem 0rem",
-          alignSelf: "stretch"
-        }} />
-
-        <p style={{ marginBottom: "1rem" }}>
-          <b>Función:</b> {funcion} &nbsp;|&nbsp; <b>Candidato Nro:</b> {candidato}
-        </p>
-
-        {/* Paso 7: grilla de valores */}
-        <h3 style={{ fontSize: "1.5rem" }}>Valores por competencia</h3>
-        <Tabla
-          columnas={["Competencia", "Valor requerido", "Valor obtenido"]}
-          datos={competencias.map(c => [c.nombre, c.requerido, c.obtenido])}
-        />
-
-        {/* Paso 7: gráfico (barras hechas con div, sin librerías) */}
-        <h3 style={{ fontSize: "1.5rem", marginTop: "2rem" }}>Gráfico comparativo</h3>
-        <div style={{ width: "100%", maxWidth: "800px", padding: "0 2rem", marginTop: "1rem" }}>
-          <div style={{ display: "flex", gap: "1.5rem", marginBottom: "1rem", justifyContent: "center" }}>
-            <span><span style={{ display: "inline-block", width: 14, height: 14, background: "#1E2A1C", marginRight: 6 }} />Requerido</span>
-            <span><span style={{ display: "inline-block", width: 14, height: 14, background: "#6FA06B", marginRight: 6 }} />Obtenido</span>
-          </div>
-
-          {competencias.map(c => (
-            <div key={c.nombre} style={{ marginBottom: "1rem" }}>
-              <p style={{ fontWeight: "bold", marginBottom: "0.25rem" }}>{c.nombre}</p>
-              <div style={{ background: "#ddd", height: 18, marginBottom: 4 }}>
-                <div style={{ width: `${(c.requerido / ESCALA_MAX) * 100}%`, height: "100%", background: "#1E2A1C" }} />
-              </div>
-              <div style={{ background: "#ddd", height: 18 }}>
-                <div style={{ width: `${(c.obtenido / ESCALA_MAX) * 100}%`, height: "100%", background: "#6FA06B" }} />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Paso 8: Imprimir. Paso 9: termina el CU */}
-        <div className="no-imprimir" style={{ display: "flex", gap: "2rem", margin: "2rem 1rem 0" }}>
-          <Boton texto="Imprimir" onClick={imprimir} padding="10px 30px" />
-          <Link href="/emitir-reporte-comparativo">
-            <Boton texto="Volver" padding="10px 30px" />
-          </Link>
-        </div>
-      </div>
-    </div>
+    </main>
   );
 }
 
-export default function ReporteComparativo() {
+export default function ReporteComparativoDetalle() {
   return (
-    <Suspense fallback={null}>
-      <ReporteComparativoContenido />
+    <Suspense fallback={<p role="status">Cargando reporte...</p>}>
+      <DetalleReporte />
     </Suspense>
   );
 }

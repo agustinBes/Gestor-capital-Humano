@@ -1,136 +1,156 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Boton from "../../componentes/boton";
-import Input from "../../componentes/input";
+import Input2 from "../../componentes/input2";
 import Tabla from "../../componentes/tabla";
-import Link from "next/dist/client/link";
+import { backendRequest, getErrorMessage, type CandidatoDto } from "@/lib/backend-api";
 
 export default function EvaluarCandidato() {
-  const [mostrarTablas, setMostrarTablas] = useState(false);
-  const [paddingArriba, setPaddingArriba] = useState("17rem");
-  const [candidatos, setCandidatos] = useState([
-  ["038", "Lucas", "Besigniano"],
-  ["069", "Agustina", "Luna"],
-  ["016", "Micalea", "Gaitan"],
-  ["067", "Ivan", "Cabañas"],
-  ]);
-
-  const [aEvaluar, setAEvaluar] = useState<(string | number)[][]>([]);
+  const router = useRouter();
+  const [numero, setNumero] = useState("");
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [candidatos, setCandidatos] = useState<CandidatoDto[]>([]);
+  const [aEvaluar, setAEvaluar] = useState<CandidatoDto[]>([]);
   const [seleccionados, setSeleccionados] = useState<number[]>([]);
+  const [busquedaRealizada, setBusquedaRealizada] = useState(false);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState("");
 
-  const seleccionDeFilas = (index: number) => {
-  if (seleccionados.includes(index)) {
-    setSeleccionados(seleccionados.filter(i => i !== index));
-  } else {
-    setSeleccionados([...seleccionados, index]);
-  }
+  const buscarCandidatos = async () => {
+    const parametros = new URLSearchParams();
+    if (numero.trim()) parametros.set("id", numero.trim());
+    if (nombre.trim()) parametros.set("nombre", nombre.trim());
+    if (apellido.trim()) parametros.set("apellido", apellido.trim());
+
+    setCargando(true);
+    setError("");
+    setBusquedaRealizada(true);
+    try {
+      const query = parametros.toString();
+      const resultado = await backendRequest<CandidatoDto[]>(
+        query ? `/gestionar-candidatos/buscar?${query}` : "/gestionar-candidatos/lista"
+      );
+      setCandidatos(resultado);
+      setSeleccionados([]);
+    } catch (errorBusqueda: unknown) {
+      setCandidatos([]);
+      setError(getErrorMessage(errorBusqueda));
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const seleccionarFila = (index: number) => {
+    const candidatoId = candidatos[index]?.id;
+    if (candidatoId === undefined) return;
+    setSeleccionados((actuales) =>
+      actuales.includes(candidatoId)
+        ? actuales.filter((id) => id !== candidatoId)
+        : [...actuales, candidatoId]
+    );
   };
 
   const agregarSeleccionados = () => {
-    const nuevos = seleccionados.map(i => candidatos[i]);
-    setAEvaluar([...aEvaluar, ...nuevos]);
+    const nuevos = candidatos.filter(
+      (candidato) =>
+        seleccionados.includes(candidato.id) &&
+        !aEvaluar.some((existente) => existente.id === candidato.id)
+    );
+    setAEvaluar((actuales) => [...actuales, ...nuevos]);
     setSeleccionados([]);
   };
 
-  useEffect(() => {const ajustarPadding = () => {if (window.innerWidth < 1400) {setPaddingArriba("4rem");
-   } else {setPaddingArriba("17rem");  }};
-  ajustarPadding(); 
-   window.addEventListener("resize", ajustarPadding);
-  return () => window.removeEventListener("resize", ajustarPadding);}, []);
+  const continuar = () => {
+    const parametros = new URLSearchParams();
+    aEvaluar.forEach((candidato) => parametros.append("candidatos", String(candidato.id)));
+    router.push(`/evaluar-candidato/evaluar-candidato-pagina2?${parametros.toString()}`);
+  };
 
   return (
-
-    <div style={{
-    minHeight: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "flex-start", 
-  paddingTop: paddingArriba
-  }}> 
-    <div className="flex flex-col flex-1" style={{display: "flex",maxWidth: mostrarTablas ? "1100px" : "800px", margin: "2rem auto", border: "2px solid #1E2A1C", borderRadius: "8px", background: "#F5F5F5", alignItems: "center",width: "100%",paddingBottom: "2rem"}}>
-          <h2 style={{ display: "flex",margin: "1rem auto 0.5rem", fontSize: "2rem" }}>
-          <img src="/lupa.png" alt="Lupa" style={{ width: "30px", height: "30px", objectFit: "contain",marginRight: "0.5rem",marginTop: "0.5rem" }} />
-          Busqueda de Candidatos
-          </h2> 
-      
-      <hr style={{ 
-      width: "100%",
-      border: "none",
-      borderTop: "2px solid #1E2A1C",
-      margin: "0.5rem 0rem 1.5rem  0rem",
-      alignSelf: "stretch"
-      }} />
-
-      <div style={{marginBottom: "10px"}}>
-        <Input label="Nro. Candidato" placeholder="Ingrese el número de candidato" />
-      </div>
-      <div style={{marginBottom: "10px", display: "flex", gap: "2rem"}}>
-        <div style={{flex: "1"}}>
-        <Input label="Nombre del Candidato" placeholder="Ingrese el nombre del candidato" />
+    <main style={{ minHeight: "100vh", padding: "4rem 1rem" }}>
+      <section
+        style={{
+          maxWidth: "1000px",
+          margin: "0 auto",
+          border: "2px solid #1E2A1C",
+          borderRadius: "8px",
+          background: "#F5F5F5",
+          padding: "1rem",
+        }}
+      >
+        <h2 style={{ textAlign: "center", fontSize: "2rem" }}>Búsqueda de candidatos</h2>
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "1rem" }}>
+          <Input2
+            label="Nro. candidato"
+            placeholder="ID del candidato"
+            value={numero}
+            onChange={(event) => setNumero(event.target.value)}
+          />
+          <Input2
+            label="Nombre"
+            placeholder="Nombre"
+            value={nombre}
+            onChange={(event) => setNombre(event.target.value)}
+          />
+          <Input2
+            label="Apellido"
+            placeholder="Apellido"
+            value={apellido}
+            onChange={(event) => setApellido(event.target.value)}
+          />
         </div>
-        <div style={{flex: "1"}}>
-        <Input label="Apellido del Candidato" placeholder="Ingrese el apellido del candidato" />
+        <div style={{ textAlign: "center", margin: "1rem" }}>
+          <Boton texto="Buscar candidatos" onClick={buscarCandidatos} disabled={cargando} />
         </div>
-      </div >
-      <div style={{ textAlign: "center", margin: "1rem" }}>
-      <Boton texto="Buscar Candidato" onClick={() => {setMostrarTablas(true),setPaddingArriba("1rem");}} padding="20px 20px" />
-      </div>
 
-      {mostrarTablas && (
+        {cargando && <p role="status">Consultando candidatos en el backend...</p>}
+        {error && <p role="alert">No se pudieron cargar los candidatos: {error}</p>}
+        {busquedaRealizada && !cargando && !error && (
+          <>
+            <h3>Candidatos encontrados</h3>
+            <Tabla
+              columnas={["Nro. de candidato", "Nombre", "Apellido"]}
+              datos={candidatos.map((candidato) => [
+                candidato.id,
+                candidato.nombre,
+                candidato.apellido,
+              ])}
+              onRowClick={seleccionarFila}
+              seleccionados={candidatos.flatMap((candidato, index) =>
+                seleccionados.includes(candidato.id) ? [index] : []
+              )}
+            />
+            {candidatos.length === 0 && <p>No hay candidatos para esos filtros.</p>}
+            <div style={{ display: "flex", justifyContent: "center", gap: "1rem", margin: "1rem" }}>
+              <Boton
+                texto="Agregar seleccionados"
+                onClick={agregarSeleccionados}
+                disabled={seleccionados.length === 0}
+              />
+            </div>
+          </>
+        )}
 
-      <div style={{ marginTop: "2rem",width: "100%"}}>
-      <hr style={{ 
-      width: "100%",
-      border: "none",
-      borderTop: "2px solid #1E2A1C",
-      margin: "0.5rem 0rem 1.5rem 0rem",
-      alignSelf: "stretch"
-      }} />
-      </div>
-       )}
-
-
-       {mostrarTablas && (
-        <div style={{ marginTop: "2rem"}}>
-      <h3 style={{fontSize: "1.5rem" }}>Candidatos encontrados</h3>
-       <div style={{ position: "relative", display: "inline-block"}}>
-      
-     <Tabla
-      columnas={["Nro de Candidato", "Nombre", "Apellido"]}
-      datos={candidatos}
-      onRowClick={seleccionDeFilas}
-      seleccionados={seleccionados}
-    />
-    
-    <div style={{ 
-    position: "absolute", 
-    right: "-280px",  
-    top: "140px" 
-  }}>
-    <Boton texto="Agregar Candidatos" onClick={agregarSeleccionados} padding="10px 20px" />
-    </div>
-    </div>
-     <h3 style={{fontSize: "1.5rem" }}>Candidatos a evaluar</h3>
-
-
-     <div style={{ position: "relative", display: "inline-block"}}>
-    <Tabla
-      columnas={["Nro de Candidato", "Nombre", "Apellido"]}
-      datos={aEvaluar}
-    />
-    <div style={{ 
-    position: "absolute", 
-    right: "-260px",  
-    top: "10px" 
-     }}>
-    <Link href="/evaluar-candidato/evaluar-candidato-pagina2">
-    <Boton texto="Siguiente" padding="10px 20px" />
-    </Link>
-    </div>
-    </div>
-    </div>
-     )}
-    </div>
-    </div>
+        <h3>Candidatos a evaluar</h3>
+        <Tabla
+          columnas={["Nro. de candidato", "Nombre", "Apellido"]}
+          datos={aEvaluar.map((candidato) => [
+            candidato.id,
+            candidato.nombre,
+            candidato.apellido,
+          ])}
+        />
+        <div style={{ display: "flex", justifyContent: "center", margin: "1rem" }}>
+          <Boton
+            texto="Siguiente"
+            onClick={continuar}
+            disabled={aEvaluar.length === 0}
+          />
+        </div>
+      </section>
+    </main>
   );
 }

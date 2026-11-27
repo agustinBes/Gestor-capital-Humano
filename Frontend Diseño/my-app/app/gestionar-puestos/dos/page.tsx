@@ -1,69 +1,117 @@
 "use client";
-import { useState } from "react";
-import { useEffect } from "react";
+
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Boton from "../../../componentes/boton";
-import Link from "next/dist/client/link";
-import Input from "../../../componentes/input";
 import Tabla from "../../../componentes/tabla";
+import { backendRequest, getErrorMessage, type PuestoDto } from "@/lib/backend-api";
 
+function ResultadosPuestos() {
+  const searchParams = useSearchParams();
+  const codigo = searchParams.get("codigo")?.trim() ?? "";
+  const empresa = searchParams.get("empresa")?.trim() ?? "";
+  const nombre = searchParams.get("puesto")?.trim() ?? "";
+  const [resultado, setResultado] = useState<{
+    query: string;
+    puestos: PuestoDto[];
+    error: string;
+    ready: boolean;
+  }>({ query: "", puestos: [], error: "", ready: false });
+  const [seleccionado, setSeleccionado] = useState<number[]>([]);
 
-export default function CompletarCuestionario() {
-    const [datos, setDatos] = useState([
-	["038", "Lucas", "Besigniano"],
-	["069", "Agustina", "Luna"],
-	["016", "Micalea", "Gaitan"],
-	["067", "Ivan", "Cabañas"],
-    ]);
+  useEffect(() => {
+    let activo = true;
+    const parametros = new URLSearchParams();
+    if (codigo) parametros.set("codigo", codigo);
+    if (empresa) parametros.set("empresa", empresa);
+    if (nombre) parametros.set("puesto", nombre);
+    const query = parametros.toString();
 
-const [seleccionado, setSeleccionado] = useState<number[]>([]);
+    backendRequest<PuestoDto[]>(
+      query ? `/puestos/buscar?${query}` : "/puestos/lista"
+    )
+      .then((resultados) => {
+        if (activo) setResultado({ query, puestos: resultados, error: "", ready: true });
+      })
+      .catch((solicitudError: unknown) => {
+        if (activo) {
+          setResultado({
+            query,
+            puestos: [],
+            error: getErrorMessage(solicitudError),
+            ready: true,
+          });
+        }
+      });
 
-const seleccionDeFila = (index: number) => {
-  setSeleccionado((prev) => (prev.includes(index) ? [] : [index]));
-};
+    return () => {
+      activo = false;
+    };
+  }, [codigo, empresa, nombre]);
 
-    const [paddingArriba, setPaddingArriba] = useState("12rem");
-    useEffect(() => {const ajustarPadding = () => {if (window.innerWidth < 1400) {setPaddingArriba("1rem");
-										 } else {setPaddingArriba("12rem");  }};
-		     ajustarPadding();
-		     window.addEventListener("resize", ajustarPadding);
-		     return () => window.removeEventListener("resize", ajustarPadding);}, []);
-    
+  const parametrosActuales = new URLSearchParams();
+  if (codigo) parametrosActuales.set("codigo", codigo);
+  if (empresa) parametrosActuales.set("empresa", empresa);
+  if (nombre) parametrosActuales.set("puesto", nombre);
+  const query = parametrosActuales.toString();
+  const cargando = !resultado.ready || resultado.query !== query;
+  const puestos = cargando ? [] : resultado.puestos;
+  const error = cargando ? "" : resultado.error;
+  const puestosTabla = puestos.map((puesto) => [
+    puesto.codigo,
+    puesto.nombre,
+    puesto.empresa,
+  ]);
+
   return (
+    <main style={{ minHeight: "100vh", padding: "4rem 1rem" }}>
+      <section
+        style={{
+          maxWidth: "1000px",
+          margin: "0 auto",
+          border: "2px solid #1E2A1C",
+          borderRadius: "8px",
+          background: "#F5F5F5",
+          padding: "1rem",
+        }}
+      >
+        <h2 style={{ textAlign: "center", fontSize: "2rem" }}>Puestos encontrados</h2>
+        <Tabla
+          columnas={["Código", "Nombre del puesto", "Empresa"]}
+          datos={puestosTabla}
+          onRowClick={(index) => setSeleccionado([index])}
+          seleccionados={seleccionado}
+        />
+        {cargando && <p role="status">Cargando puestos...</p>}
+        {error && <p role="alert">No se pudieron cargar los puestos: {error}</p>}
+        {!cargando && !error && puestos.length === 0 && (
+          <p>No hay puestos que coincidan con la búsqueda.</p>
+        )}
+        {!cargando && !error && puestos.length > 0 && (
+          <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "1rem" }}>
+            <Boton
+              texto="Modificar"
+              type="button"
+              disabled={seleccionado.length === 0}
+              onClick={() => alert("La modificación de puestos no está disponible en esta pantalla.")}
+            />
+            <Boton
+              texto="Eliminar"
+              type="button"
+              disabled={seleccionado.length === 0}
+              onClick={() => alert("La eliminación de puestos no está disponible en esta pantalla.")}
+            />
+          </div>
+        )}
+      </section>
+    </main>
+  );
+}
 
-     <div style={{
-    minHeight: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "flex-start", 
-  paddingTop: paddingArriba
-  }}> 
-    <div className="flex flex-col flex-1" style={{display: "flex",maxWidth: "800px", margin: "2rem auto", border: "2px solid #1E2A1C", borderRadius: "8px", background: "#F5F5F5", alignItems: "center",width: "100%",paddingBottom: "2rem"}}>
-          <h2 style={{ display: "flex",margin: "1rem auto 0.5rem", fontSize: "2rem" }}>
-          <img src="/cuaderno.png" alt="Lupa" style={{ width: "30px", height: "30px", objectFit: "contain",marginRight: "0.5rem",marginTop: "0.5rem" }} />
-        Puestos Encontrados
-          </h2>
-          <hr style={{ 
-      width: "100%",
-      border: "none",
-      borderTop: "2px solid #1E2A1C",
-      margin: "0.5rem 0rem 1.5rem  0rem",
-      alignSelf: "stretch"
-	      }} />
-
-	<div id="Tabla">
-	    <div  style={{display: "flex", gap: "50px", textAlign: "center", margin: "1rem 0" }}>
-		<Tabla columnas={["Codigo","Nombre del puesto","Empresa"]}
-		       datos={datos}
-		       onRowClick={seleccionDeFila}
-		       seleccionados={seleccionado} />
-	    </div>
-	</div>
-	
-	<div style={{display: "flex", gap: "100px", textAlign: "center", margin: "1rem 0" }}>
-	    <Boton texto="Modificar" onClick={() => alert("CU no implementado!!")} padding="10px 20px" />
-	    <Boton texto="Eliminar" onClick={() => alert("CU no implementado!!")} padding="10px 20px" />
-      </div>
-    </div>
-    </div>
+export default function GestionarPuestosResultados() {
+  return (
+    <Suspense fallback={<p role="status">Cargando búsqueda...</p>}>
+      <ResultadosPuestos />
+    </Suspense>
   );
 }

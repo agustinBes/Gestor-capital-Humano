@@ -5,6 +5,7 @@ import Input from "../../componentes/input";
 import Input2 from "../../componentes/input2";
 import Tabla from "../../componentes/tabla";
 import Link from "next/dist/client/link";
+import { backendRequest, getErrorMessage, type PreguntaDto } from "@/lib/backend-api";
 
 export default function EvaluarCandidato() {
   const [nombrePregunta, setNombrePregunta] = useState("");
@@ -13,16 +14,10 @@ export default function EvaluarCandidato() {
 
   const [mostrarTablas, setMostrarTablas] = useState(false);
   const [paddingArriba, setPaddingArriba] = useState("17rem");
-  const [candidatos, setCandidatos] = useState([
-    ["038", "Lucas", "Besigniano"],
-    ["069", "Agustina", "Luna"],
-    ["016", "Micalea", "Gaitan"],
-    ["067", "Ivan", "Cabañas"],
-  ]);
+  const [preguntas, setPreguntas] = useState<PreguntaDto[]>([]);
+  const [cargando, setCargando] = useState(false);
+  const [errorBusqueda, setErrorBusqueda] = useState("");
 
-  const [mostrarModal, setMostrarModal] = useState(false);
-  const [mostrarModal2, setMostrarModal2] = useState(false);
-  const [aEvaluar, setAEvaluar] = useState<(string | number)[][]>([]);
   const [seleccionados, setSeleccionados] = useState<number[]>([]);
 
   const seleccionDeFilas = (index: number) => {
@@ -33,13 +28,7 @@ export default function EvaluarCandidato() {
     }
   };
 
-  const agregarSeleccionados = () => {
-    const nuevos = seleccionados.map((i) => candidatos[i]);
-    setAEvaluar([...aEvaluar, ...nuevos]);
-    setSeleccionados([]);
-  };
-
-  const handleBuscarPregunta = () => {
+  const handleBuscarPregunta = async () => {
     const hayAlMenosUnCampo =
       nombrePregunta.trim() !== "" ||
       factor.trim() !== "" ||
@@ -53,19 +42,55 @@ export default function EvaluarCandidato() {
 
     setMostrarTablas(true);
     setPaddingArriba("1rem");
+    setCargando(true);
+    setErrorBusqueda("");
+
+    const parametros = new URLSearchParams();
+    if (competencia.trim()) parametros.set("competencia", competencia.trim());
+    if (factor.trim()) parametros.set("factor", factor.trim());
+    if (nombrePregunta.trim()) parametros.set("pregunta", nombrePregunta.trim());
+
+    try {
+      const resultado = await backendRequest<PreguntaDto[]>(
+        `/gestionar-preguntas/buscar/?${parametros.toString()}`
+      );
+      setPreguntas(resultado);
+      setSeleccionados([]);
+    } catch (error: unknown) {
+      setErrorBusqueda(getErrorMessage(error));
+      setPreguntas([]);
+    } finally {
+      setCargando(false);
+    }
   };
 
-  const handleEliminarPregunta = () => {
+  const handleEliminarPregunta = async () => {
     if (seleccionados.length === 0) {
       alert("Debes seleccionar una pregunta de la tabla para eliminarla.");
       return;
     }
-    setMostrarModal(true);
-  };
+    const preguntaSeleccionada = preguntas[seleccionados[0]];
+    if (!preguntaSeleccionada) return;
+    const idConsultor = window.prompt("Ingresá el ID del consultor responsable de la eliminación.");
+    if (!idConsultor?.trim()) return;
 
-  const filaSeleccionada =
-    seleccionados.length > 0 ? candidatos[seleccionados[0]] : undefined;
-  const nombrePreguntaSeleccionada = filaSeleccionada ? String(filaSeleccionada[0]) : "";
+    setCargando(true);
+    setErrorBusqueda("");
+    try {
+      await backendRequest<string>(
+        `/gestionar-preguntas/delete/${preguntaSeleccionada.id}/responsable/${encodeURIComponent(idConsultor.trim())}`,
+        { method: "DELETE" }
+      );
+      setPreguntas((actuales) =>
+        actuales.filter((pregunta) => pregunta.id !== preguntaSeleccionada.id)
+      );
+      setSeleccionados([]);
+    } catch (errorEliminacion: unknown) {
+      setErrorBusqueda(getErrorMessage(errorEliminacion));
+    } finally {
+      setCargando(false);
+    }
+  };
 
   useEffect(() => {
     const ajustarPadding = () => {
@@ -200,7 +225,11 @@ export default function EvaluarCandidato() {
             <div style={{ position: "relative", display: "inline-block" }}>
               <Tabla
                 columnas={["Pregunta", "Competencia", "Factor"]}
-                datos={candidatos}
+                datos={preguntas.map((pregunta) => [
+                  pregunta.nombre,
+                  pregunta.factor.competencia.nombre,
+                  pregunta.factor.nombre,
+                ])}
                 onRowClick={seleccionDeFilas}
                 seleccionados={seleccionados}
               />
@@ -218,108 +247,28 @@ export default function EvaluarCandidato() {
                   texto="Eliminar pregunta"
                   onClick={handleEliminarPregunta}
                   padding="10px 10px"
+                  disabled={seleccionados.length === 0 || cargando}
                 />
                 <Boton
                   texto="Modificar pregunta"
                   onClick={() => alert("CU no implementado")}
                   padding="10px 10px"
+                  disabled={seleccionados.length === 0}
                 />
               </div>
             </div>
           </div>
         )}
+
+        {mostrarTablas && cargando && <p role="status">Buscando preguntas...</p>}
+        {mostrarTablas && errorBusqueda && (
+          <p role="alert">No se pudieron cargar las preguntas: {errorBusqueda}</p>
+        )}
+        {mostrarTablas && !cargando && !errorBusqueda && preguntas.length === 0 && (
+          <p>No hay preguntas que coincidan con los filtros.</p>
+        )}
       </div>
 
-      {mostrarModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              background: "#f1f1f1",
-              padding: "2rem",
-              border: "1px solid #333",
-              borderRadius: "4px",
-              textAlign: "center",
-              maxWidth: "400px",
-            }}
-          >
-            <p>
-              Los datos de la pregunta {nombrePreguntaSeleccionada} serán eliminados del
-              sistema
-            </p>
-            <div
-              style={{
-                display: "flex",
-                gap: "1rem",
-                justifyContent: "center",
-                marginTop: "1.5rem",
-              }}
-            >
-              <Boton texto="ELIMINAR" onClick={() => setMostrarModal2(true)} />
-              <Link href="/">
-                <Boton texto="CANCELAR" onClick={() => setMostrarModal(false)} />
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {mostrarModal2 && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              background: "#f1f1f1",
-              padding: "2rem",
-              border: "1px solid #333",
-              borderRadius: "4px",
-              textAlign: "center",
-              maxWidth: "400px",
-            }}
-          >
-            <p>
-              Los datos de la pregunta {nombrePreguntaSeleccionada} han sido eliminados del
-              sistema
-            </p>
-            <div
-              style={{
-                display: "flex",
-                gap: "1rem",
-                justifyContent: "center",
-                marginTop: "1.5rem",
-              }}
-            >
-              <Link href="/">
-                <Boton texto="OK" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

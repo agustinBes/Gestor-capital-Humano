@@ -1,16 +1,19 @@
 "use client";
 import { useState, useEffect } from "react";
 import Boton from "../../../componentes/boton";
-import Link from "next/dist/client/link";
+import Link from "next/link";
 import InputMayus from "../../../componentes/inputMayus";
-import Desplegable from "../../../componentes/desplegable";
+import { backendRequest, getErrorMessage } from "@/lib/backend-api";
 
 export default function CompletarCuestionario() {
-  const opciones = ["Consultor", "Analista", "Desarrollador", "Gerente"];
-
   const [competencia, setCompetencia] = useState("");
   const [factor, setFactor] = useState("");
   const [opcionRespuesta, setOpcionRespuesta] = useState("");
+  const [factores, setFactores] = useState([]);
+  const [opcionesRespuesta, setOpcionesRespuesta] = useState([]);
+  const [ponderaciones, setPonderaciones] = useState({});
+  const [cargandoCatalogos, setCargandoCatalogos] = useState(true);
+  const [errorCatalogos, setErrorCatalogos] = useState("");
 
   const [formData, setFormData] = useState({
     nombrePregunta: "",
@@ -19,8 +22,39 @@ export default function CompletarCuestionario() {
   });
 
   const [errores, setErrores] = useState([]);
-  const [mostrarModal, setMostrarModal] = useState(false);
   const [paddingArriba, setPaddingArriba] = useState("12rem");
+  const [guardando, setGuardando] = useState(false);
+  const [preguntaCreada, setPreguntaCreada] = useState(null);
+  const competencias = Array.from(
+    new Map(factores.map((item) => [item.competencia.id, item.competencia])).values()
+  );
+  const factoresDeCompetencia = factores.filter(
+    (item) => String(item.competencia.id) === competencia
+  );
+
+  useEffect(() => {
+    let activo = true;
+    Promise.all([
+      backendRequest("/factores/lista"),
+      backendRequest("/opciones-de-respuesta/nombre/"),
+    ])
+      .then(([resultadoFactores, resultadoOpciones]) => {
+        if (activo) {
+          setFactores(resultadoFactores);
+          setOpcionesRespuesta(resultadoOpciones);
+        }
+      })
+      .catch((errorSolicitud) => {
+        if (activo) setErrorCatalogos(getErrorMessage(errorSolicitud));
+      })
+      .finally(() => {
+        if (activo) setCargandoCatalogos(false);
+      });
+
+    return () => {
+      activo = false;
+    };
+  }, []);
 
   useEffect(() => {
     const ajustarPadding = () => {
@@ -43,7 +77,7 @@ export default function CompletarCuestionario() {
     }));
   };
 
-  const handleAceptar = () => {
+  const handleAceptar = async () => {
     const omisiones = [];
 
     if (!competencia.trim()) {
@@ -61,14 +95,81 @@ export default function CompletarCuestionario() {
     if (!formData.pregunta.trim()) {
       omisiones.push("Falta ingresar Pregunta.");
     }
+    if (formData.nombrePregunta.length > 80) {
+      omisiones.push("El nombre de pregunta no puede superar 80 caracteres.");
+    }
+    if (formData.pregunta.length > 150) {
+      omisiones.push("La pregunta no puede superar 150 caracteres.");
+    }
+    if (formData.descripcion.length > 300) {
+      omisiones.push("La descripción no puede superar 300 caracteres.");
+    }
     if (omisiones.length > 0) {
       setErrores(omisiones);
-      setMostrarModal(false);
+      return;
+    }
+
+    const respuestaSeleccionada = opcionesRespuesta.find(
+      (item) => String(item.id) === opcionRespuesta
+    );
+    if (!respuestaSeleccionada || respuestaSeleccionada.opciones.length < 2) {
+      setErrores(["La opción seleccionada no tiene las opciones requeridas por el backend."]);
+      return;
+    }
+
+    const ponderacionesIncompletas = respuestaSeleccionada.opciones.some(
+      (opcion) => ponderaciones[opcion.fila]?.trim() === ""
+    );
+    const valoresPonderacion = respuestaSeleccionada.opciones.map((opcion) =>
+      Number(ponderaciones[opcion.fila])
+    );
+    if (
+      ponderacionesIncompletas ||
+      valoresPonderacion.some(
+        (valor, index) =>
+          ponderaciones[respuestaSeleccionada.opciones[index].fila] === undefined ||
+          !Number.isInteger(valor) ||
+          valor < 0
+      )
+    ) {
+      setErrores(["Ingresá una ponderación entera no negativa para cada opción de respuesta."]);
+      return;
+    }
+    if (valoresPonderacion.reduce((total, valor) => total + valor, 0) !== 10) {
+      setErrores(["La suma de las ponderaciones debe ser 10."]);
       return;
     }
 
     setErrores([]);
-    setMostrarModal(true);
+    setGuardando(true);
+    try {
+      const resultado = await backendRequest("/gestionar-preguntas/new", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idFactor: Number(factor),
+          titulo: formData.nombrePregunta.trim(),
+          pregunta: formData.pregunta.trim(),
+          descripcion: formData.descripcion.trim(),
+          id_opcionRespuesta: Number(opcionRespuesta),
+          ponderaciones: valoresPonderacion,
+        }),
+      });
+      setPreguntaCreada(resultado);
+    } catch (errorSolicitud) {
+      setErrores([getErrorMessage(errorSolicitud)]);
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const limpiarFormulario = () => {
+    setCompetencia("");
+    setFactor("");
+    setOpcionRespuesta("");
+    setPonderaciones({});
+    setFormData({ nombrePregunta: "", pregunta: "", descripcion: "" });
+    setPreguntaCreada(null);
   };
 
   return (
@@ -132,28 +233,49 @@ export default function CompletarCuestionario() {
               }}
             >
               <div>
-                <Desplegable
-                  label="Competencia: "
-                  opciones={opciones}
-                  valor={competencia}
-                  onChange={setCompetencia}
-                />
+                <label style={{ display: "block" }}>
+                  Competencia:
+                  <select
+                    value={competencia}
+                    onChange={(event) => {
+                      setCompetencia(event.target.value);
+                      setFactor("");
+                    }}
+                  >
+                    <option value="">Seleccionar competencia</option>
+                    {competencias.map((item) => (
+                      <option key={item.id} value={item.id}>{item.nombre}</option>
+                    ))}
+                  </select>
+                </label>
 
-                <Desplegable
-                  label="Factor:"
-                  opciones={opciones}
-                  valor={factor}
-                  onChange={setFactor}
-                />
+                <label style={{ display: "block" }}>
+                  Factor:
+                  <select value={factor} onChange={(event) => setFactor(event.target.value)}>
+                    <option value="">Seleccionar factor</option>
+                    {factoresDeCompetencia.map((item) => (
+                      <option key={item.id} value={item.id}>{item.nombre}</option>
+                    ))}
+                  </select>
+                </label>
               </div>
 
               <div>
-                <Desplegable
-                  label="Opcion de Respuesta:"
-                  opciones={opciones}
-                  valor={opcionRespuesta}
-                  onChange={setOpcionRespuesta}
-                />
+                <label style={{ display: "block" }}>
+                  Opción de respuesta:
+                  <select
+                    value={opcionRespuesta}
+                    onChange={(event) => {
+                      setOpcionRespuesta(event.target.value);
+                      setPonderaciones({});
+                    }}
+                  >
+                    <option value="">Seleccionar opciones</option>
+                    {opcionesRespuesta.map((item) => (
+                      <option key={item.id} value={item.id}>{item.nombre}</option>
+                    ))}
+                  </select>
+                </label>
 
                 <InputMayus
                   label="Nombre de pregunta:   "
@@ -181,6 +303,25 @@ export default function CompletarCuestionario() {
                 />
               </div>
             </div>
+            {opcionesRespuesta
+              .find((item) => String(item.id) === opcionRespuesta)
+              ?.opciones.map((opcion) => (
+                <label key={opcion.fila} style={{ display: "block", margin: "0.5rem 1rem" }}>
+                  Ponderación para “{opcion.descripcion}”:
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={ponderaciones[opcion.fila] ?? ""}
+                    onChange={(event) =>
+                      setPonderaciones((actuales) => ({
+                        ...actuales,
+                        [opcion.fila]: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+              ))}
           </form>
 
           {/* Tres botones */}
@@ -202,13 +343,23 @@ export default function CompletarCuestionario() {
             <Boton
               type="button"
               texto="Aceptar"
-              onClick={handleAceptar}
+              onClick={() => void handleAceptar()}
+              disabled={guardando || cargandoCatalogos || Boolean(errorCatalogos)}
               padding="10px 20px"
             />
             <Link href="/gestionar-preguntas">
               <Boton texto="Cancelar" padding="10px 20px" />
             </Link>
           </div>
+
+          {cargandoCatalogos && <p role="status">Cargando opciones desde el backend...</p>}
+          {errorCatalogos && <p role="alert">No se pudieron cargar las opciones: {errorCatalogos}</p>}
+          {preguntaCreada && (
+            <div role="status">
+              <p>Pregunta creada desde el backend: {preguntaCreada.nombre}</p>
+              <Boton texto="Crear otra" onClick={limpiarFormulario} />
+            </div>
+          )}
 
           {/* Mensaje de error en texto plano, color rojo y pequeño borde debajo de los tres botones */}
           {errores.length > 0 && (
@@ -232,52 +383,6 @@ export default function CompletarCuestionario() {
         </div>
       </div>
 
-      {mostrarModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              background: "#f1f1f1",
-              padding: "2rem",
-              border: "1px solid #333",
-              borderRadius: "4px",
-              textAlign: "center",
-              maxWidth: "400px",
-            }}
-          >
-            <p>
-              La Pregunta {formData.nombrePregunta} se ha creado correctamente ¿Desea cargar otra?
-            </p>
-            <div
-              style={{
-                display: "flex",
-                gap: "1rem",
-                justifyContent: "center",
-                marginTop: "1.5rem",
-              }}
-            >
-              <Link href="/">
-                <Boton texto="NO" onClick={() => setMostrarModal(false)} />
-              </Link>
-              <Link href="/gestionar-preguntas/dar-alta-pregunta">
-                <Boton texto="SI" onClick={() => setMostrarModal(false)} />
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

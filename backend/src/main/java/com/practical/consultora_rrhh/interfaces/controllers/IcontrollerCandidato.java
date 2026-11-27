@@ -8,6 +8,8 @@ import com.practical.consultora_rrhh.interfaces.genericos.IControllerCRUD;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 /**
  * Interfaz que hereda de las operaciones genericas de insercion,actualizacion
@@ -19,7 +21,7 @@ import org.springframework.web.bind.annotation.GetMapping;
  */
 public interface IcontrollerCandidato extends IControllerCRUD<candidatoDto, candidatoDtoCreate> {
 
-
-    @GetMapping("/login/auth")
-    ResponseEntity<cuestionarioDto> autenticarCandidato(@Valid candidatoDtoAuth candidatoDto);
+    
+    @PostMapping ("/candidato/auth")
+    ResponseEntity<cuestionarioDto> autenticarCandidato(@Valid @RequestBody candidatoDtoAuth candidatoDto);
 }

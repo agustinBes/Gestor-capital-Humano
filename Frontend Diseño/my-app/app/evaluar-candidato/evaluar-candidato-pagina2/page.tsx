@@ -1,79 +1,146 @@
 "use client";
-import { useState } from "react";
-import { useEffect } from "react";
+
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Boton from "../../../componentes/boton";
 import Tabla from "../../../componentes/tabla";
-import Desplegable from "../../../componentes/desplegable";
-import Link from "next/dist/client/link";
+import {
+  backendRequest,
+  getErrorMessage,
+  type EvaluadosDto,
+  type PuestoDto,
+} from "@/lib/backend-api";
 
-export default function EvaluarCandidatoPagina2() {
-  const [funcion, setFuncion] = useState("");
-  const [paddingArriba, setPaddingArriba] = useState("9rem");
-  const opciones = [
-    "Consultor",
-    "Analista",
-    "Desarrollador",
-    "Gerente"
-  ];
-   
-  useEffect(() => {const ajustarPadding = () => {if (window.innerWidth < 1400) {setPaddingArriba("1rem");
-     } else {setPaddingArriba("9rem");  }};
-    ajustarPadding(); 
-     window.addEventListener("resize", ajustarPadding);
-    return () => window.removeEventListener("resize", ajustarPadding);}, []);
+function SeleccionarPuesto() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const idsCandidatos = searchParams.getAll("candidatos").join(",");
+  const candidatos = idsCandidatos
+    .split(",")
+    .filter(Boolean)
+    .map(Number)
+    .filter((id) => Number.isSafeInteger(id) && id > 0);
+  const [puestos, setPuestos] = useState<PuestoDto[]>([]);
+  const [puestoId, setPuestoId] = useState("");
+  const [cargando, setCargando] = useState(true);
+  const [generando, setGenerando] = useState(false);
+  const [error, setError] = useState("");
 
+  useEffect(() => {
+    let activo = true;
+    backendRequest<PuestoDto[]>("/puestos/lista")
+      .then((resultado) => {
+        if (activo) setPuestos(resultado);
+      })
+      .catch((solicitudError: unknown) => {
+        if (activo) setError(getErrorMessage(solicitudError));
+      })
+      .finally(() => {
+        if (activo) setCargando(false);
+      });
+
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+  const puestoSeleccionado = puestos.find((puesto) => String(puesto.idPuesto) === puestoId);
+
+  const generarEvaluaciones = async () => {
+    if (!puestoId || candidatos.length === 0) return;
+
+    setGenerando(true);
+    setError("");
+    try {
+      const resultado = await backendRequest<EvaluadosDto[]>(
+        `/gestion-cuestionarios/nuevo-cuestionario/${puestoId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(candidatos),
+        }
+      );
+      sessionStorage.setItem("candidatosEvaluadosDto", JSON.stringify(resultado));
+      router.push("/evaluar-candidato/evaluar-candidato-pagina2/evaluar-candidato-pagina3");
+    } catch (solicitudError: unknown) {
+      setError(getErrorMessage(solicitudError));
+    } finally {
+      setGenerando(false);
+    }
+  };
 
   return (
+    <main style={{ minHeight: "100vh", padding: "4rem 1rem" }}>
+      <section
+        style={{
+          maxWidth: "900px",
+          margin: "0 auto",
+          border: "2px solid #1E2A1C",
+          borderRadius: "8px",
+          background: "#F5F5F5",
+          padding: "1rem",
+        }}
+      >
+        <h2 style={{ textAlign: "center", fontSize: "2rem" }}>Evaluar candidatos</h2>
+        <p>Candidatos seleccionados: {candidatos.length}</p>
+        {cargando && <p role="status">Cargando puestos...</p>}
+        {error && <p role="alert">No se pudo completar la operación: {error}</p>}
 
-    <div style={{
-    minHeight: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "flex-start", 
-  paddingTop: paddingArriba
-  }}> 
-    <div className="flex flex-col flex-1" style={{display: "flex",maxWidth: "800px", margin: "2rem auto", border: "2px solid #1E2A1C", borderRadius: "8px", background: "#F5F5F5", alignItems: "center",width: "100%",paddingBottom: "2rem"}}>
-          <h2 style={{ display: "flex",margin: "1rem auto 0.5rem", fontSize: "2rem" }}>
-          <img src="/lupa.png" alt="Lupa" style={{ width: "30px", height: "30px", objectFit: "contain",marginRight: "0.5rem",marginTop: "0.5rem" }} />
-         Evaluacion de Candidatos
-          </h2> 
-          <hr style={{ 
-      width: "100%",
-      border: "none",
-      borderTop: "2px solid #1E2A1C",
-      margin: "0.5rem 0rem 1.5rem  0rem",
-      alignSelf: "stretch"
-      }} />
+        {!cargando && (
+          <div style={{ margin: "1rem 0" }}>
+            <label htmlFor="puesto-evaluacion">Puesto a evaluar: </label>
+            <select
+              id="puesto-evaluacion"
+              value={puestoId}
+              onChange={(event) => setPuestoId(event.target.value)}
+              style={{ padding: "0.5rem", minWidth: "260px" }}
+            >
+              <option value="">Seleccionar puesto</option>
+              {puestos.map((puesto) => (
+                <option key={puesto.idPuesto} value={puesto.idPuesto}>
+                  {puesto.codigo} — {puesto.nombre} ({puesto.empresa})
+                </option>
+              ))}
+            </select>
+            {!error && puestos.length === 0 && <p>No hay puestos disponibles en el backend.</p>}
+          </div>
+        )}
 
-          <Desplegable
-        label="Seleccionar funcion o puesto a evaluar:"
-        opciones={opciones}
-        valor={funcion}
-        onChange={setFuncion}
-      />
-      <hr style={{ 
-      width: "100%",
-      border: "none",
-      borderTop: "2px solid #1E2A1C",
-      margin: "0.5rem 0rem 1.5rem  0rem",
-      alignSelf: "stretch"
-      }} />
-      <h2 style={{ display: "flex",margin: "1rem auto 0.5rem",  fontSize: "1.5rem" }}>
-          Lista de competencias asociadas
-          </h2> 
-      <div style={{ margin: "2rem" }}>
-      <Tabla
-        columnas={["Competencias", "Ponderacion requerida"]}
-        datos={[
-          ["",""],["",""],["",""],["",""],["",""],["",""],["",""],["",""],["",""],["",""]
-        ]}
-      />
-      </div>
-      <Link href="/evaluar-candidato/evaluar-candidato-pagina2/evaluar-candidato-pagina3">
-      <Boton texto="Siguiente" padding="10px 20px" />
-      </Link>
-    </div>
-    
-    </div>
+        {puestoSeleccionado && (
+          <>
+            <h3>Competencias requeridas por el puesto</h3>
+            <Tabla
+              columnas={["Competencia", "Ponderación"]}
+              datos={puestoSeleccionado.caracteristicas.map((caracteristica) => [
+                caracteristica.nombreCompetencia,
+                caracteristica.ponderacion,
+              ])}
+            />
+            {puestoSeleccionado.caracteristicas.length === 0 && (
+              <p>El DTO del puesto no incluye competencias asociadas.</p>
+            )}
+          </>
+        )}
+
+        <div style={{ display: "flex", justifyContent: "center", margin: "1.5rem" }}>
+          <Boton
+            texto={generando ? "Generando..." : "Generar cuestionarios"}
+            onClick={generarEvaluaciones}
+            disabled={generando || cargando || candidatos.length === 0 || !puestoId}
+          />
+        </div>
+        {candidatos.length === 0 && (
+          <p role="alert">No se recibieron IDs de candidatos. Volvé a seleccionarlos.</p>
+        )}
+      </section>
+    </main>
+  );
+}
+
+export default function EvaluarCandidatoPagina2() {
+  return (
+    <Suspense fallback={<p role="status">Cargando selección...</p>}>
+      <SeleccionarPuesto />
+    </Suspense>
   );
 }

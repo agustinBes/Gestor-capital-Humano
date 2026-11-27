@@ -1,340 +1,237 @@
 "use client";
-import { useState, useEffect, useSyncExternalStore } from "react";
-import { useRouter } from "next/navigation";
+
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Boton from "../../../componentes/boton";
+import {
+  AUTHENTICATED_QUESTIONNAIRE_SESSION_KEY,
+  backendRequest,
+  getErrorMessage,
+  type BloqueDto,
+  type CuestionarioDto,
+} from "@/lib/backend-api";
 
-type Opcion = {
-  texto: string;
-  puntos: number;
-};
-
-type Pregunta = {
-  id: number;
-  texto: string;
-  opciones: Opcion[];
-};
-
-type Factor = {
-  id: number;
-  nombre: string;
-  preguntas: Pregunta[];
-};
-
-const factoresEjemplo: Factor[] = [
-  {
-    id: 1,
-    nombre: "Liderazgo",
-    preguntas: [
-      {
-        id: 101,
-        texto: "¿Cómo reaccionás cuando un compañero no cumple con lo acordado?",
-        opciones: [
-          { texto: "Lo enfrento directamente", puntos: 3 },
-          { texto: "Espero a ver si mejora", puntos: 1 },
-          { texto: "Se lo digo al jefe", puntos: 2 },
-        ],
-      },
-      {
-        id: 102,
-        texto: "¿Preferís tomar decisiones solo o consultar al equipo?",
-        opciones: [
-          { texto: "Solo", puntos: 1 },
-          { texto: "Consultar", puntos: 3 },
-          { texto: "Depende de la situación", puntos: 2 },
-        ],
-      },
-    ],
-  },
-  {
-    id: 2,
-    nombre: "Trabajo en equipo",
-    preguntas: [
-      {
-        id: 201,
-        texto: "¿Qué tan cómodo te sentís trabajando con personas de otras áreas?",
-        opciones: [
-          { texto: "Muy cómodo", puntos: 3 },
-          { texto: "Más o menos", puntos: 2 },
-          { texto: "Prefiero mi equipo", puntos: 1 },
-        ],
-      },
-      {
-        id: 202,
-        texto: "Si hay un conflicto en el grupo, ¿qué hacés?",
-        opciones: [
-          { texto: "Trato de mediar", puntos: 3 },
-          { texto: "Me quedo callado", puntos: 1 },
-          { texto: "Tomo partido", puntos: 2 },
-        ],
-      },
-    ],
-  },
-  {
-    id: 3,
-    nombre: "Adaptabilidad",
-    preguntas: [
-      {
-        id: 301,
-        texto: "¿Cómo te va cuando cambian las prioridades de un día para el otro?",
-        opciones: [
-          { texto: "Me adapto rápido", puntos: 3 },
-          { texto: "Me cuesta un poco", puntos: 2 },
-          { texto: "Me estresa mucho", puntos: 1 },
-        ],
-      },
-    ],
-  },
-];
-
-const TIEMPO_TOTAL = 600;
-
-type ProgresoCuestionario = {
-  factorActual: number;
-  respuestas: Record<number, string>;
-  puntuacionTotal: number;
-  tiempoRestante: number;
-};
-
-const suscribirHidratacion = () => () => {};
-const obtenerEstadoCliente = () => true;
-const obtenerEstadoServidor = () => false;
-
-function leerProgresoInicial(): ProgresoCuestionario {
-  const predeterminado: ProgresoCuestionario = {
-    factorActual: 0,
-    respuestas: {},
-    puntuacionTotal: 0,
-    tiempoRestante: TIEMPO_TOTAL,
-  };
-
-  if (typeof window === "undefined") return predeterminado;
-
-  const guardado = localStorage.getItem("progresoCuestionario");
-  if (!guardado) return predeterminado;
-
-  const data = JSON.parse(guardado) as Partial<ProgresoCuestionario>;
-  return {
-    factorActual: data.factorActual || 0,
-    respuestas: data.respuestas || {},
-    puntuacionTotal: data.puntuacionTotal || 0,
-    tiempoRestante: data.tiempoRestante || TIEMPO_TOTAL,
-  };
-}
-
-export default function PreguntasPorFactor() {
+function ResponderBloque() {
   const router = useRouter();
-  const [paddingArriba, setPaddingArriba] = useState("9rem");
-  const [progresoInicial] = useState(leerProgresoInicial);
-  const [factorActual, setFactorActual] = useState(progresoInicial.factorActual);
-  const [respuestas, setRespuestas] = useState(progresoInicial.respuestas);
-  const [puntuacionTotal, setPuntuacionTotal] = useState(progresoInicial.puntuacionTotal);
-  const [tiempoRestante, setTiempoRestante] = useState(progresoInicial.tiempoRestante);
-  const cargado = useSyncExternalStore(
-    suscribirHidratacion,
-    obtenerEstadoCliente,
-    obtenerEstadoServidor
-  );
-  const [errorBloque, setErrorBloque] = useState(false);
+  const searchParams = useSearchParams();
+  const idCuestionario = searchParams.get("idCuestionario") ?? "";
+  const [resultado, setResultado] = useState<{
+    id: string;
+    cuestionario: CuestionarioDto | null;
+    error: string;
+    ready: boolean;
+  }>({ id: "", cuestionario: null, error: "", ready: false });
+  const [respuestas, setRespuestas] = useState<Record<number, number>>({});
+  const [guardando, setGuardando] = useState(false);
+  const [errorGuardado, setErrorGuardado] = useState("");
 
   useEffect(() => {
-    if (!cargado) return;
-    const data = {
-      factorActual,
-      respuestas,
-      puntuacionTotal,
-      tiempoRestante,
-    };
-    localStorage.setItem("progresoCuestionario", JSON.stringify(data));
-  }, [factorActual, respuestas, puntuacionTotal, tiempoRestante, cargado]);
-
-  useEffect(() => {
-    if (!cargado) return;
-
-    const intervalo = setInterval(() => {
-      setTiempoRestante((prev) => {
-        if (prev <= 1) {
-          clearInterval(intervalo);
-          localStorage.removeItem("progresoCuestionario");
-          router.push("/completar-cuestionario");
-          return 0;
+    let activo = true;
+    Promise.resolve()
+      .then(() => {
+        if (!activo) return;
+        if (!idCuestionario) {
+          setResultado({
+            id: "",
+            cuestionario: null,
+            error: "Falta el identificador del cuestionario.",
+            ready: true,
+          });
+          return;
         }
-        return prev - 1;
+
+        const datosGuardados = sessionStorage.getItem(
+          AUTHENTICATED_QUESTIONNAIRE_SESSION_KEY
+        );
+        if (!datosGuardados) {
+          throw new Error("Volvé a autenticarte para acceder a tu cuestionario.");
+        }
+
+        const cuestionario = JSON.parse(datosGuardados) as CuestionarioDto;
+        if (
+          String(cuestionario.idCuestionario) !== idCuestionario ||
+          !Array.isArray(cuestionario.bloques)
+        ) {
+          throw new Error("La sesión no contiene el cuestionario solicitado. Volvé a autenticarte.");
+        }
+
+        setResultado({
+          id: idCuestionario,
+          cuestionario,
+          error: "",
+          ready: true,
+        });
+      })
+      .catch((errorSolicitud: unknown) => {
+        if (activo) {
+          setResultado({
+            id: idCuestionario,
+            cuestionario: null,
+            error: getErrorMessage(errorSolicitud),
+            ready: true,
+          });
+        }
       });
-    }, 1000);
 
-    return () => clearInterval(intervalo);
-  }, [cargado, router]);
-
-  const factor = factoresEjemplo[factorActual];
-  const esUltimo = factorActual === factoresEjemplo.length - 1;
-
-  const todasRespondidas = factor.preguntas.every(
-    (pregunta) =>
-      respuestas[pregunta.id] !== undefined &&
-      respuestas[pregunta.id] !== null &&
-      respuestas[pregunta.id] !== ""
-  );
-  const mostrarErrorBloque = errorBloque && !todasRespondidas;
-
-  const manejarRespuesta = (preguntaId: number, valor: string, puntos: number) => {
-    const respuestaAnterior = respuestas[preguntaId];
-    let puntosAnteriores = 0;
-
-    if (respuestaAnterior) {
-      const pregunta = factor.preguntas.find((p) => p.id === preguntaId);
-      const opcionAnterior = pregunta?.opciones.find((o) => o.texto === respuestaAnterior);
-      puntosAnteriores = opcionAnterior?.puntos || 0;
-    }
-
-    setRespuestas((prev) => ({ ...prev, [preguntaId]: valor }));
-    setPuntuacionTotal((prev) => prev - puntosAnteriores + puntos);
-  };
-
-  const siguiente = () => {
-    if (!todasRespondidas) {
-      setErrorBloque(true);
-      return;
-    }
-
-    if (!esUltimo) {
-      setFactorActual(factorActual + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      localStorage.removeItem("progresoCuestionario");
-      console.log("Puntuación final:", puntuacionTotal);
-      console.log("Respuestas:", respuestas);
-      router.push("/completar-cuestionario");
-    }
-  };
-
-  const formatearTiempo = (segundos: number) => {
-    const m = Math.floor(segundos / 60);
-    const s = segundos % 60;
-    return `${m}:${s.toString().padStart(2, "0")}`;
-  };
-
-  useEffect(() => {
-    const ajustarPadding = () => {
-      if (window.innerWidth < 1400) {
-        setPaddingArriba("1rem");
-      } else {
-        setPaddingArriba("9rem");
-      }
+    return () => {
+      activo = false;
     };
-    ajustarPadding();
-    window.addEventListener("resize", ajustarPadding);
-    return () => window.removeEventListener("resize", ajustarPadding);
-  }, []);
+  }, [idCuestionario]);
 
-  if (!cargado) return null;
+  const cargando = Boolean(idCuestionario) && (!resultado.ready || resultado.id !== idCuestionario);
+  const cuestionario = cargando ? null : resultado.cuestionario;
+  const error = !idCuestionario
+    ? "Falta el identificador del cuestionario."
+    : cargando
+      ? ""
+      : resultado.error;
+  const bloqueActual: BloqueDto | undefined = cuestionario?.bloques.find(
+    (bloque) => !bloque.completado
+  );
+  const bloquesCompletados =
+    cuestionario?.bloques.filter((bloque) => bloque.completado).length ?? 0;
+
+  const guardarBloque = async () => {
+    if (!cuestionario || !bloqueActual) return;
+    const parametros = new URLSearchParams();
+    parametros.set("id_candidato", String(cuestionario.idCandidato));
+    parametros.set("id_puesto", String(cuestionario.idPuesto));
+
+    for (const [index, item] of bloqueActual.items.entries()) {
+      const opcion = respuestas[item.idPregunta] ?? item.opcionSeleccionada;
+      if (opcion === null || opcion === undefined) {
+        setErrorGuardado("Respondé todas las preguntas del bloque antes de continuar.");
+        return;
+      }
+      parametros.set(`items[${index}].idpregunta`, String(item.idPregunta));
+      parametros.set(`items[${index}].NroBloque`, String(bloqueActual.numero));
+      parametros.set(`items[${index}].opcion`, String(opcion));
+    }
+
+    setGuardando(true);
+    setErrorGuardado("");
+    try {
+      const actualizado = await backendRequest<CuestionarioDto>(
+        `/cuestionario/${idCuestionario}/editar?${parametros.toString()}`,
+        { method: "PATCH" }
+      );
+      setResultado({
+        id: idCuestionario,
+        cuestionario: actualizado,
+        error: "",
+        ready: true,
+      });
+      setRespuestas({});
+
+      const quedanPendientes = actualizado.bloques.some((bloque) => !bloque.completado);
+      if (quedanPendientes) {
+        sessionStorage.setItem(
+          AUTHENTICATED_QUESTIONNAIRE_SESSION_KEY,
+          JSON.stringify(actualizado)
+        );
+      } else {
+        sessionStorage.removeItem(AUTHENTICATED_QUESTIONNAIRE_SESSION_KEY);
+      }
+    } catch (errorSolicitud: unknown) {
+      setErrorGuardado(getErrorMessage(errorSolicitud));
+    } finally {
+      setGuardando(false);
+    }
+  };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "flex-start",
-        paddingTop: paddingArriba,
-      }}
-    >
-      <div
-        className="flex flex-col flex-1"
+    <main style={{ minHeight: "100vh", padding: "4rem 1rem" }}>
+      <section
         style={{
-          display: "flex",
-          maxWidth: "800px",
-          margin: "2rem auto",
+          maxWidth: "900px",
+          margin: "0 auto",
           border: "2px solid #1E2A1C",
           borderRadius: "8px",
           background: "#F5F5F5",
-          alignItems: "center",
-          width: "100%",
-          paddingBottom: "2rem",
+          padding: "1rem",
         }}
       >
-        <h2 style={{ display: "flex", margin: "1rem auto 0.5rem", fontSize: "2rem" }}>
-          <img
-            src="/lupa.png"
-            alt="Lupa"
-            style={{
-              width: "30px",
-              height: "30px",
-              objectFit: "contain",
-              marginRight: "0.5rem",
-              marginTop: "0.5rem",
-            }}
-          />
-          Cuestionario de Candidato
-        </h2>
-        <hr
-          style={{
-            width: "100%",
-            border: "none",
-            borderTop: "2px solid #1E2A1C",
-            margin: "0.5rem 0rem 1.5rem 0rem",
-            alignSelf: "stretch",
-          }}
-        />
-        <div style={{ position: "relative", width: "100%", textAlign: "center", marginBottom: "1.5rem" }}>
-          <p style={{ color: "#555", marginBottom: "0.5rem", marginTop: "0", fontSize: "1.1rem" }}>
-            Factor {factorActual + 1} de {factoresEjemplo.length}
-          </p>
-
-          <div
-            style={{
-              position: "absolute",
-              right: "30px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              background: "#f8f9fa",
-              border: "1px solid #e2e8f0",
-              padding: "6px 12px",
-              borderRadius: "8px",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-            }}
-          >
-            <span style={{ fontWeight: "bold", fontSize: "0.9rem", color: tiempoRestante < 60 ? "red" : "#1E2A1C" }}>
-              ⏱️ {formatearTiempo(tiempoRestante)}
-            </span>
+        <h2 style={{ textAlign: "center", fontSize: "2rem" }}>Cuestionario de candidato</h2>
+        {cargando && <p role="status">Cargando cuestionario...</p>}
+        {error && <p role="alert">No se pudo cargar el cuestionario: {error}</p>}
+        {error && (
+          <div style={{ display: "flex", justifyContent: "center", margin: "1rem" }}>
+            <Boton
+              texto="Volver a autenticarme"
+              onClick={() => router.push("/completar-cuestionario")}
+            />
           </div>
-        </div>
+        )}
 
-        {factor.preguntas.map((pregunta) => (
-          <div key={pregunta.id} style={{ marginBottom: "2rem", width: "85%", textAlign: "left" }}>
-            <p style={{ fontWeight: "bold", marginBottom: "0.8rem" }}>{pregunta.texto}</p>
+        {cuestionario && !bloqueActual && (
+          <>
+            <p>Todos los bloques de este cuestionario están completos.</p>
+            <div style={{ display: "flex", justifyContent: "center", margin: "1rem" }}>
+              <Boton
+                texto="Autenticar otro candidato"
+                onClick={() => router.push("/completar-cuestionario")}
+              />
+            </div>
+          </>
+        )}
 
-            {pregunta.opciones.map((opcion) => (
-              <label
-                key={opcion.texto}
-                style={{ display: "block", marginBottom: "0.5rem", cursor: "pointer" }}
-              >
-                <input
-                  type="radio"
-                  name={`pregunta-${pregunta.id}`}
-                  value={opcion.texto}
-                  checked={respuestas[pregunta.id] === opcion.texto}
-                  onChange={() => manejarRespuesta(pregunta.id, opcion.texto, opcion.puntos)}
-                />{" "}
-                {opcion.texto}
-              </label>
-            ))}
-          </div>
-        ))}
-
-        <div style={{ textAlign: "center", marginTop: "1rem" }}>
-          <Boton
-            texto={esUltimo ? "Finalizar" : "Siguiente"}
-            onClick={siguiente}
-            padding="10px 30px"
-          />
-
-          {mostrarErrorBloque && (
-            <p style={{ color: "#d9534f", fontSize: "0.9rem", marginTop: "10px", fontWeight: "500" }}>
-              ⚠️ Tenés que responder todas las preguntas de este bloque para continuar.
+        {cuestionario && bloqueActual && (
+          <>
+            <p>
+              Cuestionario {cuestionario.idCuestionario} — candidato {cuestionario.idCandidato} —
+              puesto {cuestionario.idPuesto}
             </p>
-          )}
-        </div>
-      </div>
-    </div>
+            <p>
+              Bloque {bloquesCompletados + 1} de {cuestionario.bloques.length}
+            </p>
+            {bloqueActual.items.map((item) => (
+              <fieldset
+                key={item.idPregunta}
+                style={{ border: "1px solid #1E2A1C", margin: "1rem 0", padding: "1rem" }}
+              >
+                <legend>{item.titulo}</legend>
+                <p>{item.pregunta}</p>
+                {item.descripcion && <p>{item.descripcion}</p>}
+                {item.opciones.map((opcion) => (
+                  <label key={opcion.fila} style={{ display: "block", margin: "0.5rem 0" }}>
+                    <input
+                      type="radio"
+                      name={`pregunta-${item.idPregunta}`}
+                      value={opcion.fila}
+                      checked={
+                        (respuestas[item.idPregunta] ?? item.opcionSeleccionada) === opcion.fila
+                      }
+                      onChange={() =>
+                        setRespuestas((actuales) => ({
+                          ...actuales,
+                          [item.idPregunta]: opcion.fila,
+                        }))
+                      }
+                    />{" "}
+                    {opcion.descripcion}
+                  </label>
+                ))}
+              </fieldset>
+            ))}
+            {errorGuardado && <p role="alert">{errorGuardado}</p>}
+            <div style={{ display: "flex", justifyContent: "center", margin: "1rem" }}>
+              <Boton
+                texto={guardando ? "Guardando..." : "Guardar bloque"}
+                onClick={guardarBloque}
+                disabled={guardando}
+              />
+            </div>
+          </>
+        )}
+      </section>
+    </main>
+  );
+}
+
+export default function CompletarCuestionarioPagina2() {
+  return (
+    <Suspense fallback={<p role="status">Cargando cuestionario...</p>}>
+      <ResponderBloque />
+    </Suspense>
   );
 }

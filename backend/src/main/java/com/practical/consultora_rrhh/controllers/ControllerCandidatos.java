@@ -166,6 +166,7 @@ private final    ClassPathResource resource = new ClassPathResource("candidatos.
     Rama alternativa del CU1 de autenticar usuario
      */
     @Override
+    @PostMapping ("/candidato/auth")
     public ResponseEntity<cuestionarioDto> autenticarCandidato(candidatoDtoAuth candidatoDtoAuth) {
         cuestionarioDto cuestionario=serviceCuestionario.obtenerCuestionarioDto(candidatoDtoAuth);
 return ResponseEntity.ok(cuestionario);

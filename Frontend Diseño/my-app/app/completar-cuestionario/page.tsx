@@ -1,51 +1,172 @@
 "use client";
-import { useState } from "react";
-import { useEffect } from "react";
+
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import Boton from "../../componentes/boton";
-import Link from "next/dist/client/link";
+import {
+  AUTHENTICATED_QUESTIONNAIRE_SESSION_KEY,
+  backendRequest,
+  getErrorMessage,
+  type CuestionarioDto,
+} from "@/lib/backend-api";
 
-export default function CompletarCuestionario() {
- 
-    const [paddingArriba, setPaddingArriba] = useState("12rem");
-  useEffect(() => {const ajustarPadding = () => {if (window.innerWidth < 1400) {setPaddingArriba("1rem");
-     } else {setPaddingArriba("12rem");  }};
-    ajustarPadding(); 
-     window.addEventListener("resize", ajustarPadding);
-    return () => window.removeEventListener("resize", ajustarPadding);}, []);
+export default function AutenticarCandidato() {
+  const router = useRouter();
+  const [tipoDocumento, setTipoDocumento] = useState("DNI");
+  const [documento, setDocumento] = useState("");
+  const [clave, setClave] = useState("");
+  const [autenticando, setAutenticando] = useState(false);
+  const [error, setError] = useState("");
 
-    
+  const autenticar = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAutenticando(true);
+    setError("");
+
+    try {
+      const cuestionario = await backendRequest<CuestionarioDto>(
+        "/gestionar-candidatos/candidato/auth",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tipoDocumento,
+            documento: documento.trim(),
+            clave,
+          }),
+        }
+      );
+
+      if (!Number.isFinite(cuestionario.idCuestionario)) {
+        throw new Error("El backend no devolvió un cuestionario válido.");
+      }
+
+      sessionStorage.setItem(
+        AUTHENTICATED_QUESTIONNAIRE_SESSION_KEY,
+        JSON.stringify(cuestionario)
+      );
+      router.push(
+        `/completar-cuestionario/completar-cuestionario-pagina2?idCuestionario=${cuestionario.idCuestionario}`
+      );
+    } catch (errorSolicitud: unknown) {
+      setError(getErrorMessage(errorSolicitud));
+    } finally {
+      setAutenticando(false);
+    }
+  };
+
   return (
+    <main
+      style={{
+        minHeight: "100vh",
+        padding: "4rem 1rem",
+        background: "#BCC9A7",
+        color: "#1D2B1B",
+      }}
+    >
+      <section
+        style={{
+          maxWidth: "520px",
+          margin: "0 auto",
+          border: "2px solid #1E2A1C",
+          borderRadius: "8px",
+          background: "#F5F5F5",
+          padding: "2rem",
+        }}
+      >
+        <h1 style={{ textAlign: "center", fontSize: "2rem", marginBottom: "0.5rem" }}>
+          Acceso al cuestionario
+        </h1>
+        <p style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+          Ingresá tus datos para recuperar tu cuestionario.
+        </p>
 
-    <div style={{
-    minHeight: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "flex-start", 
-  paddingTop: paddingArriba
-  }}> 
-    <div className="flex flex-col flex-1" style={{display: "flex",maxWidth: "800px", margin: "2rem auto", border: "2px solid #1E2A1C", borderRadius: "8px", background: "#F5F5F5", alignItems: "center",width: "100%",paddingBottom: "2rem"}}>
-          <h2 style={{ display: "flex",margin: "1rem auto 0.5rem", fontSize: "2rem" }}>
-          <img src="/nota.png" alt="Lupa" style={{ width: "30px", height: "30px", objectFit: "contain",marginRight: "0.5rem",marginTop: "0.5rem" }} />
-         Cuestionario - Instrucciones
-          </h2> 
-          <hr style={{ 
-      width: "100%",
-      border: "none",
-      borderTop: "2px solid #1E2A1C",
-      margin: "0.5rem 0rem 1.5rem  0rem",
-      alignSelf: "stretch"
-      }} />
-      <label style={{ margin: "1rem", fontSize: "1.2rem", textAlign: "center" }}>
-      Por favor, lea cuidadosamente las instrucciones antes de comenzar el cuestionario. Asegúrese de tener suficiente tiempo y un ambiente tranquilo para completar todas las preguntas. Una vez que haya terminado, haga clic en &quot;Finalizar&quot; para enviar sus respuestas.
-      </label>
-      <div style={{display: "flex", gap: "150px", textAlign: "center", margin: "1rem 0" }}>
-      <Boton texto="Cancelar" onClick={() => alert("Guardado")} padding="10px 20px" />
-      <Link href="/completar-cuestionario/completar-cuestionario-pagina2">
-      <Boton texto="Aceptar" padding="10px 20px" />
-      </Link>
-      </div>
-    </div>
-    
-    </div>
+        <form onSubmit={autenticar}>
+          <label htmlFor="tipoDocumento" style={{ display: "block", marginBottom: "0.35rem" }}>
+            Tipo de documento
+          </label>
+          <select
+            id="tipoDocumento"
+            name="tipoDocumento"
+            value={tipoDocumento}
+            onChange={(event) => setTipoDocumento(event.target.value)}
+            required
+            style={{
+              width: "100%",
+              padding: "0.65rem",
+              marginBottom: "1rem",
+              border: "1px solid #667260",
+              borderRadius: "4px",
+              background: "white",
+            }}
+          >
+            <option value="DNI">DNI</option>
+            <option value="LE">LE</option>
+            <option value="LC">LC</option>
+            <option value="PP">PP</option>
+          </select>
+
+          <label htmlFor="documento" style={{ display: "block", marginBottom: "0.35rem" }}>
+            Número de documento
+          </label>
+          <input
+            id="documento"
+            name="documento"
+            type="text"
+            value={documento}
+            onChange={(event) => setDocumento(event.target.value)}
+            autoComplete="username"
+            minLength={6}
+            maxLength={15}
+            pattern="[0-9A-Za-z]{6,15}"
+            title="Ingresá entre 6 y 15 caracteres alfanuméricos, sin puntos ni guiones."
+            required
+            style={{
+              width: "100%",
+              padding: "0.65rem",
+              marginBottom: "1rem",
+              border: "1px solid #667260",
+              borderRadius: "4px",
+            }}
+          />
+
+          <label htmlFor="clave" style={{ display: "block", marginBottom: "0.35rem" }}>
+            Clave de ingreso
+          </label>
+          <input
+            id="clave"
+            name="clave"
+            type="password"
+            value={clave}
+            onChange={(event) => setClave(event.target.value)}
+            autoComplete="current-password"
+            minLength={8}
+            maxLength={8}
+            required
+            style={{
+              width: "100%",
+              padding: "0.65rem",
+              marginBottom: "1.25rem",
+              border: "1px solid #667260",
+              borderRadius: "4px",
+            }}
+          />
+
+          {error && (
+            <p role="alert" style={{ color: "#9B1C1C", marginBottom: "1rem" }}>
+              No se pudo autenticar: {error}
+            </p>
+          )}
+
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Boton
+              texto={autenticando ? "Verificando..." : "Ingresar"}
+              type="submit"
+              disabled={autenticando}
+            />
+          </div>
+        </form>
+      </section>
+    </main>
   );
 }
