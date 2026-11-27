@@ -19,4 +19,3 @@ export default function Input({label, placeholder}: Props) {
     </div>
   );
 }
-
