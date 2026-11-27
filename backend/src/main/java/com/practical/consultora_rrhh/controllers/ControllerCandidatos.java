@@ -163,6 +163,7 @@ private final    ClassPathResource resource = new ClassPathResource("candidatos.
 
     /**
      * Peticion para acceder al sistema por parte de un candidato. Consultar los campos requeridos en {@link candidatoDtoAuth}
+    Rama alternativa del CU1 de autenticar usuario
      */
     @Override
     public ResponseEntity<cuestionarioDto> autenticarCandidato(candidatoDtoAuth candidatoDtoAuth) {

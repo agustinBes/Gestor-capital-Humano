@@ -105,7 +105,7 @@ public void validarEstado(Duration tiempoMaximoActivo,Duration tiempoMaximoReali
     }
 else{
     if(estado == tipoEstado.SIN_CONTESTAR){
-        superatiempoMaximoActivo(tiempoMaximoActivo);
+   superaTiempoMaximoRealizacion(tiempoMaximoActivo);
     }
     }
 }

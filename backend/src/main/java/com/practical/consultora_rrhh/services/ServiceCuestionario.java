@@ -80,7 +80,11 @@ ordenMeritoMediator.registrarServicioB(this);
 this.actualizarEstados();
 
 }
-@Transactional
+
+    /**
+     * Actualizar y revisar el estado de todos los cuestionarios al arrancar el sistema
+     */
+    @Transactional
 public void actualizarEstados(){
     List<Cuestionario> cuestionarios=dao.obtenerTodos();
     cuestionarios.forEach(cuestionario->{ cuestionario.validarEstadoGeneral(
@@ -224,7 +228,12 @@ public cuestionarioDto actualizarCuestionario(cuestionarioDtoCreate c, Long id) 
         throw new CuestionarioException("No se encontro el cuestionario",HttpStatus.NOT_FOUND);
     }
 //-----------------------------------------OBTENER CUESTIONARIO CANDIDATO-----------------------------------------
-@Transactional
+
+    /**
+     * Recuperar un cuestionario con las credenciales de accedo del candidato {@link candidatoDtoAuth}
+Actualizar su estado interno y devolver si es pertinente
+     */
+    @Transactional
 public cuestionarioDto obtenerCuestionarioDto(candidatoDtoAuth candidatoDtoAuth) {
 
    Optional<Cuestionario> actual = obtenerPorClave(candidatoDtoAuth);
@@ -353,7 +362,16 @@ bloques.add(nuevo);}
                 item.setPuntaje(nuevo.getPuntaje());
             }}
     }
-@Transactional
+
+    /**
+     * Calculamos para cuestionarios completos el puntaje
+     * Obtenemos los puntajes totales por factor
+     * Calculamos los puntajes totales por competencia
+     * Guardamos los resultados en una entidad interna del Cuestionario representado
+     * con un Map<{@link Competencia}, resultados de punto flotante>     * Con el
+     * @param idCuestionario recibimos el identificador del cuestionario
+     */
+    @Transactional
     private void CalcularPuntaje(Long idCuestionario) {
     Cuestionario c = obtenerEntidad(idCuestionario);
     if (c.getEstado().equals(tipoEstado.COMPLETADO)) {
@@ -367,6 +385,14 @@ bloques.add(nuevo);}
     }
 throw new CuestionarioActivoException("El cuestionario aun no ha sido completado");
 }
+
+    /**
+     * recibimos la lista de items clasificada por factores que estan presentes en el cuestionaro
+     * Sumamos las ponderaciones de las 2 preguntas asociadas a ese factor que fueron evaluadas
+     * Dividimos el total por 2 y almacenamos el resultado
+     * @param factores mapa que clasifica todos los items del cuestionario en base a los factores
+     * @return mapa de resultados por factor con un valor de punto flotante
+     */
     private Map<Factor,BigDecimal> puntajePorFactor(Map<Factor,List<ItemCuestionario>> factores) {
         Map <Factor,BigDecimal> puntajePorfactor = new HashMap<>();
        for (Factor f : factores.keySet()) {
@@ -379,6 +405,15 @@ throw new CuestionarioActivoException("El cuestionario aun no ha sido completado
        }
        return puntajePorfactor;
    }
+
+    /**
+     * Recibimos un mapa con las competencias evaluadas en el cuestionario y sus correspondientes factores asociados
+     * que tienen al menos 2 preguntas asociadas
+     * @param competencias mapa que nos muestra las competencias evaluadas en el cuestionario y la lista de los factores
+     *                     evaluados de cada competencia
+     * @param puntajePorfactor mapa con los resultados totales calculados por factor
+     * @return mapa con los resultados totales calculados por competencia
+     */
    private Map<Competencia,BigDecimal> puntajePorCompetencia(Map<Competencia,List<Factor>> competencias,Map<Factor,BigDecimal> puntajePorfactor) {
        Map<Competencia,BigDecimal> puntajePorcompetencia = new HashMap<>();
         for (Competencia ls : competencias.keySet()) {
@@ -404,17 +439,31 @@ return puntajePorcompetencia;   }
 
 
 //-----------------------------------------------------------------------------------------------
+
+    /**
+     * Clasificamos los items de un cuestionario agrupando por factor
+     * @param c cuestionario recibido
+     */
     private Map<Factor, List<ItemCuestionario>> obtenerPorFactor(Cuestionario c) {
         return c.getItems().stream()
                 .collect(Collectors.groupingBy(
                         o -> o.getPregunta().getFactor()
                 ));}
+
+    /**
+     * Clasificamos los factores del cuestionario agrupando por competencia
+     * @param c cuestionario recibido
+     */
     private Map<Competencia, List<Factor>> obtenerPorCompetencia(Cuestionario c) {
         return c.getItems().stream()
                 .map(o -> o.getPregunta().getFactor())
                 .distinct()
                 .collect(Collectors.groupingBy(Factor::getCompetencia));
     }
+
+    /**
+     * Obtenemos para un puesto las competencias evaluadas en el cuestionario
+     */
     private Map<Competencia,Short> obtenerPonderaciones(Long puesto,List<Competencia> competencias) {
         Map<Competencia,Short> puntajePorcompetencia = new HashMap<>();
         List<PuestoCompetencia> pc=obtenerPorPuesto(puesto);
@@ -430,15 +479,22 @@ return puntajePorcompetencia;   }
         return puntajePorcompetencia;
     }
 
-    @Override
+    /**
+     * Obtenemos un conjunto de cuestionarios de una lista de puestos
+     */
+
+        @Override
     public List<Cuestionario> obtenerPorPuestos(List<Long> puestos) {
 List<Cuestionario> resultados=dao.buscarPorPuesto(puestos);
    if(resultados.isEmpty()) {
        throw  new ColeccionNotFoundException("No se encontraron cuestionarios para el puesto");
    }
    return resultados;
-
     }
+
+    /**
+     * Listamos los cuestionarios generados para evaluar por puesto
+     */
 
     @Override
     public List<Cuestionario> listarPorPuesto(Long id) {
@@ -449,6 +505,10 @@ List<Cuestionario> resultados=dao.buscarPorPuesto(puestos);
         return resultados;
     }
 
+    /**
+     * Obtenemos un conjuntos de cuestionarios en base a una lista de los identificadores de los mismos
+     * @param cuestionarios List de identificadores de cuestionarios
+     */
     @Override
     public List<Cuestionario> obtenerxIdsCuestionario(List<Long> cuestionarios) {
  List<Cuestionario> lc=dao.buscarxIds(cuestionarios);
@@ -457,6 +517,9 @@ List<Cuestionario> resultados=dao.buscarPorPuesto(puestos);
  return lc;
     }
 
+    /**
+     * Verificar si un puesto esta siendo usado en el sistema
+     */
     @Override
     public boolean existePuestoEnUso(Long idPuesto) {
         return dao.existePuestoEnUso(idPuesto);

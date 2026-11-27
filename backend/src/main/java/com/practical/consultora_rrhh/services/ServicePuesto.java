@@ -90,6 +90,7 @@ private final OrdenMeritoPuestoMediator ordenMeritoMediator;
     @Override
     public puestoDto actualizar(Long id, puestoDtoCreate dto) {
         Puesto actual = obtenerEntidad(id),actualizado=null;
+
         Map<String, String> modificacion = validators.validarCreacionModificacion(actual, dto);
        List<PuestoCompetencia> caracteristicas=actualizarCaracteristicas(actual, dto.caracteristicas());
 if(!modificacion.isEmpty()){actualizado=dao.actualizar(actual,modificacion);}
@@ -140,7 +141,9 @@ if(Enuso){
         dao.eliminar(puesto);
 
         String respuesta = "Los datos del puesto: " + puesto.getNombre() + " han sido eliminados del sistema";
-        puestoCompetenciaDao.eliminarPorPuesto(id);
+//si deseamos eliminar las caracteristicas del puesto se debe preservar en alguna entidad
+// las caracteristicas del mismo ya que aun son datos que sirven para generar reportes
+        //        puestoCompetenciaDao.eliminarPorPuesto(id);
         auditoriaDtoCreate nueva = new auditoriaDtoCreate(null,id, puesto.getNombre(), tipoAuditoria.PUESTO, LocalDateTime.now(), idConsultor);
         auditoria.crearAuditoria(nueva);
 
@@ -221,6 +224,11 @@ return  resultados;
     }
 
         public List<PuestoCompetencia> actualizarCaracteristicas(Puesto p, Map<Long, Short> caracteristicas) {
+            boolean enUso=cuestionarioMediator.existePuestoEnUso(p.getId());
+            if(enUso){
+                throw new EntidadEnUsoException("El cuestionario esta siendo usado por otros recursos en el sistema");
+            }
+
 List<PuestoCompetencia> respuesta = new ArrayList<>();
         List<Competencia> competencias = mediatorCompetencia.validarCompetencias(caracteristicas.keySet().stream().toList());
             for (Competencia c : competencias) {
