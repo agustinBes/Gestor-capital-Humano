@@ -14,4 +14,9 @@ List<Cuestionario> obtenerCompletadosPorPuesto(Long idPuesto);
 List<Cuestionario> guardarTodos(List<Cuestionario> cuestionarios);
     List<Cuestionario> cuestionariosActivos(List<Long> identificadores);
 
+    List<Cuestionario> buscarPorPuesto(List<Long> puestos);
+
+    List<Cuestionario> buscarXPuesto(Long id);
+
+    List<Cuestionario> buscarxIds(List<Long> cuestionarios);
 }

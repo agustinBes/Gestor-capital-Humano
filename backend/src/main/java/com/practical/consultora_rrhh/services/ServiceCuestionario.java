@@ -6,6 +6,7 @@ import com.practical.consultora_rrhh.dto.request.itemCuestionarioDtoCreate;
 import com.practical.consultora_rrhh.dto.response.cuestionarioDto;
 import com.practical.consultora_rrhh.dto.response.evaluadosDto;
 import com.practical.consultora_rrhh.excepciones.especializadas.atributos.CuestionarioActivoException;
+import com.practical.consultora_rrhh.excepciones.genericas.ColeccionNotFoundException;
 import com.practical.consultora_rrhh.excepciones.genericas.CuestionarioException;
 import com.practical.consultora_rrhh.excepciones.genericas.ErrorExportException;
 import com.practical.consultora_rrhh.excepciones.genericas.IntegridadComprometidaException;
@@ -16,16 +17,16 @@ import com.practical.consultora_rrhh.modelo.clases.*;
 import com.practical.consultora_rrhh.modelo.enums.tipoEstado;
 import com.practical.consultora_rrhh.modelo.id.itemCuestionarioId;
 import com.practical.consultora_rrhh.modelo.propiedades.CuestionarioProperties;
-import com.practical.consultora_rrhh.services.mediator.CandidatoCuestionarioMediator;
-import com.practical.consultora_rrhh.services.mediator.CuestionarioPreguntaMediator;
-import com.practical.consultora_rrhh.services.mediator.PuestoCuestionarioMediator;
-import com.practical.consultora_rrhh.services.mediator.ServiceExportacionEvaluados;
+import com.practical.consultora_rrhh.services.mediator.*;
 import com.practical.consultora_rrhh.validaciones.CuestionarioValidators;
 import com.practical.consultora_rrhh.validaciones.internas.ItemCuestionarioValidators;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -50,11 +51,12 @@ private final ClaveGeneratorService generador;
 private final CuestionarioValidators validators;
 private final CuestionarioProperties propiedadesCuestionario;
 private  final ServiceExportacionEvaluados serviceExportacionEvaluados;
+private  final OrdenMeritoCuestionarioMediator ordenMeritoMediator;
 //--------------------------------------------------------------------------
 public ServiceCuestionario(IcuestionarioDao dao, IitemCuestionarioDao item,
                            PuestoCuestionarioMediator puestoMediator, PuestoCuestionarioMediator puestoMediator1,
                            CandidatoCuestionarioMediator candidatoMediator,
-                           ClaveGeneratorService generador, CuestionarioPreguntaMediator pregunta, CuestionarioValidators validators, CuestionarioProperties propiedadesCuestionario, ServiceExportacionEvaluados serviceExportacionEvaluados) {
+                           ClaveGeneratorService generador, CuestionarioPreguntaMediator pregunta, CuestionarioValidators validators, CuestionarioProperties propiedadesCuestionario, ServiceExportacionEvaluados serviceExportacionEvaluados, OrdenMeritoCuestionarioMediator ordenMeritoMediator) {
     this.dao = dao;
     this.itemDao = item;
     this.puestoMediator = puestoMediator1;
@@ -64,6 +66,7 @@ public ServiceCuestionario(IcuestionarioDao dao, IitemCuestionarioDao item,
     this.validators = validators;
     this.propiedadesCuestionario = propiedadesCuestionario;
     this.serviceExportacionEvaluados = serviceExportacionEvaluados;
+    this.ordenMeritoMediator = ordenMeritoMediator;
 }
 //--------------------------------------------------------------------------
 @PostConstruct
@@ -72,6 +75,7 @@ public void init(){
 generador.inicializar(this.obtenerClaves());
 candidatoMediator.registrarServicioA(this);
 preguntaMediator.registrarServicioB(this);
+ordenMeritoMediator.registrarServicioB(this);
 }
   //---------------------------------LISTAR---------------------------------
 //--------------------------------------------------------------------------
@@ -250,6 +254,7 @@ throw new CuestionarioException("No se encontró el cuestionario", HttpStatus.NO
     private List<PuestoCompetencia> obtenerPorPuesto(Long idPuesto){
         return  puestoMediator.obtenerPorPuesto(idPuesto);}
 
+
     public short cantidadBloques(List<Pregunta> pregunta){
 
         int cantidadFactores=pregunta.stream()
@@ -343,37 +348,44 @@ bloques.add(nuevo);}
     if (c.getEstado().equals(tipoEstado.COMPLETADO)) {
         Map<Factor, List<ItemCuestionario>> factores = obtenerPorFactor(c);
 
-        Map<Factor, Short> puntajePorfactor = puntajePorFactor(factores);
+        Map<Factor, BigDecimal> puntajePorfactor = puntajePorFactor(factores);
         Map<Competencia, List<Factor>> competencias = obtenerPorCompetencia(c);
-        Map<Competencia, Short> puntajePorcompetencia = puntajePorCompetencia(competencias, puntajePorfactor);
+        Map<Competencia, BigDecimal> puntajePorcompetencia = puntajePorCompetencia(competencias, puntajePorfactor);
     c.setPuntajes(puntajePorcompetencia);
 
     }
 throw new CuestionarioActivoException("El cuestionario aun no ha sido completado");
 }
-    private Map<Factor,Short> puntajePorFactor(Map<Factor,List<ItemCuestionario>> factores) {
-        Map <Factor,Short> puntajePorfactor = new HashMap<>();
+    private Map<Factor,BigDecimal> puntajePorFactor(Map<Factor,List<ItemCuestionario>> factores) {
+        Map <Factor,BigDecimal> puntajePorfactor = new HashMap<>();
        for (Factor f : factores.keySet()) {
            int puntaje = factores.get(f)
                    .stream()
                    .mapToInt(ItemCuestionario::getPuntaje)
                    .sum();
-           short puntos = (short) (puntaje / 2);
+           BigDecimal puntos = BigDecimal.valueOf(puntaje / 2);
            puntajePorfactor.put(f, puntos);
        }
        return puntajePorfactor;
    }
-   private Map<Competencia,Short> puntajePorCompetencia(Map<Competencia,List<Factor>> competencias,Map<Factor,Short> puntajePorfactor) {
-       Map<Competencia,Short> puntajePorcompetencia = new HashMap<>();
+   private Map<Competencia,BigDecimal> puntajePorCompetencia(Map<Competencia,List<Factor>> competencias,Map<Factor,BigDecimal> puntajePorfactor) {
+       Map<Competencia,BigDecimal> puntajePorcompetencia = new HashMap<>();
         for (Competencia ls : competencias.keySet()) {
            List<Factor> lfc = competencias.get(ls);
            int cantidad = lfc.size();
-           int puntaje = 0;
+            BigDecimal puntaje = BigDecimal.ZERO;
            for (Factor f : lfc) {
-               puntaje = puntaje + puntajePorfactor.get(f);
+               BigDecimal fp = puntajePorfactor.get(f);
+               if (fp != null) {
+                   puntaje = puntaje.add(fp);
+               }
            }
-           int resultado = puntaje / cantidad;
-           puntajePorcompetencia.put(ls, (short) resultado);
+            BigDecimal resultado = puntaje.divide(
+                    BigDecimal.valueOf(cantidad),
+                    2,
+                    RoundingMode.HALF_UP
+            );
+           puntajePorcompetencia.put(ls, resultado);
        }
 return puntajePorcompetencia;   }
 
@@ -405,6 +417,33 @@ return puntajePorcompetencia;   }
             }
         }
         return puntajePorcompetencia;
+    }
+
+    @Override
+    public List<Cuestionario> obtenerPorPuestos(List<Long> puestos) {
+List<Cuestionario> resultados=dao.buscarPorPuesto(puestos);
+   if(resultados.isEmpty()) {
+       throw  new ColeccionNotFoundException("No se encontraron cuestionarios para el puesto");
+   }
+   return resultados;
+
+    }
+
+    @Override
+    public List<Cuestionario> listarPorPuesto(Long id) {
+        List<Cuestionario> resultados= dao.buscarXPuesto(id);
+        if(resultados.isEmpty()) {
+            throw new ColeccionNotFoundException("No se encontraron cuestionarios para el puesto");
+        }
+        return resultados;
+    }
+
+    @Override
+    public List<Cuestionario> obtenerxIdsCuestionario(List<Long> cuestionarios) {
+ List<Cuestionario> lc=dao.buscarxIds(cuestionarios);
+ if(lc.isEmpty()) {
+     throw new  ColeccionNotFoundException("No se encontraron cuestionarios");}
+ return lc;
     }
 }
 

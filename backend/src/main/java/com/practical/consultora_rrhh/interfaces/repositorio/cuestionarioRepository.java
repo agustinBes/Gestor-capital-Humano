@@ -19,4 +19,8 @@ public interface cuestionarioRepository extends JpaRepository<Cuestionario, Long
     List<Cuestionario> findAllByCandidato_IdInAndEstadoIn(List<Long> identificadores, List<tipoEstado> tipoEstado);
 
     Optional<Cuestionario> findByClaveAndCandidato_TipoAndCandidato_Documento(String clave, tipoDocumento tipoDocumento, String documento);
+
+    List<Cuestionario> findAllByPuesto_IdIn(List<Long> puestos);
+
+    List<Cuestionario> findByPuesto_Id(Long id);
 }

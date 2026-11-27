@@ -6,6 +6,7 @@ import lombok.*;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -45,8 +46,8 @@ private short NroBloques;
             name = "puntaje_competencia",
             joinColumns = @JoinColumn(name = "id_cuestionario"))
     @MapKeyJoinColumn(name = "id_competencia")
-    @Column(name = "puntaje_obtenido", nullable = false)
-    private Map<Competencia, Short> puntajes = new HashMap<>();
+    @Column(name = "puntaje_obtenido", nullable = false,precision = 3,scale = 2)
+    private Map<Competencia, BigDecimal> puntajes = new HashMap<>();
     @Column
 private String clave;
     @Column(name="nro_acceso")
@@ -68,7 +69,7 @@ public static Cuestionario GenerarCuestioario(Puesto puesto, Candidato candidato
             .clave(clave)
             .items(items)
             .build();
-    items.forEach(item->{item.setCuestionario(nuevo);});
+    items.forEach(item-> item.setCuestionario(nuevo));
     return nuevo;
 }
 
@@ -133,15 +134,7 @@ if(estado ==tipoEstado.ACTIVO) {
         fechaIntento = ahora;
     }
 }}
-//    public String actualizarEstado(Duration tiempoMaximoRealizacion,Duration tiempoMaximoActivo,short cantidadAccesos) {
-//if(NroAccesos==cantidadAccesos){
-//
-//    if(estado==tipoEstado.ACTIVO) { superatiempoMaximoActivo(tiempoMaximoActivo);}
-//    superaTiempoMaximoRealizacion(tiempoMaximoRealizacion);
-//}
-//else{
-//
-//}}
+
     public void completado(List<Bloque> bloques){
 
         long cantidadTotal = bloques.size();

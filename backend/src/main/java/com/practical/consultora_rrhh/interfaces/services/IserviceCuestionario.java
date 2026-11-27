@@ -25,4 +25,9 @@ Cuestionario obtenerEntidad(Long id);
 List<cuestionarioDto> obtenerCuestionarios();
     cuestionarioDto obtenerCuestionarioDto(candidatoDtoAuth dto);
 
+    List<Cuestionario> obtenerPorPuestos(List<Long> puestos);
+
+    List<Cuestionario> listarPorPuesto(Long id);
+
+    List<Cuestionario> obtenerxIdsCuestionario(List<Long> cuestionarios);
 }

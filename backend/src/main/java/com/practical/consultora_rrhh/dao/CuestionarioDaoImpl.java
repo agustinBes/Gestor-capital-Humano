@@ -66,5 +66,18 @@ public class CuestionarioDaoImpl implements IcuestionarioDao {
     @Override
     public boolean existePorId(Long aLong) {return repository.existsById(aLong);}
 
-
+    @Override
+    public List<Cuestionario> buscarPorPuesto(List<Long> puestos) {
+        return  repository.findAllByPuesto_IdIn(puestos);
     }
+
+    @Override
+    public List<Cuestionario> buscarXPuesto(Long id) {
+        return  repository.findByPuesto_Id(id);
+    }
+
+    @Override
+    public List<Cuestionario> buscarxIds(List<Long> cuestionarios) {
+        return  repository.findAllById(cuestionarios);
+    }
+}

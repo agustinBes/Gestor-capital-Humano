@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/>
+<title>Orden de mérito</title>
+<style>
+@page {
+  size: A4;
+  margin: 1.3cm 1.2cm 1.7cm 1.2cm;
+  @bottom-center { content: "Capit@l Humano - Página " counter(page) " de " counter(pages); font-size: 7.5pt; color: #64708a; }
+}
+body { font-family: Helvetica, Arial, sans-serif; font-size: 9pt; color: #16213a; }
+table { border-collapse: separate; border-spacing: 0; width: 100%; }
+td { padding: 0; vertical-align: middle; }
+
+/* Encabezado */
+.hero { background-color: #3b4cca; color: #ffffff; }
+.hero td { padding: 14px 18px; }
+.hero .k { font-size: 7.5pt; color: #cfd5ff; }
+.hero h1 { font-size: 18pt; margin: 3px 0 4px 0; }
+.hero .s { font-size: 9pt; color: #e6e9ff; }
+.mins { margin: 10px 0 4px 0; font-size: 8.5pt; color: #64708a; }
+.mins b { color: #3b4cca; }
+
+/* KPIs */
+.kpis { border-spacing: 8px 0; margin: 8px -8px 0 -8px; width: 104%; }
+.kpi { background-color: #f4f6fb; padding: 8px 10px; }
+.kpi .n { font-size: 20pt; font-weight: bold; }
+.kpi .l { font-size: 8pt; color: #64708a; }
+
+/* Secciones */
+.sec { margin: 16px 0 2px 0; padding: 6px 10px; font-size: 12pt; font-weight: bold; border-left: 5px solid #999999; page-break-after: avoid; }
+.sec.ok  { border-left-color: #12a36b; background-color: #e4f7ef; color: #0b6e49; }
+.sec.ko  { border-left-color: #d64545; background-color: #fdeaea; color: #a52a2a; }
+.sec.inc { border-left-color: #d98a0b; background-color: #fff3dc; color: #8a5800; }
+.sec.sin { border-left-color: #7a8499; background-color: #eceff5; color: #4a5368; }
+.sub { font-size: 8pt; color: #64708a; margin: 2px 0 7px 0; page-break-after: avoid; }
+.empty { font-size: 8.5pt; color: #64708a; margin: 4px 0; }
+
+/* Tarjeta de candidato */
+.card { border: 1px solid #e3e8f2; margin-bottom: 6px; page-break-inside: avoid; }
+.card.ok { border-left: 4px solid #12a36b; }
+.card.ko { border-left: 4px solid #d64545; }
+.card td { padding: 6px 8px; }
+.posb { width: 34px; text-align: center; font-weight: bold; font-size: 13pt; color: #3a2b00; }
+.nom { font-size: 10pt; font-weight: bold; }
+.doc { font-size: 8pt; color: #64708a; }
+.tag { font-size: 7pt; color: #d64545; font-weight: bold; }
+.big { font-size: 17pt; font-weight: bold; text-align: right; }
+.big.ok { color: #12a36b; }
+.big.ko { color: #d64545; }
+.lbl { font-size: 6.5pt; color: #64708a; text-align: right; }
+.extra { border-top: 1px dashed #e3e8f2; font-size: 7.5pt; color: #64708a; padding: 4px 8px; }
+.extra b { color: #16213a; }
+
+/* Barras por competencia */
+.m td { padding: 2px 0; }
+.ml { font-size: 7.5pt; color: #64708a; width: 34%; }
+.ml.bad, .mv.bad { color: #d64545; font-weight: bold; }
+.mb { width: 54%; padding-right: 6px; }
+.mv { font-size: 8pt; font-weight: bold; text-align: right; width: 12%; }
+.bar { width: 100%; }
+.bar td { height: 7px; font-size: 1px; line-height: 1px; padding: 0; }
+
+/* Listas simples (incompletos / sin contestar) */
+.lst td { padding: 4px 6px; border-bottom: 1px solid #e3e8f2; font-size: 8.5pt; }
+.lst .h td { background-color: #eceff5; font-weight: bold; font-size: 7.5pt; color: #4a5368; }
+.lst tr { page-break-inside: avoid; }
+
+.legend { margin-top: 14px; font-size: 7.5pt; color: #64708a; }
+</style>
+</head>
+<body>
+
+<table class="hero"><tr><td>
+  <div class="k">CU028 - ORDEN DE MÉRITO</div>
+  <h1 th:text="${puestoNombre}">Analista Funcional Sr.</h1>
+  <div class="s" th:text="${puestoCodigo} + ' - ' + ${puestoEmpresa}">PUE-014 - Empresa</div>
+</td></tr></table>
+
+<div class="mins">Mínimos requeridos:
+  <span th:each="m, it : ${minimos}"><b th:text="${m.nombre()} + ' >= ' + ${m.valor()}">Lealtad >= 7</b><span th:if="${!it.last}"> &#160;|&#160; </span></span>
+</div>
+
+<table class="kpis"><tr>
+  <td class="kpi" style="border-top: 3px solid #12a36b;"><div class="n" style="color:#12a36b;" th:text="${#lists.size(aprobados)}">0</div><div class="l">En orden de mérito</div></td>
+  <td class="kpi" style="border-top: 3px solid #d64545;"><div class="n" style="color:#d64545;" th:text="${#lists.size(noAprobados)}">0</div><div class="l">No alcanzan mínimos</div></td>
+  <td class="kpi" style="border-top: 3px solid #d98a0b;"><div class="n" style="color:#d98a0b;" th:text="${#lists.size(incompletos)}">0</div><div class="l">Incompletos</div></td>
+  <td class="kpi" style="border-top: 3px solid #7a8499;"><div class="n" style="color:#7a8499;" th:text="${#lists.size(sinContestar)}">0</div><div class="l">Sin contestar</div></td>
+</tr></table>
+
+<!-- 1) ORDEN DE MÉRITO -->
+<div class="sec ok" th:text="'Orden de mérito (' + ${#lists.size(aprobados)} + ')'">Orden de mérito</div>
+<div class="sub">Cuestionarios completos que alcanzaron todos los mínimos, ordenados por puntaje.</div>
+<p class="empty" th:if="${#lists.isEmpty(aprobados)}">Sin candidatos en esta categoría.</p>
+<table class="card ok" th:each="f : ${aprobados}">
+  <tr>
+    <td class="posb" th:style="'background-color:' + ${f.colorPos()}" th:text="${f.pos()}">1</td>
+    <td style="width:27%;"><div class="nom" th:text="${f.nombre()}">Apellido, Nombre</div><div class="doc" th:text="${f.doc()}">DNI 1</div></td>
+    <td style="width:47%;">
+      <table class="m"><tr th:each="c : ${f.comps()}">
+        <td class="ml" th:text="${c.nombre()}">Competencia</td>
+        <td class="mb"><table class="bar"><tr><td th:each="s : ${c.barra()}" th:style="'width:' + ${s.ancho()} + '%;background-color:' + ${s.color()}">&#160;</td></tr></table></td>
+        <td class="mv" th:text="${c.obtenido()}">0,00</td>
+      </tr></table>
+    </td>
+    <td style="width:16%;"><div class="big ok" th:text="${f.puntaje()}">0,00</div><div class="lbl">PUNTAJE OBTENIDO</div></td>
+  </tr>
+  <tr><td colspan="4" class="extra">Inicio: <b th:text="${f.inicio()}">-</b> &#160;&#160; Fin: <b th:text="${f.fin()}">-</b> &#160;&#160; Accesos: <b th:text="${f.accesos()}">0</b></td></tr>
+</table>
+
+<!-- 2) COMPLETOS QUE NO ALCANZAN LOS MÍNIMOS -->
+<div class="sec ko" th:text="'Completos que no alcanzan los mínimos (' + ${#lists.size(noAprobados)} + ')'">No alcanzan</div>
+<div class="sub">Cuestionarios completos con al menos una competencia por debajo de lo requerido.</div>
+<p class="empty" th:if="${#lists.isEmpty(noAprobados)}">Sin candidatos en esta categoría.</p>
+<table class="card ko" th:each="f : ${noAprobados}">
+  <tr>
+    <td class="posb" style="background-color:#eceff5; color:#64708a;">-</td>
+    <td style="width:27%;">
+      <div class="nom" th:text="${f.nombre()}">Apellido, Nombre</div><div class="doc" th:text="${f.doc()}">DNI 1</div>
+      <div><span class="tag" th:each="n : ${f.fallas()}" th:text="${n} + ' bajo mínimo  '">x</span></div>
+    </td>
+    <td style="width:47%;">
+      <table class="m"><tr th:each="c : ${f.comps()}">
+        <td class="ml" th:classappend="${!c.cumple()} ? 'bad'" th:text="${c.nombre()}">Competencia</td>
+        <td class="mb"><table class="bar"><tr><td th:each="s : ${c.barra()}" th:style="'width:' + ${s.ancho()} + '%;background-color:' + ${s.color()}">&#160;</td></tr></table></td>
+        <td class="mv" th:classappend="${!c.cumple()} ? 'bad'" th:text="${c.obtenido()}">0,00</td>
+      </tr></table>
+    </td>
+    <td style="width:16%;"><div class="big ko" th:text="${f.puntaje()}">0,00</div><div class="lbl">PUNTAJE OBTENIDO</div></td>
+  </tr>
+  <tr><td colspan="4" class="extra">Inicio: <b th:text="${f.inicio()}">-</b> &#160;&#160; Fin: <b th:text="${f.fin()}">-</b> &#160;&#160; Accesos: <b th:text="${f.accesos()}">0</b></td></tr>
+</table>
+
+<!-- 3) INCOMPLETOS -->
+<div class="sec inc" th:text="'Incompletos (' + ${#lists.size(incompletos)} + ')'">Incompletos</div>
+<div class="sub">Ingresaron al cuestionario pero no lo terminaron en el plazo. No se informa puntaje.</div>
+<p class="empty" th:if="${#lists.isEmpty(incompletos)}">Sin candidatos en esta categoría.</p>
+<table class="lst" th:if="${!#lists.isEmpty(incompletos)}">
+  <tr class="h"><td>Documento</td><td>Apellido y nombre</td><td>Inicio</td><td>Último ingreso</td><td>Accesos</td></tr>
+  <tr th:each="r : ${incompletos}">
+    <td th:text="${r.doc()}">DNI 1</td><td th:text="${r.nombre()}">Apellido, Nombre</td>
+    <td th:text="${r.inicio()}">-</td><td th:text="${r.ultimo()}">-</td><td th:text="${r.accesos()}">0</td>
+  </tr>
+</table>
+
+<!-- 4) SIN CONTESTAR -->
+<div class="sec sin" th:text="'Sin contestar (' + ${#lists.size(sinContestar)} + ')'">Sin contestar</div>
+<div class="sub">No ingresaron al cuestionario dentro del plazo en que estuvo activo.</div>
+<p class="empty" th:if="${#lists.isEmpty(sinContestar)}">Sin candidatos en esta categoría.</p>
+<table class="lst" th:if="${!#lists.isEmpty(sinContestar)}">
+  <tr class="h"><td>Documento</td><td>Apellido y nombre</td></tr>
+  <tr th:each="r : ${sinContestar}"><td th:text="${r.doc()}">DNI 1</td><td th:text="${r.nombre()}">Apellido, Nombre</td></tr>
+</table>
+
+<div class="legend">La marca oscura en cada barra indica la ponderación mínima requerida para el puesto (escala 0 a 10).
+  Reporte generado el <span th:text="${generado}">01/01/2026 10:00</span>.</div>
+
+</body>
+</html>

@@ -18,12 +18,14 @@ import com.practical.consultora_rrhh.modelo.clases.Puesto;
 import com.practical.consultora_rrhh.modelo.clases.PuestoCompetencia;
 import com.practical.consultora_rrhh.modelo.enums.tipoAuditoria;
 import com.practical.consultora_rrhh.services.mediator.CompetenciaPuestoMediator;
+import com.practical.consultora_rrhh.services.mediator.OrdenMeritoPuestoMediator;
 import com.practical.consultora_rrhh.services.mediator.PuestoCuestionarioMediator;
 import com.practical.consultora_rrhh.validaciones.PuestoValidators;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,14 +38,15 @@ public class ServicePuesto implements IservicePuesto {
     private final PuestoValidators validators;
     private final IserviceAuditoria auditoria;
     private final PuestoCuestionarioMediator cuestionarioMediator;
-
-    public ServicePuesto(IPuestoDao dao, IpuestoCompetenciaDao puestoCompetenciaDao, CompetenciaPuestoMediator mediatorCompetencia, PuestoValidators validators, IserviceAuditoria auditoria, PuestoCuestionarioMediator cuestionarioMediator) {
+private final OrdenMeritoPuestoMediator ordenMeritoMediator;
+    public ServicePuesto(IPuestoDao dao, IpuestoCompetenciaDao puestoCompetenciaDao, CompetenciaPuestoMediator mediatorCompetencia, PuestoValidators validators, IserviceAuditoria auditoria, PuestoCuestionarioMediator cuestionarioMediator, OrdenMeritoPuestoMediator ordenMeritoMediator) {
         this.dao = dao;
         this.puestoCompetenciaDao = puestoCompetenciaDao;
         this.mediatorCompetencia = mediatorCompetencia;
         this.validators = validators;
         this.auditoria = auditoria;
         this.cuestionarioMediator = cuestionarioMediator;
+        this.ordenMeritoMediator = ordenMeritoMediator;
     }
 
     @PostConstruct
@@ -51,7 +54,9 @@ public class ServicePuesto implements IservicePuesto {
 
         mediatorCompetencia.registrarServicioB(this);
        cuestionarioMediator.registrarServicioA(this);
+   ordenMeritoMediator.registrarServicioB(this);
     }
+
 
 
     @Override
@@ -171,6 +176,35 @@ return resultados;
         throw new FiltroVacioException();
 
     }
+
+
+
+    @Override
+    public Map<Puesto,List<PuestoCompetencia>> buscarParaOrdenMerito(puestoFiltrosDto dto) {
+        if(validators.validarFiltros(dto)) {
+
+            List<Puesto> puestos=dao.buscar(dto);
+
+            if(puestos.isEmpty()){
+                throw new ColeccionNotFoundException("No se encontraron puestos");
+            }
+            List<Long> coleccion=puestos.stream().map(Puesto::getId).toList();
+            List<PuestoCompetencia> competencias=puestoCompetenciaDao.obtenerPorPuestos(coleccion);
+Map<Puesto,List<PuestoCompetencia>> resultados=new HashMap<>();
+for (Puesto puesto : puestos) {
+    List<PuestoCompetencia> filas=competencias.stream().toList()
+            .stream().filter(o->o.getPuesto().equals(puesto))
+            .toList();
+
+    resultados.put(puesto,filas);}
+
+return  resultados;
+        }
+
+        throw new FiltroVacioException();
+
+    }
+
 
     //-------------------------------------------------------------------------------------------------------
     @Override
