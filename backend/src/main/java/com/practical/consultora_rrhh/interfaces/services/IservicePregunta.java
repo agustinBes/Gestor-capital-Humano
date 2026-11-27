@@ -11,7 +11,12 @@ import com.practical.consultora_rrhh.modelo.clases.Pregunta;
 import java.util.List;
 
 /**
+ * Interface que hereda de {@link IserviceCRUD} y {@link InternalService} heredando un conjunto de operaciones basicas
+ * que la mayoria de los servicios requieren o exigen para
+ * Garantizar la comunicacion entre servicios y con el controlador
  *
+ * @author Besigniano Agustin
+ *  * @since 1.0
  */
 public interface IservicePregunta extends IserviceCRUD<Long,preguntaDto, preguntaDtoCreate>, InternalService<Pregunta,Long> {
 

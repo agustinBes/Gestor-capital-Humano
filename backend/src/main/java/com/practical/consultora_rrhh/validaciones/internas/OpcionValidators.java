@@ -14,6 +14,14 @@ import org.springframework.stereotype.Service;
  * @Since 1.0
  */
 import java.util.*;
+
+/**
+ * Clase que Valida logica de negocio del sistema
+ * e interactua con la capa de persistencia
+ * permitiendo dejar los servicios lo mas limpios posibles de codigo
+ * @author Besigniano Agustin
+ * @since 1.0
+ */
 @Service
 public class OpcionValidators {
 

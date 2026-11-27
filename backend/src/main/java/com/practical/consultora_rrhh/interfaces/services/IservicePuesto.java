@@ -12,7 +12,14 @@ import com.practical.consultora_rrhh.modelo.clases.PuestoCompetencia;
 
 import java.util.List;
 import java.util.Map;
-
+/**
+ * Interface que hereda de {@link IserviceCRUD}.{@link IcompetenciaEnUso} y {@link InternalService} heredando un conjunto de operaciones basicas
+ * que la mayoria de los servicios requieren o exigen para
+ * Garantizar la comunicacion entre servicios y con el controlador
+ *
+ * @author Besigniano Agustin
+ *  * @since 1.0
+ */
 public interface IservicePuesto extends IserviceCRUD<Long, puestoDto,puestoDtoCreate>, InternalService<Puesto,Long>, IcompetenciaEnUso {
 
 public List<PuestoCompetencia> guardarCaracteristicas(List<puestoCompetenciaDtoCreate> caracteristicas);

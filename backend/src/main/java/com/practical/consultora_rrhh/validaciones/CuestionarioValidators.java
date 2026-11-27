@@ -12,6 +12,13 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Clase que Valida logica de negocio del sistema
+ * e interactua con la capa de persistencia
+ * permitiendo dejar los servicios lo mas limpios posibles de codigo
+ * @author Besigniano Agustin
+ * @since 1.0
+ */
 @Component
 public class CuestionarioValidators {
     private final IcuestionarioDao dao;

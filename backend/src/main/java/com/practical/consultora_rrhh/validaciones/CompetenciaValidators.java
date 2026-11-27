@@ -12,6 +12,15 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+
+/**
+ * Clase que Valida logica de negocio del sistema
+ * e interactua con la capa de persistencia
+ * permitiendo dejar los servicios lo mas limpios posibles de codigo
+ * @author Besigniano Agustin
+ * @since 1.0
+ */
+
 @Service
 public class CompetenciaValidators  extends DuplicadoValidators implements IvalidarExistenciaNombreCodigoService {
     private final ICompetenciaDao dao;

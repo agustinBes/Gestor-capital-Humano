@@ -9,6 +9,14 @@ import org.springframework.validation.annotation.Validated;
 
 import java.time.Duration;
 
+/**
+ * Archivo de configuracion que recupera de 'application.properties' los
+ * parametros con los que se diseñan los cuestionarios
+ * cantidad de accesos
+ * la cantidad de preguntas por bloque
+ * el tiempo maximo que puede permanecer en el estado activo
+ * el tiempo maximo de realizacion del cuestionario
+ */
 @Configuration
 @ConfigurationProperties(prefix = "cuestionario")
 @Validated

@@ -6,6 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Estructura auxiliar no persistida usada para gestionar el estado de los cuestionarios
+ * y tener un registro de items completados
+ * @author  Besigniano Agustin
+ * @since 1.0
+ */
 @Getter
 @Setter
 @Builder
