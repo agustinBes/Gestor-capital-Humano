@@ -30,10 +30,14 @@ realizamos la creacion del proyecto base a traves de [Spring Boot initializer](h
 9. OAuth2 Resource Server(desactivado por el momento)
 10. Jackson Csv
 11. jackson-datatype-jsr310
+12. OpenPdf-html
+13. spring-boot-starter-thymeleaf
+Otras dependencias viene por defecto con el inicializar de spring como jackson base
+
 --- 
 ## 🗄️ Configuración de la capa de persistencia
 
-El proyecto utiliza **PostgreSQL 18** como sistema gestor de bases de datos, ejecutándose localmente en el **puerto `5433`**.
+El proyecto utiliza **PostgreSQL 18** como sistema gestor de bases de datos, ejecutándose localmente en el **puerto `5433`** o en donde se haya instalado para correr por defecto el motor.
 
 La aplicación está configurada para crear automáticamente la base de datos `capital_humano` si todavía no existe, por lo que **no es necesario crearla manualmente** antes de iniciar el proyecto.
 
@@ -60,6 +64,7 @@ spring.datasource.username=${DB_capital_humano}
 spring.datasource.password=${DB_capital_humano_pass}
 
 ```
+Por defecto el servidor de Tomcat corre en el puerto **8080** si desean modificarlo pueden hacerlo con una variable que altere el puerto por defecto tambien
 
 ### 🔄 Gestión y validación del esquema
 
@@ -74,5 +79,29 @@ En consecuencia:
 - **`ddl-auto=validate`:** evita que Hibernate genere o modifique automáticamente la estructura de las tablas.
 
 > 💡 **Importante:** Los cambios estructurales de la base de datos deben realizarse mediante nuevas migraciones de Flyway, manteniendo sincronizado el modelo de persistencia con la estructura definida en PostgreSQL.
+
+### Parametros de configuracion del sistema
+
+Establecimos un configuracion por defecto para la generacion de cuestionarios dichos parametros pueden ser modificados 
+en el archivo de propiedades.
+Los parametros de tiempo establecen una cuenta en dias desde la fecha de creacion o inicio
+Alterar la cantidad de preguntas por bloque altera el nro de bloque al que pertenece una pregunta del cuestionario
+> 💡 **Importante:** Tener en cuenta que alterarlos requiere un metodo que actualice los plazos, cantidadde accesos y tiempos de todos los cuestionarios ya existentes
+
+```Parametros del cuestionario
+cuestionario.tiempo-maximo-activo=7d
+cuestionario.tiempo-maximo-realizacion=15d
+cuestionario.preguntas-por-bloque=4
+cuestionario.instrucciones=Responda todas las preguntas seleccionando la opción que mejor represente su respuesta.
+cuestionario.cantidad-de-accesos=3
+```
+
+Una vez se hayan configurado estos datos ya esta disponible el servidor para ser iniciado 
+Pueden realizar peticiones desde alguna herramienta como INSOMNIA o Postman
+Tambien puede usar la que genera swagger-ui 
+
+---
+## Capa de Frontend
+
 
 
