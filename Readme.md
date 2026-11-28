@@ -1,130 +1,118 @@
-# Bienvenidos
+# Operación, API y producción
 
-![Banner de github](./imagen/Banner-3.jpg)
-***  
+Esta guía cubre la generación local de artefactos, la configuración necesaria para
+ejecutarlos y las operaciones de auditoría e importación de candidatos. Crear los
+artefactos no los publica ni reinicia en un servidor remoto.
 
-Desarrollaremos un proyecto Full Stack de una empresa Gestora de recursos humanos para la materia Desarrollo de Software y en colaboracion con el Trabajo de la materia Diseño de Sistemas
+## Requisitos verificados
 
-# Configuracion del entorno
+- Backend: Maven instalado y disponible en `PATH`, Java compatible con la versión 25 declarada en `backend/pom.xml`.
+  La compilación local se ejecutó con Java 26.
+- Frontend: Node.js y npm. La compilación local se ejecutó con Node.js 24.14.0 y npm 11.9.0.
+- PostgreSQL disponible para iniciar el backend.
 
-configurar una cuenta en Github y aplicar configuraciones de autoria en tu entorno.
-```git bash
- git config --global user.name "Tu Nombre"  
-git config --global user.email "tu@email.com"
+## Configuración del backend
+
+La aplicación escucha en el puerto `8080` por defecto y utiliza PostgreSQL en el puerto
+`5433`, con la base `capital_humano`. El usuario y la contraseña se leen de las variables
+de entorno `DB_capital_humano` y `DB_capital_humano_pass`.
+
+En un entorno de producción, configurar las credenciales fuera del repositorio y asignar
+la URL completa de la base mediante `SPRING_DATASOURCE_URL` cuando PostgreSQL no esté en
+el mismo host. También pueden configurarse `SPRING_DATASOURCE_USERNAME`,
+`SPRING_DATASOURCE_PASSWORD` y `SERVER_PORT` como variables de entorno de Spring Boot.
+No almacenar credenciales en el código ni en archivos versionados.
+
+Las migraciones de esquema están administradas por Flyway. Antes de iniciar la aplicación
+contra una base productiva, comprobar su disponibilidad y revisar las migraciones que se
+aplicarán.
+
+## Empaquetar e iniciar el backend
+
+Desde PowerShell, en la raíz del repositorio (la carpeta que contiene `backend` y
+`Frontend Diseño`). Si PowerShell está en la carpeta contenedora, primero entre a la
+carpeta del proyecto, por ejemplo: `Set-Location '.\Gestor-capital-Humano-mainDise-o'`.
+
+```powershell
+Set-Location .\backend
+mvn package
+java -jar .\target\consultora-rrhh-0.0.1-SNAPSHOT.jar
 ```
 
-realizamos la creacion del proyecto base a traves de [Spring Boot initializer](https://start.spring.io/)  
+`mvn package` ejecuta las fases previas de Maven y genera el JAR ejecutable en
+`backend/target/consultora-rrhh-0.0.1-SNAPSHOT.jar`. El comando `java -jar` lo inicia.
+Las variables `DB_capital_humano` y `DB_capital_humano_pass` deben estar configuradas en
+el entorno de Windows antes de iniciar la aplicación; si ya están configuradas en el
+sistema, no hace falta volver a asignarlas en PowerShell. Mantener el backend ejecutándose.
 
-<img src="imagen/spring-boot.png" width="200" alt="logo de spring boot">  
+## Empaquetar e iniciar el frontend
 
---- 
-## Dependencias del proyecto
-1. Spring WEB
-2. Spring Data JPA
-3. spring Doc
-4. PostgreSQL Driver
-5. Lombok (opcional)
-6. bean validation
-7. devtools
-8. Flyway 
-9. OAuth2 Resource Server(desactivado por el momento)
-10. Jackson Csv
-11. jackson-datatype-jsr310
-12. OpenPdf-html
-13. spring-boot-starter-thymeleaf
-Otras dependencias viene por defecto con el inicializar de spring como jackson base
+La aplicación Next.js usa `BACKEND_API_URL` para reenviar las peticiones de `/api/backend`
+al backend. Cuando el backend esté ejecutándose, abrir otra terminal de PowerShell y, desde
+la raíz del repositorio, definir la URL antes del build:
 
---- 
-## Requisitos Previos
-
-Precisara Next.js por lo cual debera instalar NodeJS ( es importante aclarar que Next.js requiere
-la versión 20.9 o superior de nodeJS), el mismo se puede descargar desde el siguiente link:
-https://nodejs.org/en/download
-o ejecutar npm install
-
-Una vez instalado, proceda a ejecutar los siguientes comandos para crear y levantar el entorno de ejecucion:
-```git bash
- npx create-next-app@latest my-app --yes
- cd my-app
- npm run dev
-```
-Set-Location '.\Frontend Diseño\my-app'
+```powershell
+Set-Location '.\my-app'
 npm ci
 $env:BACKEND_API_URL = 'http://localhost:8080'
 npm run start:prod
-
-## 🗄️ Configuración de la capa de persistencia
-
-El proyecto utiliza **PostgreSQL 18** como sistema gestor de bases de datos, ejecutándose localmente en el **puerto `5433`** o en donde se haya instalado para correr por defecto el motor.
-
-La aplicación está configurada para crear automáticamente la base de datos `capital_humano` si todavía no existe, por lo que **no es necesario crearla manualmente** antes de iniciar el proyecto.
-
-### ⚙️ Configuración de variables de entorno
-
-Para establecer correctamente la conexión con la base de datos, es necesario configurar las siguientes variables de entorno en el sistema operativo:
-
-```variables de entorno
- `DB_capital_humano`  Usuario de PostgreSQL utilizado para la conexión. 
- `DB_capital_humano_pass`  Contraseña correspondiente al usuario configurado. 
 ```
 
-Ambas variables deben contener las credenciales establecidas durante la instalación y configuración de PostgreSQL.
+`start:prod` construye la aplicación y luego inicia el servidor Next.js en modo
+producción (puerto `3000` por defecto). Para separar ambas etapas, usar `npm run build`
+y luego `npm start`.
 
-### 🔌 Configuración de conexión
+Para un despliegue real, reemplazar la URL local por la URL base del backend accesible
+desde el servidor Next.js y mantener la configuración correspondiente en el entorno donde
+se ejecuta el proceso. `npm start` sirve un build existente; no publica el sitio por sí
+mismo.
 
-Spring Boot utiliza las variables de entorno anteriores para configurar el acceso a la base de datos:
+## JavaDoc
 
-```properties
-app.db.port=5433
-app.db.name=capital_humano
-spring.datasource.url=jdbc:postgresql://localhost:${app.db.port}/${app.db.name}
-spring.datasource.username=${DB_capital_humano}
-spring.datasource.password=${DB_capital_humano_pass}
+Los comentarios existentes pueden tener etiquetas `@param`, `@return` u otras incompletas.
+El siguiente comando desactiva DocLint y permite que Maven complete la generación aunque
+encuentre errores de documentación:
 
-```
-Por defecto el servidor de Tomcat corre en el puerto **8080** si desean modificarlo pueden hacerlo con una variable que altere el puerto por defecto tambien
-
-### 🔄 Gestión y validación del esquema
-
-La estructura de la base de datos se administra mediante **Flyway**, que permite mantener un esquema migratorio versionado y controlar la evolución de las tablas y relaciones del sistema.
-
-Por otro lado, las anotaciones de persistencia de **JPA/Hibernate** se utilizan para validar que el esquema existente en la base de datos coincida con las entidades declaradas en Java.
-
-En consecuencia:
-
-- **Flyway:** responsable de crear, modificar y versionar el esquema mediante scripts SQL de migración.
-- **JPA/Hibernate:** responsable de validar la correspondencia entre las entidades Java y el esquema de la base de datos.
-- **`ddl-auto=validate`:** evita que Hibernate genere o modifique automáticamente la estructura de las tablas.
-
-> 💡 **Importante:** Los cambios estructurales de la base de datos deben realizarse mediante nuevas migraciones de Flyway, manteniendo sincronizado el modelo de persistencia con la estructura definida en PostgreSQL.
-
-### Parametros de configuracion del sistema
-
-Establecimos un configuracion por defecto para la generacion de cuestionarios dichos parametros pueden ser modificados 
-en el archivo de propiedades.
-Los parametros de tiempo establecen una cuenta en dias desde la fecha de creacion o inicio
-Alterar la cantidad de preguntas por bloque altera el nro de bloque al que pertenece una pregunta del cuestionario
-> 💡 **Importante:** Tener en cuenta que alterarlos requiere un metodo que actualice los plazos, cantidadde accesos y tiempos de todos los cuestionarios ya existentes
-
-```Parametros del cuestionario
-cuestionario.tiempo-maximo-activo=7d
-cuestionario.tiempo-maximo-realizacion=15d
-cuestionario.preguntas-por-bloque=4
-cuestionario.instrucciones=Responda todas las preguntas seleccionando la opción que mejor represente su respuesta.
-cuestionario.cantidad-de-accesos=3
+```powershell
+Set-Location .\backend
+mvn 'javadoc:javadoc' '-Ddoclint=none' '-Dmaven.javadoc.failOnError=false'
 ```
 
-Una vez se hayan configurado estos datos ya esta disponible el servidor para ser iniciado 
-Pueden realizar peticiones desde alguna herramienta como INSOMNIA o Postman
-Tambien puede usar la que genera swagger-ui 
+El HTML se genera en `backend/target/reports/apidocs/index.html`. La salida puede contener
+advertencias; el comando prioriza producir la documentación a partir de los comentarios
+disponibles y no modifica las fuentes Java.
 
-### Producción y documentación
+## API
 
-Las instrucciones para construir el frontend y el backend, configurar el entorno,
-consultar la API e iniciar la documentación JavaDoc están en la
-[guía de operación y producción](./docs/operacion-produccion.md).
----
+El backend incluye SpringDoc. Con la aplicación en ejecución, consultar:
 
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
+Operaciones relevantes para las pantallas de auditorías y candidatos:
 
+| Método | Ruta | Uso |
+| --- | --- | --- |
+| `GET` | `/auditorias/lista` | Devuelve todos los registros de auditoría. |
+| `GET` | `/gestionar-candidatos/lista` | Devuelve todos los candidatos registrados. |
+| `POST` | `/gestionar-candidatos/import/{idConsultor}` | Importa un archivo CSV multipart en el campo `file`. |
 
+### Formato del CSV de candidatos
+
+La primera fila debe contener estos nombres exactos:
+
+```text
+id,nombre,apellido,fecha,mail,tipo,documento,nacionalidad,genero,escolaridad
+```
+
+La fecha debe tener formato `AAAA-MM-DD`; `tipo` admite `DNI`, `LE`, `LC` o `PP`, y
+`genero` admite `F`, `M` o `X`. El ID y el documento del candidato deben ser únicos.
+La importación requiere un ID de consultor válido en la ruta y el archivo debe enviarse
+como `multipart/form-data` con el nombre de campo `file`.
+
+## Despliegue remoto
+
+Para pasar estos artefactos a un servidor, configurar allí la base y las variables de
+entorno, desplegar el JAR y ejecutar el servidor Next.js de producción con su
+`BACKEND_API_URL`. El destino, el método de publicación, TLS, proxy inverso y política de
+reinicio dependen de la infraestructura; no se realizan automáticamente al compilar.
