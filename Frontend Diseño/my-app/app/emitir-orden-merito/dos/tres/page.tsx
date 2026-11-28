@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Boton from "../../../../componentes/boton";
 import Tabla from "../../../../componentes/tabla";
 import FeedbackMessage from "@/componentes/feedback-message";
@@ -11,7 +11,6 @@ import {
 } from "@/lib/backend-api";
 
 function EvaluacionesDelPuesto() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const idPuesto = searchParams.get("idPuesto") ?? "";
   const [resultado, setResultado] = useState<{
@@ -22,10 +21,18 @@ function EvaluacionesDelPuesto() {
   }>({ idPuesto: "", evaluaciones: [], error: "", ready: false });
   const [seleccionadas, setSeleccionadas] = useState<number[]>([]);
   const [generando, setGenerando] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState("");
+
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    };
+  }, [pdfUrl]);
 
   useEffect(() => {
     if (!idPuesto) return;
 
+    setPdfUrl("");
     let activo = true;
     fetch(`/api/backend/emitir-orden-merito/emitir-orden-merito/${encodeURIComponent(idPuesto)}`, {
       cache: "no-store",
@@ -93,14 +100,13 @@ function EvaluacionesDelPuesto() {
         throw new Error(detail || `Error del backend (${response.status})`);
       }
 
-      const archivo = await response.blob();
-      const url = URL.createObjectURL(archivo);
-      const enlace = document.createElement("a");
-      enlace.href = url;
-      enlace.download = `orden-merito-${idPuesto}.pdf`;
-      enlace.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      router.push("/emitir-orden-merito/dos/tres/cuatro");
+      const archivo = new Blob([await response.blob()], { type: "application/pdf" });
+      if (archivo.size === 0) {
+        throw new Error("El backend devolvió un PDF vacío.");
+      }
+
+      setPdfUrl(URL.createObjectURL(archivo));
+      setResultado((actual) => ({ ...actual, error: "" }));
     } catch (solicitudError: unknown) {
       setResultado((actual) => ({
         ...actual,
@@ -109,6 +115,15 @@ function EvaluacionesDelPuesto() {
     } finally {
       setGenerando(false);
     }
+  };
+
+  const descargarOrden = () => {
+    if (!pdfUrl) return;
+
+    const enlace = document.createElement("a");
+    enlace.href = pdfUrl;
+    enlace.download = `orden-merito-${idPuesto}.pdf`;
+    enlace.click();
   };
 
   const seleccionarFila = (index: number) => {
@@ -157,6 +172,27 @@ function EvaluacionesDelPuesto() {
             disabled={generando || cargando || seleccionadas.length === 0}
           />
         </div>
+        {pdfUrl && (
+          <section aria-label="Orden de mérito generada">
+            <h3 style={{ textAlign: "center", fontSize: "1.5rem" }}>
+              Vista previa de la orden de mérito
+            </h3>
+            <div style={{ display: "flex", justifyContent: "center", margin: "1rem" }}>
+              <Boton texto="Descargar PDF" onClick={descargarOrden} />
+            </div>
+            <iframe
+              src={pdfUrl}
+              title="Vista previa del PDF de la orden de mérito"
+              style={{
+                display: "block",
+                width: "100%",
+                height: "min(80vh, 900px)",
+                border: "1px solid #1E2A1C",
+                borderRadius: "6px",
+              }}
+            />
+          </section>
+        )}
       </section>
     </main>
   );

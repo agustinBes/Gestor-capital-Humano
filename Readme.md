@@ -53,6 +53,12 @@ npm ci
 $env:BACKEND_API_URL = 'http://localhost:8080'
 npm run start:prod
 
+### Orden de mérito
+
+Al emitir una orden de mérito, el frontend muestra en pantalla el PDF devuelto por el
+backend y ofrece el botón **Descargar PDF**. La descarga es opcional; la vista previa se
+mantiene en la pantalla.
+
 ## 🗄️ Configuración de la capa de persistencia
 
 El proyecto utiliza **PostgreSQL 18** como sistema gestor de bases de datos, ejecutándose localmente en el **puerto `5433`** o en donde se haya instalado para correr por defecto el motor.
