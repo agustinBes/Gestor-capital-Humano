@@ -35,6 +35,24 @@ realizamos la creacion del proyecto base a traves de [Spring Boot initializer](h
 Otras dependencias viene por defecto con el inicializar de spring como jackson base
 
 --- 
+## Requisitos Previos
+
+Precisara Next.js por lo cual debera instalar NodeJS ( es importante aclarar que Next.js requiere
+la versión 20.9 o superior de nodeJS), el mismo se puede descargar desde el siguiente link:
+https://nodejs.org/en/download
+o ejecutar npm install
+
+Una vez instalado, proceda a ejecutar los siguientes comandos para crear y levantar el entorno de ejecucion:
+```git bash
+ npx create-next-app@latest my-app --yes
+ cd my-app
+ npm run dev
+```
+Set-Location '.\Frontend Diseño\my-app'
+npm ci
+$env:BACKEND_API_URL = 'http://localhost:8080'
+npm run start:prod
+
 ## 🗄️ Configuración de la capa de persistencia
 
 El proyecto utiliza **PostgreSQL 18** como sistema gestor de bases de datos, ejecutándose localmente en el **puerto `5433`** o en donde se haya instalado para correr por defecto el motor.
@@ -100,13 +118,13 @@ Una vez se hayan configurado estos datos ya esta disponible el servidor para ser
 Pueden realizar peticiones desde alguna herramienta como INSOMNIA o Postman
 Tambien puede usar la que genera swagger-ui 
 
-### Pasando el proyecto a produccion 
-ejecutar desde la carpeta backend ./mvnw clean package
-generar javadoc  .\mvnw.cmd javadoc:javadoc -Ddoclint=none
-acceder al javadoc start target\reports\apidocs\index.html
-iniciando el proyecto java -jar target/consultora-rrhh-0.0.1-SNAPSHOT.jar
+### Producción y documentación
+
+Las instrucciones para construir el frontend y el backend, configurar el entorno,
+consultar la API e iniciar la documentación JavaDoc están en la
+[guía de operación y producción](./docs/operacion-produccion.md).
 ---
-## Capa de Frontend
+
 
 
 

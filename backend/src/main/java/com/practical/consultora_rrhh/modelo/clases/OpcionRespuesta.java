@@ -48,9 +48,13 @@ public class OpcionRespuesta {
 @JoinColumn: indica la FK hacia opcion_respuesta.
 @OrderColumn: indica la columna que almacena la posición de cada elemento de la lista.
  * */
-    @ElementCollection
-    @CollectionTable(name = "opcion",joinColumns = @JoinColumn(name = "id_opcion_respuesta"))
-    private List<Opcion> opciones = new ArrayList<>();
+//    @ElementCollection
+//    @CollectionTable(name = "opcion",joinColumns = @JoinColumn(name = "id_opcion_respuesta"))
+ @OneToMany(
+         mappedBy = "opcionRespuesta",
+         cascade = {CascadeType.PERSIST, CascadeType.MERGE}
+ )
+ private List<Opcion> opciones = new ArrayList<>();
 
     public  OpcionRespuesta(opcionRespuestaDtoCreate dto) {
         this.id = null;

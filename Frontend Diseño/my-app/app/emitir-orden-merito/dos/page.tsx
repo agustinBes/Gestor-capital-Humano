@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Boton from "../../../componentes/boton";
 import Tabla from "../../../componentes/tabla";
+import FeedbackMessage from "@/componentes/feedback-message";
 import {
   backendRequest,
   getErrorMessage,
@@ -90,9 +91,15 @@ function ResultadosOrdenMerito() {
           seleccionados={seleccionado}
         />
         {cargando && <p role="status">Buscando puestos...</p>}
-        {error && <p role="alert">No se pudieron cargar los puestos: {error}</p>}
+        {error && (
+          <FeedbackMessage variant="error">
+            No se pudieron cargar los puestos: {error}
+          </FeedbackMessage>
+        )}
         {!cargando && !error && puestos.length === 0 && (
-          <p>No hay puestos disponibles para esos criterios.</p>
+          <FeedbackMessage variant="warning">
+            No hay puestos disponibles para esos criterios.
+          </FeedbackMessage>
         )}
         <div style={{ display: "flex", justifyContent: "center", margin: "1.5rem" }}>
           <Boton

@@ -1,5 +1,6 @@
 export const AUTHENTICATED_QUESTIONNAIRE_SESSION_KEY =
   "cuestionario-candidato-autenticado";
+export const DEFAULT_DELETE_CONSULTOR_ID = "1";
 
 const JAVA_LONG_MAX_VALUE = "9223372036854775807";
 
@@ -197,6 +198,17 @@ export type EvaluadosDto = {
   "clave de ingreso": string;
 };
 
+export class BackendApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly statusText: string
+  ) {
+    super(message);
+    this.name = "BackendApiError";
+  }
+}
+
 export async function backendRequest<T>(
   path: string,
   init: RequestInit = {}
@@ -208,7 +220,27 @@ export async function backendRequest<T>(
 
   if (!response.ok) {
     const detail = await response.text();
-    throw new Error(detail || `Error del backend (${response.status})`);
+    let message = detail;
+    if (detail) {
+      try {
+        const body: unknown = JSON.parse(detail);
+        if (typeof body === "object" && body !== null) {
+          const errorBody = body as Record<string, unknown>;
+          const backendMessage = errorBody.mensaje ?? errorBody.message ?? errorBody.detail;
+          if (typeof backendMessage === "string" && backendMessage.trim()) {
+            message = backendMessage;
+          }
+        }
+      } catch {
+        // Keep plain-text backend responses as-is.
+      }
+    }
+
+    throw new BackendApiError(
+      message || `El servidor respondió con HTTP ${response.status}.`,
+      response.status,
+      response.statusText
+    );
   }
 
   const contentType = response.headers.get("content-type") ?? "";
@@ -219,5 +251,9 @@ export async function backendRequest<T>(
 }
 
 export function getErrorMessage(error: unknown): string {
+  if (error instanceof BackendApiError) {
+    const statusText = error.statusText ? ` ${error.statusText}` : "";
+    return `(${error.status}${statusText}) ${error.message}`;
+  }
   return error instanceof Error ? error.message : "No se pudo completar la solicitud.";
 }

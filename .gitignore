@@ -7,6 +7,15 @@ backend/.mvn/wrapper/maven-wrapper.jar
 !**/backend/src/main/**/target/
 !**/backend/src/test/**/target/
 
+# Artefactos generados para producción
+/Frontend Diseño/my-app/.next/
+/Frontend Diseño/my-app/out/
+/Frontend Diseño/my-app/build/
+
+# Mantener versionada la documentación del proyecto
+!/docs/
+!/docs/**
+
 # === Herramientas del sistema y compilación del backend ===
 backend/.mvn/
 backend/mvnw

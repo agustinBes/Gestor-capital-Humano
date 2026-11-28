@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import Boton from "../../componentes/boton";
 import Tabla from "../../componentes/tabla";
+import FeedbackMessage from "@/componentes/feedback-message";
 import {
   backendRequest,
+  DEFAULT_DELETE_CONSULTOR_ID,
   getErrorMessage,
   isPositiveLongIdentifier,
   type OpcionRespuestaDto,
@@ -59,12 +61,14 @@ export default function GestionarOpcionesRespuesta() {
   const [formulario, setFormulario] = useState(formularioVacio);
   const [idEdicion, setIdEdicion] = useState<number | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [cargando, setCargando] = useState(true);
+  const [cargando, setCargando] = useState(false);
+  const [consultaRealizada, setConsultaRealizada] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
 
   const consultar = async (filtro = "") => {
+    setConsultaRealizada(true);
     setCargando(true);
     setError("");
     setMensaje("");
@@ -84,23 +88,15 @@ export default function GestionarOpcionesRespuesta() {
     }
   };
 
-  useEffect(() => {
-    let activo = true;
-    backendRequest<OpcionRespuestaDto[]>("/opciones-de-respuesta/lista")
-      .then((resultado) => {
-        if (activo) setOpcionesRespuesta(resultado);
-      })
-      .catch((errorSolicitud: unknown) => {
-        if (activo) setError(getErrorMessage(errorSolicitud));
-      })
-      .finally(() => {
-        if (activo) setCargando(false);
-      });
+  const refrescarConsulta = async () => {
+    if (consultaRealizada) {
+      await consultar(busqueda.trim());
+      return;
+    }
 
-    return () => {
-      activo = false;
-    };
-  }, []);
+    setOpcionesRespuesta([]);
+    setSeleccionada(null);
+  };
 
   const abrirAlta = () => {
     setFormulario(formularioVacio());
@@ -228,7 +224,7 @@ export default function GestionarOpcionesRespuesta() {
         body: JSON.stringify(body),
       });
       setModalAbierto(false);
-      await consultar(busqueda.trim());
+      await refrescarConsulta();
       setMensaje(
         idEdicion === null
           ? `Opciones de respuesta creadas: ${resultado.nombre}.`
@@ -244,11 +240,7 @@ export default function GestionarOpcionesRespuesta() {
   const eliminar = async () => {
     const opcionRespuesta = opcionesRespuesta.find((item) => item.id === seleccionada);
     if (!opcionRespuesta) return;
-    const idConsultor = window.prompt(
-      "Ingresá el ID numérico del consultor responsable de la eliminación."
-    );
-    if (idConsultor === null) return;
-    const idConsultorLimpio = idConsultor.trim();
+    const idConsultorLimpio = DEFAULT_DELETE_CONSULTOR_ID;
     const idOpcionRespuesta = String(opcionRespuesta.id);
     if (
       !isPositiveLongIdentifier(idOpcionRespuesta) ||
@@ -266,7 +258,7 @@ export default function GestionarOpcionesRespuesta() {
         `/opciones-de-respuesta/delete/${encodeURIComponent(idOpcionRespuesta)}/responsable/${encodeURIComponent(idConsultorLimpio)}`,
         { method: "DELETE" }
       );
-      await consultar(busqueda.trim());
+      await refrescarConsulta();
       setMensaje(respuesta);
     } catch (errorSolicitud: unknown) {
       setError(getErrorMessage(errorSolicitud));
@@ -302,34 +294,54 @@ export default function GestionarOpcionesRespuesta() {
           </label>
           <div style={{ alignSelf: "end", display: "flex", gap: "0.5rem" }}>
             <Boton texto="Buscar" onClick={() => void consultar(busqueda.trim())} disabled={cargando} />
-            <Boton texto="Limpiar" onClick={() => { setBusqueda(""); void consultar(); }} disabled={cargando} />
+            <Boton
+              texto="Limpiar"
+              onClick={() => {
+                setBusqueda("");
+                setOpcionesRespuesta([]);
+                setSeleccionada(null);
+                setConsultaRealizada(false);
+                setError("");
+                setMensaje("");
+              }}
+              disabled={cargando}
+            />
           </div>
         </div>
 
         {cargando && <p role="status">Consultando opciones de respuesta...</p>}
-        {error && <p role="alert">{error}</p>}
-        {mensaje && <p role="status">{mensaje}</p>}
+        {error && <FeedbackMessage variant="error">{error}</FeedbackMessage>}
+        {mensaje && <FeedbackMessage variant="success">{mensaje}</FeedbackMessage>}
 
-        <Tabla
-          columnas={["ID", "Nombre", "Descripción", "Cantidad", "Opciones"]}
-          datos={opcionesRespuesta.map((item) => [
-            item.id,
-            item.nombre,
-            item.descripcion,
-            item.opciones.length,
-            item.opciones
-              .slice()
-              .sort((a, b) => a.orden - b.orden)
-              .map((opcion) => `${opcion.orden}. ${opcion.descripcion}`)
-              .join(" | "),
-          ])}
-          onRowClick={(index) => setSeleccionada(opcionesRespuesta[index]?.id ?? null)}
-          seleccionados={opcionesRespuesta.flatMap((item, index) =>
-            item.id === seleccionada ? [index] : []
-          )}
-        />
-        {!cargando && !error && opcionesRespuesta.length === 0 && (
-          <p>No hay opciones de respuesta para esa búsqueda.</p>
+        {consultaRealizada && (
+          <Tabla
+            columnas={["ID", "Nombre", "Descripción", "Cantidad", "Opciones"]}
+            datos={opcionesRespuesta.map((item) => [
+              item.id,
+              item.nombre,
+              item.descripcion,
+              item.opciones.length,
+              item.opciones
+                .slice()
+                .sort((a, b) => a.orden - b.orden)
+                .map((opcion) => `${opcion.orden}. ${opcion.descripcion}`)
+                .join(" | "),
+            ])}
+            onRowClick={(index) => setSeleccionada(opcionesRespuesta[index]?.id ?? null)}
+            seleccionados={opcionesRespuesta.flatMap((item, index) =>
+              item.id === seleccionada ? [index] : []
+            )}
+          />
+        )}
+        {!consultaRealizada && (
+          <FeedbackMessage variant="warning">
+            Ingresá un nombre y seleccioná Buscar para ver opciones de respuesta.
+          </FeedbackMessage>
+        )}
+        {consultaRealizada && !cargando && !error && opcionesRespuesta.length === 0 && (
+          <FeedbackMessage variant="warning">
+            No hay opciones de respuesta para esa búsqueda.
+          </FeedbackMessage>
         )}
 
         <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "0.75rem", marginTop: "1rem" }}>
@@ -349,92 +361,85 @@ export default function GestionarOpcionesRespuesta() {
               {idEdicion === null ? "Nueva opción de respuesta" : "Modificar opción de respuesta"}
             </h2>
             <form onSubmit={guardar}>
-              <label style={{ display: "block", margin: "0.75rem 0" }}>
-                Nombre
-                <input
-                  value={formulario.nombre}
-                  onChange={(event) => setFormulario((actual) => ({ ...actual, nombre: event.target.value }))}
-                  maxLength={50}
-                  required
-                  disabled={idEdicion !== null}
-                  style={controlStyle}
-                />
-              </label>
-              <label style={{ display: "block", margin: "0.75rem 0" }}>
-                Descripción
-                <textarea
-                  value={formulario.descripcion}
-                  onChange={(event) => setFormulario((actual) => ({ ...actual, descripcion: event.target.value }))}
-                  maxLength={300}
-                  required
-                  rows={3}
-                  style={controlStyle}
-                />
-              </label>
+              <ul className="form-field-list">
+                <li>
+                  <label>
+                    Nombre
+                    <input
+                      value={formulario.nombre}
+                      onChange={(event) => setFormulario((actual) => ({ ...actual, nombre: event.target.value }))}
+                      maxLength={50}
+                      required
+                      disabled={idEdicion !== null}
+                      style={controlStyle}
+                    />
+                  </label>
+                </li>
+                <li>
+                  <label>
+                    Descripción
+                    <textarea
+                      value={formulario.descripcion}
+                      onChange={(event) => setFormulario((actual) => ({ ...actual, descripcion: event.target.value }))}
+                      maxLength={300}
+                      required
+                      rows={3}
+                      style={controlStyle}
+                    />
+                  </label>
+                </li>
+              </ul>
 
               <h3>Opciones</h3>
               <p>
                 El orden debe ser consecutivo desde 1. Al modificar, el backend no permite cambiar
                 la cantidad de opciones ni sus números de fila.
               </p>
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "520px" }}>
-                  <thead>
-                    <tr style={{ background: "#E0E4D3" }}>
-                      <th scope="col" style={{ border: "1px solid #1E2A1C", padding: "0.6rem" }}>Fila</th>
-                      <th scope="col" style={{ border: "1px solid #1E2A1C", padding: "0.6rem" }}>Orden</th>
-                      <th scope="col" style={{ border: "1px solid #1E2A1C", padding: "0.6rem" }}>Descripción</th>
-                      <th scope="col" style={{ border: "1px solid #1E2A1C", padding: "0.6rem" }}>Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {formulario.opciones.map((opcion) => (
-                      <tr key={opcion.fila}>
-                        <td style={{ border: "1px solid #1E2A1C", padding: "0.5rem", textAlign: "center" }}>
-                          {opcion.fila}
-                        </td>
-                        <td style={{ border: "1px solid #1E2A1C", padding: "0.5rem" }}>
-                          <input
-                            type="number"
-                            value={opcion.orden}
-                            min={1}
-                            max={32767}
-                            step={1}
-                            onChange={(event) => actualizarOpcion(opcion.fila, "orden", event.target.value)}
-                            required
-                            style={controlStyle}
-                          />
-                        </td>
-                        <td style={{ border: "1px solid #1E2A1C", padding: "0.5rem" }}>
-                          <input
-                            value={opcion.descripcion}
-                            onChange={(event) => actualizarOpcion(opcion.fila, "descripcion", event.target.value)}
-                            maxLength={100}
-                            required
-                            style={controlStyle}
-                          />
-                        </td>
-                        <td style={{ border: "1px solid #1E2A1C", padding: "0.5rem", textAlign: "center" }}>
-                          <button
-                            type="button"
-                            onClick={() => quitarOpcion(opcion.fila)}
-                            disabled={idEdicion !== null || formulario.opciones.length <= 2}
-                            style={{ padding: "0.5rem", cursor: idEdicion !== null || formulario.opciones.length <= 2 ? "not-allowed" : "pointer" }}
-                          >
-                            Quitar
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <ul className="form-option-list">
+                {formulario.opciones.map((opcion) => (
+                  <li key={opcion.fila} className="form-option-item">
+                    <label>
+                      Orden
+                      <input
+                        type="number"
+                        value={opcion.orden}
+                        min={1}
+                        max={32767}
+                        step={1}
+                        onChange={(event) => actualizarOpcion(opcion.fila, "orden", event.target.value)}
+                        readOnly={idEdicion !== null}
+                        required
+                        style={controlStyle}
+                      />
+                    </label>
+                    <label>
+                      Descripción
+                      <textarea
+                        value={opcion.descripcion}
+                        onChange={(event) => actualizarOpcion(opcion.fila, "descripcion", event.target.value)}
+                        maxLength={100}
+                        required
+                        rows={2}
+                        style={controlStyle}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => quitarOpcion(opcion.fila)}
+                      disabled={idEdicion !== null || formulario.opciones.length <= 2}
+                      style={{ padding: "0.5rem", cursor: idEdicion !== null || formulario.opciones.length <= 2 ? "not-allowed" : "pointer" }}
+                    >
+                      Quitar
+                    </button>
+                  </li>
+                ))}
+              </ul>
               {idEdicion === null && (
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.75rem" }}>
                   <button type="button" onClick={agregarOpcion}>Agregar opción</button>
                 </div>
               )}
-              {error && <p role="alert">{error}</p>}
+              {error && <FeedbackMessage variant="error">{error}</FeedbackMessage>}
               <div style={{ display: "flex", justifyContent: "center", gap: "0.75rem", marginTop: "1rem" }}>
                 <Boton texto={guardando ? "Guardando..." : "Guardar"} type="submit" disabled={guardando} />
                 <Boton texto="Cancelar" type="button" onClick={() => setModalAbierto(false)} disabled={guardando} />

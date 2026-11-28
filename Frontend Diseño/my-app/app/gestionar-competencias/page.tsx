@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import Boton from "../../componentes/boton";
 import Tabla from "../../componentes/tabla";
+import FeedbackMessage from "@/componentes/feedback-message";
 import {
   backendRequest,
+  DEFAULT_DELETE_CONSULTOR_ID,
   getErrorMessage,
   isPositiveLongIdentifier,
   type CompetenciaDto,
@@ -46,12 +48,14 @@ export default function GestionarCompetencias() {
   const [formulario, setFormulario] = useState(formularioVacio);
   const [idEdicion, setIdEdicion] = useState<number | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [cargando, setCargando] = useState(true);
+  const [cargando, setCargando] = useState(false);
+  const [consultaRealizada, setConsultaRealizada] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
 
   const consultar = async (filtro = "") => {
+    setConsultaRealizada(true);
     setCargando(true);
     setError("");
     setMensaje("");
@@ -71,23 +75,15 @@ export default function GestionarCompetencias() {
     }
   };
 
-  useEffect(() => {
-    let activo = true;
-    backendRequest<CompetenciaDto[]>("/gestionar-competencias/lista")
-      .then((resultado) => {
-        if (activo) setCompetencias(resultado);
-      })
-      .catch((errorSolicitud: unknown) => {
-        if (activo) setError(getErrorMessage(errorSolicitud));
-      })
-      .finally(() => {
-        if (activo) setCargando(false);
-      });
+  const refrescarConsulta = async () => {
+    if (consultaRealizada) {
+      await consultar(busqueda.trim());
+      return;
+    }
 
-    return () => {
-      activo = false;
-    };
-  }, []);
+    setCompetencias([]);
+    setSeleccionada(null);
+  };
 
   const abrirAlta = () => {
     setFormulario(formularioVacio);
@@ -146,7 +142,7 @@ export default function GestionarCompetencias() {
         body: JSON.stringify(body),
       });
       setModalAbierto(false);
-      await consultar(busqueda.trim());
+      await refrescarConsulta();
       setMensaje(
         idEdicion === null
           ? `Competencia creada: ${resultado.nombre}.`
@@ -163,11 +159,7 @@ export default function GestionarCompetencias() {
     const competencia = competencias.find((item) => item.id === seleccionada);
     if (!competencia) return;
 
-    const idConsultor = window.prompt(
-      "Ingresá el ID numérico del consultor responsable de la eliminación."
-    );
-    if (idConsultor === null) return;
-    const idConsultorLimpio = idConsultor.trim();
+    const idConsultorLimpio = DEFAULT_DELETE_CONSULTOR_ID;
     if (!isPositiveLongIdentifier(String(competencia.id)) || !isPositiveLongIdentifier(idConsultorLimpio)) {
       setError("Los IDs de competencia y consultor deben ser enteros positivos válidos.");
       return;
@@ -181,7 +173,7 @@ export default function GestionarCompetencias() {
         `/gestionar-competencias/delete/${encodeURIComponent(String(competencia.id))}/responsable/${encodeURIComponent(idConsultorLimpio)}`,
         { method: "DELETE" }
       );
-      await consultar(busqueda.trim());
+      await refrescarConsulta();
       setMensaje(respuesta);
     } catch (errorSolicitud: unknown) {
       setError(getErrorMessage(errorSolicitud));
@@ -224,31 +216,51 @@ export default function GestionarCompetencias() {
           </label>
           <div style={{ alignSelf: "end" }}>
             <Boton texto="Buscar" onClick={() => void consultar(busqueda.trim())} disabled={cargando} />
-            <Boton texto="Limpiar" onClick={() => { setBusqueda(""); void consultar(); }} disabled={cargando} />
+            <Boton
+              texto="Limpiar"
+              onClick={() => {
+                setBusqueda("");
+                setCompetencias([]);
+                setSeleccionada(null);
+                setConsultaRealizada(false);
+                setError("");
+                setMensaje("");
+              }}
+              disabled={cargando}
+            />
           </div>
         </div>
 
         {cargando && <p role="status">Consultando competencias del backend...</p>}
-        {error && <p role="alert">{error}</p>}
-        {mensaje && <p role="status">{mensaje}</p>}
+        {error && <FeedbackMessage variant="error">{error}</FeedbackMessage>}
+        {mensaje && <FeedbackMessage variant="success">{mensaje}</FeedbackMessage>}
 
-        <Tabla
-          columnas={["ID", "Código", "Nombre", "Tipo", "Descripción", "Factores asociados"]}
-          datos={competencias.map((item) => [
-            item.id,
-            item.codigo,
-            item.nombre,
-            item.tipo,
-            item.descripcion,
-            item.factores.map((factor) => factor.nombre).join(", ") || "Sin factores",
-          ])}
-          onRowClick={(index) => setSeleccionada(competencias[index]?.id ?? null)}
-          seleccionados={competencias.flatMap((item, index) =>
-            item.id === seleccionada ? [index] : []
-          )}
-        />
-        {!cargando && !error && competencias.length === 0 && (
-          <p>No hay competencias que coincidan con la búsqueda.</p>
+        {consultaRealizada && (
+          <Tabla
+            columnas={["ID", "Código", "Nombre", "Tipo", "Descripción", "Factores asociados"]}
+            datos={competencias.map((item) => [
+              item.id,
+              item.codigo,
+              item.nombre,
+              item.tipo,
+              item.descripcion,
+              item.factores.map((factor) => factor.nombre).join(", ") || "Sin factores",
+            ])}
+            onRowClick={(index) => setSeleccionada(competencias[index]?.id ?? null)}
+            seleccionados={competencias.flatMap((item, index) =>
+              item.id === seleccionada ? [index] : []
+            )}
+          />
+        )}
+        {!consultaRealizada && (
+          <FeedbackMessage variant="warning">
+            Ingresá un nombre y seleccioná Buscar para ver competencias.
+          </FeedbackMessage>
+        )}
+        {consultaRealizada && !cargando && !error && competencias.length === 0 && (
+          <FeedbackMessage variant="warning">
+            No hay competencias que coincidan con la búsqueda.
+          </FeedbackMessage>
         )}
 
         <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "0.75rem", marginTop: "1rem" }}>
@@ -268,53 +280,63 @@ export default function GestionarCompetencias() {
               {idEdicion === null ? "Nueva competencia" : "Modificar competencia"}
             </h2>
             <form onSubmit={guardar}>
-              <label style={{ display: "block", margin: "0.75rem 0" }}>
-                Código
-                <input
-                  value={formulario.codigo}
-                  onChange={(event) => cambiarCampo("codigo", event.target.value)}
-                  maxLength={30}
-                  required
-                  disabled={idEdicion !== null}
-                  style={controlStyle}
-                />
-              </label>
-              <label style={{ display: "block", margin: "0.75rem 0" }}>
-                Nombre
-                <input
-                  value={formulario.nombre}
-                  onChange={(event) => cambiarCampo("nombre", event.target.value)}
-                  maxLength={50}
-                  required
-                  style={controlStyle}
-                />
-              </label>
-              <label style={{ display: "block", margin: "0.75rem 0" }}>
-                Descripción
-                <textarea
-                  value={formulario.descripcion}
-                  onChange={(event) => cambiarCampo("descripcion", event.target.value)}
-                  minLength={30}
-                  maxLength={300}
-                  required
-                  rows={4}
-                  style={controlStyle}
-                />
-              </label>
-              <label style={{ display: "block", margin: "0.75rem 0" }}>
-                Tipo
-                <select
-                  value={formulario.tipo}
-                  onChange={(event) => cambiarCampo("tipo", event.target.value as TipoCompetencia)}
-                  disabled={idEdicion !== null}
-                  style={controlStyle}
-                >
-                  <option value="TECNICA">Técnica</option>
-                  <option value="ACTITUDINAL">Actitudinal</option>
-                  <option value="GENERICA">Genérica</option>
-                </select>
-              </label>
-              {error && <p role="alert">{error}</p>}
+              <ul className="form-field-list">
+                <li>
+                  <label>
+                    Código
+                    <input
+                      value={formulario.codigo}
+                      onChange={(event) => cambiarCampo("codigo", event.target.value)}
+                      maxLength={30}
+                      required
+                      disabled={idEdicion !== null}
+                      style={controlStyle}
+                    />
+                  </label>
+                </li>
+                <li>
+                  <label>
+                    Nombre
+                    <input
+                      value={formulario.nombre}
+                      onChange={(event) => cambiarCampo("nombre", event.target.value)}
+                      maxLength={50}
+                      required
+                      style={controlStyle}
+                    />
+                  </label>
+                </li>
+                <li>
+                  <label>
+                    Descripción
+                    <textarea
+                      value={formulario.descripcion}
+                      onChange={(event) => cambiarCampo("descripcion", event.target.value)}
+                      minLength={30}
+                      maxLength={300}
+                      required
+                      rows={4}
+                      style={controlStyle}
+                    />
+                  </label>
+                </li>
+                <li>
+                  <label>
+                    Tipo
+                    <select
+                      value={formulario.tipo}
+                      onChange={(event) => cambiarCampo("tipo", event.target.value as TipoCompetencia)}
+                      disabled={idEdicion !== null}
+                      style={controlStyle}
+                    >
+                      <option value="TECNICA">Técnica</option>
+                      <option value="ACTITUDINAL">Actitudinal</option>
+                      <option value="GENERICA">Genérica</option>
+                    </select>
+                  </label>
+                </li>
+              </ul>
+              {error && <FeedbackMessage variant="error">{error}</FeedbackMessage>}
               <div style={{ display: "flex", justifyContent: "center", gap: "0.75rem", marginTop: "1rem" }}>
                 <Boton texto={guardando ? "Guardando..." : "Guardar"} type="submit" disabled={guardando} />
                 <Boton texto="Cancelar" type="button" onClick={() => setModalAbierto(false)} disabled={guardando} />

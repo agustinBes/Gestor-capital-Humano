@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Boton from "../../componentes/boton";
 import Input2 from "../../componentes/input2";
 import Tabla from "../../componentes/tabla";
+import FeedbackMessage from "@/componentes/feedback-message";
 import {
   backendRequest,
   getErrorMessage,
@@ -124,7 +125,11 @@ export default function EvaluarCandidato() {
         </div>
 
         {cargando && <p role="status">Consultando candidatos en el backend...</p>}
-        {error && <p role="alert">No se pudieron cargar los candidatos: {error}</p>}
+        {error && (
+          <FeedbackMessage variant="error">
+            No se pudieron cargar los candidatos: {error}
+          </FeedbackMessage>
+        )}
         {busquedaRealizada && !cargando && !error && (
           <>
             <h3>Candidatos encontrados</h3>
@@ -140,7 +145,11 @@ export default function EvaluarCandidato() {
                 seleccionados.includes(candidato.id) ? [index] : []
               )}
             />
-            {candidatos.length === 0 && <p>No hay candidatos para esos filtros.</p>}
+            {candidatos.length === 0 && (
+              <FeedbackMessage variant="warning">
+                No hay candidatos para esos filtros.
+              </FeedbackMessage>
+            )}
             <div style={{ display: "flex", justifyContent: "center", gap: "1rem", margin: "1rem" }}>
               <Boton
                 texto="Agregar seleccionados"

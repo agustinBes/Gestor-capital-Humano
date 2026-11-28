@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Boton from "../../componentes/boton";
+import FeedbackMessage from "@/componentes/feedback-message";
 import {
   AUTHENTICATED_QUESTIONNAIRE_SESSION_KEY,
   backendRequest,
@@ -153,9 +154,9 @@ export default function AutenticarCandidato() {
           />
 
           {error && (
-            <p role="alert" style={{ color: "#9B1C1C", marginBottom: "1rem" }}>
+            <FeedbackMessage variant="error">
               No se pudo autenticar: {error}
-            </p>
+            </FeedbackMessage>
           )}
 
           <div style={{ display: "flex", justifyContent: "center" }}>

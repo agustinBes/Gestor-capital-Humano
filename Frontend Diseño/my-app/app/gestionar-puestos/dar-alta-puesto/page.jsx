@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Boton from "../../../componentes/boton";
 import InputMayus from "../../../componentes/inputMayus";
+import FeedbackMessage from "@/componentes/feedback-message";
 import { backendRequest, getErrorMessage } from "@/lib/backend-api";
 
 const formInicial = {
@@ -168,142 +169,161 @@ export default function AltaPuesto() {
         <h2 style={{ textAlign: "center", fontSize: "2rem" }}>Dar de alta puesto</h2>
         {cargandoCatalogo && <p role="status">Cargando competencias...</p>}
         {!cargandoCatalogo && competencias.length < 2 && !errorCatalogo && (
-          <p>El backend debe devolver al menos dos competencias para crear un puesto.</p>
+          <FeedbackMessage variant="warning">
+            El backend debe devolver al menos dos competencias para crear un puesto.
+          </FeedbackMessage>
         )}
 
         <form onSubmit={crearPuesto}>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "1rem" }}>
-            <InputMayus
-              label="Código:"
-              placeholder="Código"
-              value={formData.codigo}
-              onChange={handleChange("codigo")}
-            />
-            <InputMayus
-              label="Nombre del puesto:"
-              placeholder="Nombre"
-              value={formData.nombre}
-              onChange={handleChange("nombre")}
-            />
-            <InputMayus
-              label="Descripción:"
-              placeholder="Descripción (30 a 300 caracteres)"
-              value={formData.descripcion}
-              onChange={handleChange("descripcion")}
-            />
-            <InputMayus
-              label="Empresa:"
-              placeholder="Empresa"
-              value={formData.empresa}
-              onChange={handleChange("empresa")}
-            />
-          </div>
+          <ul className="form-field-list">
+            <li>
+              <InputMayus
+                label="Código:"
+                placeholder="Código"
+                value={formData.codigo}
+                onChange={handleChange("codigo")}
+              />
+            </li>
+            <li>
+              <InputMayus
+                label="Nombre del puesto:"
+                placeholder="Nombre"
+                value={formData.nombre}
+                onChange={handleChange("nombre")}
+              />
+            </li>
+            <li>
+              <label>
+                Descripción:
+                <textarea
+                  placeholder="Descripción (30 a 300 caracteres)"
+                  value={formData.descripcion}
+                  onChange={(event) =>
+                    setFormData((actual) => ({
+                      ...actual,
+                      descripcion: event.target.value,
+                    }))
+                  }
+                  minLength={30}
+                  maxLength={300}
+                  required
+                  rows={4}
+                  style={{
+                    width: "100%",
+                    padding: "0.55rem",
+                    border: "1px solid #1E2A1C",
+                    borderRadius: "4px",
+                    background: "#E0E4D3",
+                  }}
+                />
+              </label>
+            </li>
+            <li>
+              <InputMayus
+                label="Empresa:"
+                placeholder="Empresa"
+                value={formData.empresa}
+                onChange={handleChange("empresa")}
+              />
+            </li>
+          </ul>
 
           <fieldset style={{ margin: "1.5rem 0", border: "1px solid #1E2A1C", padding: "1rem" }}>
             <legend>Competencias requeridas y ponderaciones</legend>
             <p style={{ marginBottom: "1rem" }}>
               Elegí al menos dos competencias y asigná a cada una una ponderación de 0 a 10.
             </p>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "520px" }}>
-                <thead>
-                  <tr style={{ background: "#E0E4D3" }}>
-                    <th scope="col" style={{ border: "1px solid #1E2A1C", padding: "0.65rem", textAlign: "left" }}>
-                      Competencia
-                    </th>
-                    <th scope="col" style={{ border: "1px solid #1E2A1C", padding: "0.65rem", textAlign: "left" }}>
-                      Ponderación
-                    </th>
-                    <th scope="col" style={{ border: "1px solid #1E2A1C", padding: "0.65rem" }}>
-                      Acción
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filas.map((fila, index) => {
-                    const seleccionadasEnOtrasFilas = new Set(
-                      filas
-                        .filter(
-                          (otraFila) =>
-                            otraFila.id !== fila.id && otraFila.competenciaId
-                        )
-                        .map((otraFila) => otraFila.competenciaId)
-                    );
+            <ul className="form-option-list">
+              {filas.map((fila, index) => {
+                const seleccionadasEnOtrasFilas = new Set(
+                  filas
+                    .filter(
+                      (otraFila) =>
+                        otraFila.id !== fila.id && otraFila.competenciaId
+                    )
+                    .map((otraFila) => otraFila.competenciaId)
+                );
 
-                    return (
-                      <tr key={fila.id}>
-                        <td style={{ border: "1px solid #1E2A1C", padding: "0.5rem" }}>
-                          <select
-                            aria-label={`Competencia de la fila ${index + 1}`}
-                            value={fila.competenciaId}
-                            onChange={(event) =>
-                              actualizarFila(fila.id, "competenciaId", event.target.value)
-                            }
-                            required
-                            disabled={cargandoCatalogo || Boolean(errorCatalogo)}
-                            style={{
-                              width: "100%",
-                              padding: "0.55rem",
-                              border: "1px solid #1E2A1C",
-                              borderRadius: "4px",
-                              background: "white",
-                            }}
+                return (
+                  <li
+                    key={fila.id}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "minmax(0, 2fr) minmax(100px, 1fr) auto",
+                      alignItems: "end",
+                      gap: "0.75rem",
+                    }}
+                  >
+                    <label>
+                      Competencia {index + 1}
+                      <select
+                        aria-label={`Competencia de la fila ${index + 1}`}
+                        value={fila.competenciaId}
+                        onChange={(event) =>
+                          actualizarFila(fila.id, "competenciaId", event.target.value)
+                        }
+                        required
+                        disabled={cargandoCatalogo || Boolean(errorCatalogo)}
+                        style={{
+                          width: "100%",
+                          padding: "0.55rem",
+                          border: "1px solid #1E2A1C",
+                          borderRadius: "4px",
+                          background: "white",
+                        }}
+                      >
+                        <option value="">Seleccioná una competencia</option>
+                        {competencias.map((competencia) => (
+                          <option
+                            key={competencia.id}
+                            value={String(competencia.id)}
+                            disabled={seleccionadasEnOtrasFilas.has(String(competencia.id))}
                           >
-                            <option value="">Seleccioná una competencia</option>
-                            {competencias.map((competencia) => (
-                              <option
-                                key={competencia.id}
-                                value={String(competencia.id)}
-                                disabled={seleccionadasEnOtrasFilas.has(String(competencia.id))}
-                              >
-                                {competencia.nombre}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td style={{ border: "1px solid #1E2A1C", padding: "0.5rem" }}>
-                          <input
-                            type="number"
-                            aria-label={`Ponderación de la fila ${index + 1}`}
-                            min="0"
-                            max="10"
-                            step="1"
-                            value={fila.ponderacion}
-                            onChange={(event) =>
-                              actualizarFila(fila.id, "ponderacion", event.target.value)
-                            }
-                            required
-                            style={{
-                              width: "100%",
-                              padding: "0.55rem",
-                              border: "1px solid #1E2A1C",
-                              borderRadius: "4px",
-                            }}
-                          />
-                        </td>
-                        <td style={{ border: "1px solid #1E2A1C", padding: "0.5rem", textAlign: "center" }}>
-                          <button
-                            type="button"
-                            onClick={() => quitarFila(fila.id)}
-                            disabled={filas.length <= 2}
-                            aria-label={`Quitar fila ${index + 1}`}
-                            style={{
-                              padding: "0.5rem",
-                              border: "1px solid #1E2A1C",
-                              borderRadius: "4px",
-                              background: filas.length <= 2 ? "#D5D8D0" : "#F5F5F5",
-                              cursor: filas.length <= 2 ? "not-allowed" : "pointer",
-                            }}
-                          >
-                            Quitar
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                            {competencia.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Ponderación
+                      <input
+                        type="number"
+                        aria-label={`Ponderación de la fila ${index + 1}`}
+                        min="0"
+                        max="10"
+                        step="1"
+                        value={fila.ponderacion}
+                        onChange={(event) =>
+                          actualizarFila(fila.id, "ponderacion", event.target.value)
+                        }
+                        required
+                        style={{
+                          width: "100%",
+                          padding: "0.55rem",
+                          border: "1px solid #1E2A1C",
+                          borderRadius: "4px",
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => quitarFila(fila.id)}
+                      disabled={filas.length <= 2}
+                      aria-label={`Quitar fila ${index + 1}`}
+                      style={{
+                        padding: "0.5rem",
+                        border: "1px solid #1E2A1C",
+                        borderRadius: "4px",
+                        background: filas.length <= 2 ? "#D5D8D0" : "#F5F5F5",
+                        cursor: filas.length <= 2 ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      Quitar
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
             <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.75rem" }}>
               <button
                 type="button"
@@ -323,9 +343,15 @@ export default function AltaPuesto() {
           </fieldset>
 
           {errorCatalogo && (
-            <p role="alert">No se pudieron cargar las competencias: {errorCatalogo}</p>
+            <FeedbackMessage variant="error">
+              No se pudieron cargar las competencias: {errorCatalogo}
+            </FeedbackMessage>
           )}
-          {error && <p role="alert">No se pudo crear el puesto: {error}</p>}
+          {error && (
+            <FeedbackMessage variant="error">
+              No se pudo crear el puesto: {error}
+            </FeedbackMessage>
+          )}
           <div style={{ display: "flex", justifyContent: "center", gap: "1rem" }}>
             <Boton
               type="submit"
@@ -358,9 +384,9 @@ export default function AltaPuesto() {
           }}
         >
           <div style={{ background: "#f1f1f1", padding: "2rem", borderRadius: "4px" }}>
-            <p>
+            <FeedbackMessage variant="success">
               Puesto creado desde el backend: {puestoCreado.codigo} — {puestoCreado.nombre}
-            </p>
+            </FeedbackMessage>
             <div style={{ display: "flex", justifyContent: "center", gap: "1rem" }}>
               <Link href="/gestionar-puestos">
                 <Boton texto="Volver a puestos" type="button" />

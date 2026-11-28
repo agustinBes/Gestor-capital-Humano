@@ -3,6 +3,7 @@
 import { useState, useSyncExternalStore } from "react";
 import Boton from "../../../../componentes/boton";
 import Tabla from "../../../../componentes/tabla";
+import FeedbackMessage from "@/componentes/feedback-message";
 import { getErrorMessage, type EvaluadosDto } from "@/lib/backend-api";
 
 const suscribirHidratacion = () => () => {};
@@ -81,9 +82,15 @@ export default function EvaluarCandidatoPagina3() {
           ])}
         />
         {evaluados.length === 0 && (
-          <p role="alert">No hay una respuesta DTO disponible. Generá los cuestionarios desde el paso anterior.</p>
+          <FeedbackMessage variant="warning">
+            No hay una respuesta DTO disponible. Generá los cuestionarios desde el paso anterior.
+          </FeedbackMessage>
         )}
-        {error && <p role="alert">No se pudo exportar el archivo: {error}</p>}
+        {error && (
+          <FeedbackMessage variant="error">
+            No se pudo exportar el archivo: {error}
+          </FeedbackMessage>
+        )}
         <div style={{ display: "flex", justifyContent: "center", margin: "1.5rem" }}>
           <Boton
             texto={cargando ? "Exportando..." : "Exportar candidatos"}

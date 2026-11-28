@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.practical.consultora_rrhh.excepciones.especializadas.atributos.CuestionarioActivoException;
 import com.practical.consultora_rrhh.excepciones.especializadas.atributos.SumaPonderacionesInvalidException;
 import com.practical.consultora_rrhh.excepciones.genericas.*;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -129,7 +130,7 @@ public class GlobalExceptionHandler {
         return respuesta(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
-    @ExceptionHandler(IntegridadComprometidaException.class)
+    @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> manejarIntegridad(IntegridadComprometidaException e) {
         return respuesta(HttpStatus.BAD_REQUEST, e.getMessage());
     }

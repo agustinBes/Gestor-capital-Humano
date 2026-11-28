@@ -2,6 +2,7 @@ package com.practical.consultora_rrhh.modelo.clases;
 
 import com.practical.consultora_rrhh.dto.request.opcionDtoCreate;
 import com.practical.consultora_rrhh.dto.response.opcionDto;
+import com.practical.consultora_rrhh.modelo.id.OpcionId;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,36 +24,54 @@ import lombok.Setter;
  *         sus atributos, en lugar de utilizar setters directamente.
  *
  */
-@Embeddable
+@Entity
+@Table(name = "opcion")
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-/*
-* clase cuyos atributos se almacenarán directamente dentro de la tabla de la entidad que la contiene,
-*  sin necesidad de crear una tabla independiente para ella
-* */
 public class Opcion {
-    @Column()
-    private short fila;
-    @Column()
+
+    @EmbeddedId
+    private OpcionId id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("idOpcionRespuesta")
+    @JoinColumn(name = "id_opcion_respuesta", nullable = false)
+    private OpcionRespuesta opcionRespuesta;
+
+    @Column(name = "orden", nullable = false)
     private short orden;
-      @Column()
+
+    @Column(name = "descripcion", nullable = false)
     private String descripcion;
 
-
-public  Opcion(opcionDtoCreate x){
-    fila=x.fila();
-    orden=x.orden();
-    descripcion=x.descripcion();
-
+//public  Opcion(opcionDtoCreate x){
+//    id.getFila()=x.fila();
+//    orden=x.orden();
+//    descripcion=x.descripcion();
+//
+//}
+//    public  Opcion(opcionDto x){
+//    id.getFila()=x.fila();
+//        orden=x.orden();
+//        descripcion=x.descripcion();
+//
+//    }
+public Opcion(opcionDtoCreate x) {
+    this.id = new OpcionId();
+    this.id.setFila((short) x.fila());
+    this.orden = (short) x.orden();
+    this.descripcion = x.descripcion();
 }
-    public  Opcion(opcionDto x){
-    fila=x.fila();
-        orden=x.orden();
-        descripcion=x.descripcion();
 
+    public Opcion(opcionDto x) {
+        this.id = new OpcionId();
+        this.id.setFila((short) x.fila());
+        this.orden = (short) x.orden();
+        this.descripcion = x.descripcion();
     }
 
-
+    public Short getFila() {
+    return this.id.getFila();
+    }
 }

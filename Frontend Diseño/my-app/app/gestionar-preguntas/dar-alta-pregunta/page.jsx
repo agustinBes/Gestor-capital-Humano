@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Boton from "../../../componentes/boton";
 import Link from "next/link";
 import InputMayus from "../../../componentes/inputMayus";
+import FeedbackMessage from "@/componentes/feedback-message";
 import { backendRequest, getErrorMessage } from "@/lib/backend-api";
 
 export default function CompletarCuestionario() {
@@ -36,7 +37,7 @@ export default function CompletarCuestionario() {
     let activo = true;
     Promise.all([
       backendRequest("/factores/lista"),
-      backendRequest("/opciones-de-respuesta/nombre/"),
+      backendRequest("/opciones-de-respuesta/lista"),
     ])
       .then(([resultadoFactores, resultadoOpciones]) => {
         if (activo) {
@@ -223,17 +224,9 @@ export default function CompletarCuestionario() {
 
         <div id="formulario">
           <form onSubmit={(e) => e.preventDefault()}>
-            <div
-              style={{
-                display: "flex",
-                gap: "30px",
-                textAlign: "center",
-                margin: "1rem 0",
-                justifyContent: "center",
-              }}
-            >
-              <div>
-                <label style={{ display: "block" }}>
+            <ul className="form-field-list">
+              <li>
+                <label>
                   Competencia:
                   <select
                     value={competencia}
@@ -241,6 +234,7 @@ export default function CompletarCuestionario() {
                       setCompetencia(event.target.value);
                       setFactor("");
                     }}
+                    required
                   >
                     <option value="">Seleccionar competencia</option>
                     {competencias.map((item) => (
@@ -248,20 +242,25 @@ export default function CompletarCuestionario() {
                     ))}
                   </select>
                 </label>
-
-                <label style={{ display: "block" }}>
+              </li>
+              <li>
+                <label>
                   Factor:
-                  <select value={factor} onChange={(event) => setFactor(event.target.value)}>
+                  <select
+                    value={factor}
+                    onChange={(event) => setFactor(event.target.value)}
+                    required
+                    disabled={!competencia}
+                  >
                     <option value="">Seleccionar factor</option>
                     {factoresDeCompetencia.map((item) => (
                       <option key={item.id} value={item.id}>{item.nombre}</option>
                     ))}
                   </select>
                 </label>
-              </div>
-
-              <div>
-                <label style={{ display: "block" }}>
+              </li>
+              <li>
+                <label>
                   Opción de respuesta:
                   <select
                     value={opcionRespuesta}
@@ -269,6 +268,7 @@ export default function CompletarCuestionario() {
                       setOpcionRespuesta(event.target.value);
                       setPonderaciones({});
                     }}
+                    required
                   >
                     <option value="">Seleccionar opciones</option>
                     {opcionesRespuesta.map((item) => (
@@ -276,52 +276,89 @@ export default function CompletarCuestionario() {
                     ))}
                   </select>
                 </label>
-
+              </li>
+              <li>
                 <InputMayus
                   label="Nombre de pregunta:   "
                   placeholder="Nombre de pregunta"
                   value={formData.nombrePregunta}
                   onChange={handleChange("nombrePregunta")}
                 />
-              </div>
-
-              <br />
-
-              <div>
-                <InputMayus
-                  label="Pregunta:   "
-                  placeholder="Pregunta"
-                  value={formData.pregunta}
-                  onChange={handleChange("pregunta")}
-                />
-                <br />
-                <InputMayus
-                  label="Descripcion:   "
-                  placeholder="Descripcion (Opcional)"
-                  value={formData.descripcion}
-                  onChange={handleChange("descripcion")}
-                />
-              </div>
-            </div>
-            {opcionesRespuesta
-              .find((item) => String(item.id) === opcionRespuesta)
-              ?.opciones.map((opcion) => (
-                <label key={opcion.fila} style={{ display: "block", margin: "0.5rem 1rem" }}>
-                  Ponderación para “{opcion.descripcion}”:
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={ponderaciones[opcion.fila] ?? ""}
+              </li>
+              <li>
+                <label>
+                  Pregunta:
+                  <textarea
+                    placeholder="Pregunta"
+                    value={formData.pregunta}
                     onChange={(event) =>
-                      setPonderaciones((actuales) => ({
-                        ...actuales,
-                        [opcion.fila]: event.target.value,
+                      setFormData((actual) => ({
+                        ...actual,
+                        pregunta: event.target.value,
                       }))
                     }
+                    maxLength={150}
+                    required
+                    rows={3}
+                    style={{
+                      width: "100%",
+                      padding: "0.55rem",
+                      border: "1px solid #1E2A1C",
+                      borderRadius: "4px",
+                      background: "#E0E4D3",
+                    }}
                   />
                 </label>
-              ))}
+              </li>
+              <li>
+                <label>
+                  Descripción (opcional):
+                  <textarea
+                    placeholder="Descripción (hasta 300 caracteres)"
+                    value={formData.descripcion}
+                    onChange={(event) =>
+                      setFormData((actual) => ({
+                        ...actual,
+                        descripcion: event.target.value,
+                      }))
+                    }
+                    maxLength={300}
+                    rows={3}
+                    style={{
+                      width: "100%",
+                      padding: "0.55rem",
+                      border: "1px solid #1E2A1C",
+                      borderRadius: "4px",
+                      background: "#E0E4D3",
+                    }}
+                  />
+                </label>
+              </li>
+            </ul>
+            <ul className="form-option-list" style={{ marginTop: "1rem" }}>
+              {opcionesRespuesta
+                .find((item) => String(item.id) === opcionRespuesta)
+                ?.opciones.map((opcion) => (
+                  <li key={opcion.fila}>
+                    <label>
+                      Ponderación para “{opcion.descripcion}”:
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={ponderaciones[opcion.fila] ?? ""}
+                        onChange={(event) =>
+                          setPonderaciones((actuales) => ({
+                            ...actuales,
+                            [opcion.fila]: event.target.value,
+                          }))
+                        }
+                        required
+                      />
+                    </label>
+                  </li>
+                ))}
+            </ul>
           </form>
 
           {/* Tres botones */}
@@ -353,32 +390,25 @@ export default function CompletarCuestionario() {
           </div>
 
           {cargandoCatalogos && <p role="status">Cargando opciones desde el backend...</p>}
-          {errorCatalogos && <p role="alert">No se pudieron cargar las opciones: {errorCatalogos}</p>}
+          {errorCatalogos && (
+            <FeedbackMessage variant="error">
+              No se pudieron cargar las opciones: {errorCatalogos}
+            </FeedbackMessage>
+          )}
           {preguntaCreada && (
-            <div role="status">
-              <p>Pregunta creada desde el backend: {preguntaCreada.nombre}</p>
+            <FeedbackMessage variant="success">
+              Pregunta creada desde el backend: {preguntaCreada.nombre}
               <Boton texto="Crear otra" onClick={limpiarFormulario} />
-            </div>
+            </FeedbackMessage>
           )}
 
           {/* Mensaje de error en texto plano, color rojo y pequeño borde debajo de los tres botones */}
           {errores.length > 0 && (
-            <div
-              role="alert"
-              style={{
-                color: "red",
-                border: "1px solid red",
-                borderRadius: "4px",
-                padding: "0.5rem 0.75rem",
-                marginTop: "0.75rem",
-                maxWidth: "650px",
-                textAlign: "left",
-              }}
-            >
+            <FeedbackMessage variant="error">
               {errores.map((error, index) => (
                 <div key={index}>{error}</div>
               ))}
-            </div>
+            </FeedbackMessage>
           )}
         </div>
       </div>

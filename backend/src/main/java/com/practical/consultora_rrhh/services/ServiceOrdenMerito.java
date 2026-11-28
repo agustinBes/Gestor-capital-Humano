@@ -73,7 +73,12 @@ List<puestoOrdenMeritoDto> resultados=new ArrayList<>();
             String nombre = c.getCandidato().getNombre();
             String estado = tipoEstado.desdeTipo(c.getEstado());
             LocalDateTime fecha = c.getFechaIntento();
-            String f = fecha.toString();
+           String f;
+            if(fecha==null){
+                 f="null";
+            }
+            else{
+            f = fecha.toString();}
             evaluacionesOrdenMeritoDto nuevo = new evaluacionesOrdenMeritoDto(idC, idCandidato, nombre, estado, f);
             resultados.add(nuevo);}
         return resultados;

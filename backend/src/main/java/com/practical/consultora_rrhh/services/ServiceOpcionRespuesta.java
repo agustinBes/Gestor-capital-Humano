@@ -5,10 +5,7 @@ import com.practical.consultora_rrhh.dto.request.auditoriaDtoCreate;
 import com.practical.consultora_rrhh.dto.request.opcionRespuestaDtoCreate;
 import com.practical.consultora_rrhh.dto.response.opcionDto;
 import com.practical.consultora_rrhh.dto.response.opcionRespuestaDto;
-import com.practical.consultora_rrhh.excepciones.genericas.AtributoInvalidoException;
-import com.practical.consultora_rrhh.excepciones.genericas.ColeccionNotFoundException;
-import com.practical.consultora_rrhh.excepciones.genericas.EntidadEnUsoException;
-import com.practical.consultora_rrhh.excepciones.genericas.EntityNotFoundException;
+import com.practical.consultora_rrhh.excepciones.genericas.*;
 import com.practical.consultora_rrhh.interfaces.dao.IOpcionRespuestaDao;
 import com.practical.consultora_rrhh.interfaces.services.IserviceAuditoria;
 import com.practical.consultora_rrhh.interfaces.services.IserviceOpcionRespuesta;
@@ -19,8 +16,10 @@ import com.practical.consultora_rrhh.modelo.enums.tipo_campo_duplicado;
 import com.practical.consultora_rrhh.services.mediator.PreguntaOpcionRMediator;
 import com.practical.consultora_rrhh.validaciones.OpcionRespuestaValidators;
 import jakarta.annotation.PostConstruct;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -75,7 +74,18 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
 
         validators.validarFormatoOpciones(dto.opciones());
         OpcionRespuesta entidad = new OpcionRespuesta(dto);
+    List<Opcion> ordenadas = entidad.getOpciones().stream()
+            .sorted(Comparator.comparing(
+                    Opcion::getOrden,
+                    Comparator.nullsLast(Comparator.naturalOrder())
+            ))
+            .toList();
+    // Si tu setter espera List<Opcion>:
+    entidad.setOpciones(ordenadas);
+
         OpcionRespuesta guardada = dao.guardar(entidad);
+
+
         return new opcionRespuestaDto(guardada);}
 //--------------------------------------------------------------------------------
     /**
@@ -96,13 +106,15 @@ public class ServiceOpcionRespuesta implements IserviceOpcionRespuesta {
 
        boolean descripcion=validators.validarFormatoModificaciones(actual,dto);
 
-        List<opcionDto> aux = validators.ValidarAlteracionOpcion(id, actual.getOpciones(), dto.opciones());
+        List<opcionDto> aux = validators.validarAlteracionOpcion(id, actual.getOpciones(), dto.opciones());
         OpcionRespuesta nueva;
 
         if(descripcion || !aux.isEmpty()) {
-            nueva = dao.actualizar(descripcion ? dto.descripcion() : null, actual, aux);
+          try{  nueva = dao.actualizar(descripcion ? dto.descripcion() : null, actual, aux);
             return new opcionRespuestaDto(nueva);
-        }
+        }catch(DataIntegrityViolationException e)
+                {throw new IntegridadComprometidaException("Integridad de los datos comprometida no se puede modificar");
+                }}
         return new opcionRespuestaDto(actual);}
 //-------------------------------------------------------------------------------------------------------
 /**

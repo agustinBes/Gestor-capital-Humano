@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Boton from "../../../componentes/boton";
 import Tabla from "../../../componentes/tabla";
+import FeedbackMessage from "@/componentes/feedback-message";
 import {
   backendRequest,
   getErrorMessage,
@@ -84,7 +85,11 @@ function SeleccionarPuesto() {
         <h2 style={{ textAlign: "center", fontSize: "2rem" }}>Evaluar candidatos</h2>
         <p>Candidatos seleccionados: {candidatos.length}</p>
         {cargando && <p role="status">Cargando puestos...</p>}
-        {error && <p role="alert">No se pudo completar la operación: {error}</p>}
+        {error && (
+          <FeedbackMessage variant="error">
+            No se pudo completar la operación: {error}
+          </FeedbackMessage>
+        )}
 
         {!cargando && (
           <div style={{ margin: "1rem 0" }}>
@@ -102,7 +107,11 @@ function SeleccionarPuesto() {
                 </option>
               ))}
             </select>
-            {!error && puestos.length === 0 && <p>No hay puestos disponibles en el backend.</p>}
+            {!error && puestos.length === 0 && (
+              <FeedbackMessage variant="warning">
+                No hay puestos disponibles en el backend.
+              </FeedbackMessage>
+            )}
           </div>
         )}
 
@@ -130,7 +139,9 @@ function SeleccionarPuesto() {
           />
         </div>
         {candidatos.length === 0 && (
-          <p role="alert">No se recibieron IDs de candidatos. Volvé a seleccionarlos.</p>
+          <FeedbackMessage variant="error">
+            No se recibieron IDs de candidatos. Volvé a seleccionarlos.
+          </FeedbackMessage>
         )}
       </section>
     </main>

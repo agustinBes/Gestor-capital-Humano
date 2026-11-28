@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Boton from "../../componentes/boton";
 import Input2 from "../../componentes/input2";
 import Tabla from "../../componentes/tabla";
+import FeedbackMessage from "@/componentes/feedback-message";
 import {
   backendRequest,
   getErrorMessage,
@@ -114,7 +115,11 @@ export default function EmitirReporteComparativo() {
           <Boton texto="Buscar" onClick={buscar} disabled={cargando} />
         </div>
         {cargando && <p role="status">Consultando datos del backend...</p>}
-        {error && <p role="alert">No se pudieron cargar los datos: {error}</p>}
+        {error && (
+          <FeedbackMessage variant="error">
+            No se pudieron cargar los datos: {error}
+          </FeedbackMessage>
+        )}
 
         {datos && (
           <>
@@ -131,7 +136,11 @@ export default function EmitirReporteComparativo() {
                 item.idPuesto === puestoSeleccionado ? [index] : []
               )}
             />
-            {datos.puestos.length === 0 && <p>No hay puestos para esos filtros.</p>}
+            {datos.puestos.length === 0 && (
+              <FeedbackMessage variant="warning">
+                No hay puestos para esos filtros.
+              </FeedbackMessage>
+            )}
 
             {puesto && (
               <>
@@ -158,7 +167,9 @@ export default function EmitirReporteComparativo() {
                   )}
                 />
                 {filasCandidatos.length === 0 && (
-                  <p>No hay cuestionarios asociados a este puesto en el backend.</p>
+                  <FeedbackMessage variant="warning">
+                    No hay cuestionarios asociados a este puesto en el backend.
+                  </FeedbackMessage>
                 )}
               </>
             )}

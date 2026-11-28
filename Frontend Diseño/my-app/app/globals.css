@@ -17,3 +17,87 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.feedback-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid;
+  border-left-width: 4px;
+  border-radius: 6px;
+}
+
+.feedback-message__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.feedback-message--error {
+  color: #991B1B;
+  background: #FEF2F2;
+  border-color: #DC2626;
+}
+
+.feedback-message--success {
+  color: #166534;
+  background: #F0FDF4;
+  border-color: #16A34A;
+}
+
+.feedback-message--warning {
+  color: #854D0E;
+  background: #FEFCE8;
+  border-color: #CA8A04;
+}
+
+.feedback-message--info {
+  color: #1E3A8A;
+  background: #EFF6FF;
+  border-color: #3B82F6;
+}
+
+.form-field-list,
+.form-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.form-field-list > li,
+.form-option-list > li {
+  min-width: 0;
+}
+
+.form-option-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.form-field-list label,
+.form-option-list label {
+  display: block;
+}
+
+.form-field-list input,
+.form-field-list textarea,
+.form-field-list select,
+.form-option-list input,
+.form-option-list textarea {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 600px) {
+  .form-option-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

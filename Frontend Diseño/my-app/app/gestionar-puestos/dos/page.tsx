@@ -4,19 +4,27 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Boton from "../../../componentes/boton";
 import Tabla from "../../../componentes/tabla";
+import FeedbackMessage from "@/componentes/feedback-message";
 import {
   backendRequest,
+  DEFAULT_DELETE_CONSULTOR_ID,
   getErrorMessage,
   isPositiveLongIdentifier,
+  type CompetenciaDtoSinFactores,
   type PuestoDto,
   type PuestoDtoCreate,
 } from "@/lib/backend-api";
+
+type CompetenciaPuestoEditada = {
+  idCompetencia: string;
+  ponderacion: string;
+};
 
 type FormularioPuesto = {
   nombre: string;
   descripcion: string;
   empresa: string;
-  ponderaciones: Record<string, string>;
+  caracteristicas: CompetenciaPuestoEditada[];
 };
 
 function ResultadosPuestos() {
@@ -36,25 +44,31 @@ function ResultadosPuestos() {
     nombre: "",
     descripcion: "",
     empresa: "",
-    ponderaciones: {},
+    caracteristicas: [],
   });
+  const [competencias, setCompetencias] = useState<CompetenciaDtoSinFactores[]>([]);
+  const [cargandoCompetencias, setCargandoCompetencias] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [errorMutacion, setErrorMutacion] = useState("");
   const [mensaje, setMensaje] = useState("");
 
   useEffect(() => {
-    let activo = true;
     const parametros = new URLSearchParams();
     if (codigo) parametros.set("codigo", codigo);
     if (empresa) parametros.set("empresa", empresa);
     if (nombre) parametros.set("puesto", nombre);
     const query = parametros.toString();
+    if (!query) return;
 
+    let activo = true;
     backendRequest<PuestoDto[]>(
-      query ? `/puestos/buscar?${query}` : "/puestos/lista"
+      `/puestos/buscar?${query}`
     )
       .then((resultados) => {
-        if (activo) setResultado({ query, puestos: resultados, error: "", ready: true });
+        if (activo) {
+          setResultado({ query, puestos: resultados, error: "", ready: true });
+          setSeleccionado([]);
+        }
       })
       .catch((solicitudError: unknown) => {
         if (activo) {
@@ -77,32 +91,42 @@ function ResultadosPuestos() {
   if (empresa) parametrosActuales.set("empresa", empresa);
   if (nombre) parametrosActuales.set("puesto", nombre);
   const query = parametrosActuales.toString();
-  const cargando = !resultado.ready || resultado.query !== query;
-  const puestos = cargando ? [] : resultado.puestos;
-  const error = cargando ? "" : resultado.error;
+  const cargando = Boolean(query) && (!resultado.ready || resultado.query !== query);
+  const resultadoActual = Boolean(query) && resultado.query === query && resultado.ready;
+  const puestos = resultadoActual ? resultado.puestos : [];
+  const error = resultadoActual ? resultado.error : "";
   const puestosTabla = puestos.map((puesto) => [
     puesto.codigo,
     puesto.nombre,
     puesto.empresa,
   ]);
 
-  const abrirEdicion = () => {
+  const abrirEdicion = async () => {
     const puesto = seleccionado.length > 0 ? puestos[seleccionado[0]] : undefined;
     if (!puesto) return;
-    setPuestoEnEdicion(puesto);
-    setFormularioEdicion({
-      nombre: puesto.nombre,
-      descripcion: puesto.descripcion,
-      empresa: puesto.empresa,
-      ponderaciones: Object.fromEntries(
-        puesto.caracteristicas.map((caracteristica) => [
-          String(caracteristica.idCompetencia),
-          String(caracteristica.ponderacion),
-        ])
-      ),
-    });
     setErrorMutacion("");
     setMensaje("");
+    setCargandoCompetencias(true);
+    try {
+      const catalogo = await backendRequest<CompetenciaDtoSinFactores[]>(
+        "/gestionar-competencias/lista"
+      );
+      setCompetencias(catalogo);
+      setPuestoEnEdicion(puesto);
+      setFormularioEdicion({
+        nombre: puesto.nombre,
+        descripcion: puesto.descripcion,
+        empresa: puesto.empresa,
+        caracteristicas: puesto.caracteristicas.map((caracteristica) => ({
+          idCompetencia: String(caracteristica.idCompetencia),
+          ponderacion: String(caracteristica.ponderacion),
+        })),
+      });
+    } catch (errorSolicitud: unknown) {
+      setErrorMutacion(getErrorMessage(errorSolicitud));
+    } finally {
+      setCargandoCompetencias(false);
+    }
   };
 
   const guardarModificacion = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -124,13 +148,15 @@ function ResultadosPuestos() {
       setErrorMutacion("La empresa es obligatoria y no puede superar 50 caracteres.");
       return;
     }
-    if (puestoEnEdicion.caracteristicas.length < 2) {
+    if (formularioEdicion.caracteristicas.length < 2) {
       setErrorMutacion("El puesto debe conservar al menos dos competencias.");
       return;
     }
 
     const caracteristicas: Record<number, number> = {};
-    for (const [idCompetencia, valor] of Object.entries(formularioEdicion.ponderaciones)) {
+    for (const item of formularioEdicion.caracteristicas) {
+      const idCompetencia = item.idCompetencia;
+      const valor = item.ponderacion;
       const ponderacion = Number(valor);
       if (
         !isPositiveLongIdentifier(idCompetencia) ||
@@ -145,8 +171,8 @@ function ResultadosPuestos() {
       caracteristicas[Number(idCompetencia)] = ponderacion;
     }
 
-    if (Object.keys(caracteristicas).length !== puestoEnEdicion.caracteristicas.length) {
-      setErrorMutacion("El DTO del puesto contiene competencias incompletas.");
+    if (Object.keys(caracteristicas).length !== formularioEdicion.caracteristicas.length) {
+      setErrorMutacion("Cada competencia debe aparecer una sola vez.");
       return;
     }
 
@@ -185,15 +211,31 @@ function ResultadosPuestos() {
     }
   };
 
+  const agregarCompetencia = () => {
+    setFormularioEdicion((actual) => ({
+      ...actual,
+      caracteristicas: [
+        ...actual.caracteristicas,
+        { idCompetencia: "", ponderacion: "" },
+      ],
+    }));
+  };
+
+  const quitarCompetencia = (indice: number) => {
+    setFormularioEdicion((actual) => ({
+      ...actual,
+      caracteristicas:
+        actual.caracteristicas.length > 2
+          ? actual.caracteristicas.filter((_, index) => index !== indice)
+          : actual.caracteristicas,
+    }));
+  };
+
   const eliminar = async () => {
     const puesto = seleccionado.length > 0 ? puestos[seleccionado[0]] : undefined;
     if (!puesto) return;
 
-    const idConsultor = window.prompt(
-      "Ingresá el ID numérico del consultor responsable de la eliminación."
-    );
-    if (idConsultor === null) return;
-    const idConsultorLimpio = idConsultor.trim();
+    const idConsultorLimpio = DEFAULT_DELETE_CONSULTOR_ID;
     const idPuesto = String(puesto.idPuesto);
     if (
       !isPositiveLongIdentifier(idPuesto) ||
@@ -237,23 +279,36 @@ function ResultadosPuestos() {
         }}
       >
         <h2 style={{ textAlign: "center", fontSize: "2rem" }}>Puestos encontrados</h2>
-        <Tabla
-          columnas={["Código", "Nombre del puesto", "Empresa"]}
-          datos={puestosTabla}
-          onRowClick={(index) => setSeleccionado([index])}
-          seleccionados={seleccionado}
-        />
+        {query && (
+          <Tabla
+            columnas={["Código", "Nombre del puesto", "Empresa"]}
+            datos={puestosTabla}
+            onRowClick={(index) => setSeleccionado([index])}
+            seleccionados={seleccionado}
+          />
+        )}
         {cargando && <p role="status">Cargando puestos...</p>}
-        {error && <p role="alert">No se pudieron cargar los puestos: {error}</p>}
-        {!cargando && !error && puestos.length === 0 && (
-          <p>No hay puestos que coincidan con la búsqueda.</p>
+        {error && (
+          <FeedbackMessage variant="error">
+            No se pudieron cargar los puestos: {error}
+          </FeedbackMessage>
+        )}
+        {!cargando && !error && !query && (
+          <FeedbackMessage variant="warning">
+            Ingresá al menos un filtro en la pantalla anterior para buscar puestos.
+          </FeedbackMessage>
+        )}
+        {!cargando && !error && query && puestos.length === 0 && (
+          <FeedbackMessage variant="warning">
+            No hay puestos que coincidan con la búsqueda.
+          </FeedbackMessage>
         )}
         {!cargando && !error && puestos.length > 0 && (
           <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "1rem" }}>
             <Boton
               texto="Modificar"
               type="button"
-              disabled={seleccionado.length === 0 || guardando}
+              disabled={seleccionado.length === 0 || guardando || cargandoCompetencias}
               onClick={abrirEdicion}
             />
             <Boton
@@ -264,8 +319,12 @@ function ResultadosPuestos() {
             />
           </div>
         )}
-        {errorMutacion && <p role="alert">No se pudo completar la operación: {errorMutacion}</p>}
-        {mensaje && <p role="status">{mensaje}</p>}
+        {errorMutacion && (
+          <FeedbackMessage variant="error">
+            No se pudo completar la operación: {errorMutacion}
+          </FeedbackMessage>
+        )}
+        {mensaje && <FeedbackMessage variant="success">{mensaje}</FeedbackMessage>}
       </section>
 
       {puestoEnEdicion && (
@@ -298,8 +357,7 @@ function ResultadosPuestos() {
               Modificar puesto
             </h2>
             <p>
-              Código: {puestoEnEdicion.codigo}. El código y las competencias asociadas no se
-              pueden modificar desde esta pantalla; sí podés ajustar sus ponderaciones.
+              Código: {puestoEnEdicion.codigo}. El código no se puede modificar.
             </p>
             <form onSubmit={guardarModificacion}>
               <label style={{ display: "block", margin: "0.75rem 0" }}>
@@ -350,30 +408,89 @@ function ResultadosPuestos() {
                 />
               </label>
               <h3>Competencias y ponderaciones</h3>
-              {puestoEnEdicion.caracteristicas.map((caracteristica) => (
-                <label key={caracteristica.idCompetencia} style={{ display: "block", margin: "0.75rem 0" }}>
-                  {caracteristica.nombreCompetencia}
-                  <input
-                    type="number"
-                    min="0"
-                    max="10"
-                    step="1"
-                    value={formularioEdicion.ponderaciones[String(caracteristica.idCompetencia)] ?? ""}
-                    onChange={(event) =>
-                      setFormularioEdicion((actual) => ({
-                        ...actual,
-                        ponderaciones: {
-                          ...actual.ponderaciones,
-                          [String(caracteristica.idCompetencia)]: event.target.value,
-                        },
-                      }))
-                    }
-                    required
-                    style={{ display: "block", width: "100%", padding: "0.6rem" }}
-                  />
-                </label>
-              ))}
-              {errorMutacion && <p role="alert">{errorMutacion}</p>}
+              {formularioEdicion.caracteristicas.map((caracteristica, index) => {
+                const seleccionadasEnOtrasFilas = new Set(
+                  formularioEdicion.caracteristicas
+                    .filter((_, otroIndice) => otroIndice !== index)
+                    .map((item) => item.idCompetencia)
+                    .filter(Boolean)
+                );
+
+                return (
+                  <div key={index} style={{ display: "flex", gap: "0.75rem", alignItems: "end", margin: "0.75rem 0" }}>
+                    <label style={{ flex: 2 }}>
+                      Competencia
+                      <select
+                        value={caracteristica.idCompetencia}
+                        onChange={(event) =>
+                          setFormularioEdicion((actual) => ({
+                            ...actual,
+                            caracteristicas: actual.caracteristicas.map((item, otroIndice) =>
+                              otroIndice === index
+                                ? { ...item, idCompetencia: event.target.value }
+                                : item
+                            ),
+                          }))
+                        }
+                        required
+                        style={{ display: "block", width: "100%", padding: "0.6rem" }}
+                      >
+                        <option value="">Seleccioná una competencia</option>
+                        {competencias.map((competencia) => (
+                          <option
+                            key={competencia.id}
+                            value={String(competencia.id)}
+                            disabled={seleccionadasEnOtrasFilas.has(String(competencia.id))}
+                          >
+                            {competencia.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label style={{ flex: 1 }}>
+                      Ponderación
+                      <input
+                        type="number"
+                        min="0"
+                        max="10"
+                        step="1"
+                        value={caracteristica.ponderacion}
+                        onChange={(event) =>
+                          setFormularioEdicion((actual) => ({
+                            ...actual,
+                            caracteristicas: actual.caracteristicas.map((item, otroIndice) =>
+                              otroIndice === index
+                                ? { ...item, ponderacion: event.target.value }
+                                : item
+                            ),
+                          }))
+                        }
+                        required
+                        style={{ display: "block", width: "100%", padding: "0.6rem" }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => quitarCompetencia(index)}
+                      disabled={formularioEdicion.caracteristicas.length <= 2}
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                );
+              })}
+              <button
+                type="button"
+                onClick={agregarCompetencia}
+                disabled={
+                  formularioEdicion.caracteristicas.length >= competencias.length
+                }
+              >
+                Agregar competencia
+              </button>
+              {errorMutacion && (
+                <FeedbackMessage variant="error">{errorMutacion}</FeedbackMessage>
+              )}
               <div style={{ display: "flex", justifyContent: "center", gap: "0.75rem", marginTop: "1rem" }}>
                 <Boton texto={guardando ? "Guardando..." : "Guardar cambios"} type="submit" disabled={guardando} />
                 <Boton texto="Cancelar" type="button" onClick={() => setPuestoEnEdicion(null)} disabled={guardando} />

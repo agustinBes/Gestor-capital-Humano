@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Boton from "../../../../componentes/boton";
 import Tabla from "../../../../componentes/tabla";
+import FeedbackMessage from "@/componentes/feedback-message";
 import {
   getErrorMessage,
   type EvaluacionOrdenMeritoDto,
@@ -143,9 +144,11 @@ function EvaluacionesDelPuesto() {
           seleccionados={seleccionadas}
         />
         {cargando && <p role="status">Cargando evaluaciones...</p>}
-        {error && <p role="alert">{error}</p>}
+        {error && <FeedbackMessage variant="error">{error}</FeedbackMessage>}
         {!cargando && !error && evaluaciones.length === 0 && (
-          <p>El backend no devolvió evaluaciones para este puesto.</p>
+          <FeedbackMessage variant="warning">
+            El backend no devolvió evaluaciones para este puesto.
+          </FeedbackMessage>
         )}
         <div style={{ display: "flex", justifyContent: "center", margin: "1.5rem" }}>
           <Boton

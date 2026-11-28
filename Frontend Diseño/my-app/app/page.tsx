@@ -98,6 +98,26 @@ export default function MenuPrincipal({ username = 'admin' }: MenuPrincipalProps
         </svg>
       ),
     },
+    {
+      id: 'gestionar-auditorias',
+      title: 'Ver Auditorías',
+      route: '/gestionar-auditorias',
+      icon: (
+        <svg className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h7.5m-7.5 4.5h7.5m-7.5 4.5h4.5M6 3.75h9.75L19.5 7.5v12.75A1.5 1.5 0 0 1 18 21.75H6A1.5 1.5 0 0 1 4.5 20.25V5.25A1.5 1.5 0 0 1 6 3.75Zm9.75 0V7.5h3.75" />
+        </svg>
+      ),
+    },
+    {
+      id: 'gestionar-candidatos',
+      title: 'Gestionar Candidatos',
+      route: '/gestionar-candidatos',
+      icon: (
+        <svg className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth={1.6} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25a7.5 7.5 0 0 1 15 0v.75h-15v-.75Zm13.5-13.5h3.75m-1.875-1.875v3.75" />
+        </svg>
+      ),
+    },
   ];
 
   return (

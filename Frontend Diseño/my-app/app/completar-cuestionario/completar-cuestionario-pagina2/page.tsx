@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Boton from "../../../componentes/boton";
+import FeedbackMessage from "@/componentes/feedback-message";
 import {
   AUTHENTICATED_QUESTIONNAIRE_SESSION_KEY,
   backendRequest,
@@ -161,7 +162,11 @@ function ResponderBloque() {
       >
         <h2 style={{ textAlign: "center", fontSize: "2rem" }}>Cuestionario de candidato</h2>
         {cargando && <p role="status">Cargando cuestionario...</p>}
-        {error && <p role="alert">No se pudo cargar el cuestionario: {error}</p>}
+        {error && (
+          <FeedbackMessage variant="error">
+            No se pudo cargar el cuestionario: {error}
+          </FeedbackMessage>
+        )}
         {error && (
           <div style={{ display: "flex", justifyContent: "center", margin: "1rem" }}>
             <Boton
@@ -173,7 +178,9 @@ function ResponderBloque() {
 
         {cuestionario && !bloqueActual && (
           <>
-            <p>Todos los bloques de este cuestionario están completos.</p>
+            <FeedbackMessage variant="success">
+              Todos los bloques de este cuestionario están completos.
+            </FeedbackMessage>
             <div style={{ display: "flex", justifyContent: "center", margin: "1rem" }}>
               <Boton
                 texto="Autenticar otro candidato"
@@ -221,7 +228,9 @@ function ResponderBloque() {
                 ))}
               </fieldset>
             ))}
-            {errorGuardado && <p role="alert">{errorGuardado}</p>}
+            {errorGuardado && (
+              <FeedbackMessage variant="error">{errorGuardado}</FeedbackMessage>
+            )}
             <div style={{ display: "flex", justifyContent: "center", margin: "1rem" }}>
               <Boton
                 texto={guardando ? "Guardando..." : "Guardar bloque"}

@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Boton from "../../../componentes/boton";
 import Tabla from "../../../componentes/tabla";
+import FeedbackMessage from "@/componentes/feedback-message";
 import {
   backendRequest,
   getErrorMessage,
@@ -114,7 +115,11 @@ function DetalleReporte() {
       >
         <h2 style={{ textAlign: "center", fontSize: "2rem" }}>Datos de evaluación</h2>
         {cargando && <p role="status">Cargando DTOs del backend...</p>}
-        {error && <p role="alert">No se pudo cargar el reporte: {error}</p>}
+        {error && (
+          <FeedbackMessage variant="error">
+            No se pudo cargar el reporte: {error}
+          </FeedbackMessage>
+        )}
         {datos && (
           <>
             <p>

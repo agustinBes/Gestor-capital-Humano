@@ -11,7 +11,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  Implementación de la interfaz DAO para operaciones CRUD y consultas
@@ -50,18 +53,38 @@ public class OpcionRespuestaDaoImpl implements IOpcionRespuestaDao {
 */
     @Override
     @Transactional
-        public OpcionRespuesta actualizar(String descripcion, OpcionRespuesta actual,List<opcionDto> opciones) {
-
-        if(descripcion!=null){
-        actual.setDescripcion(descripcion);}
-
-        if (!opciones.isEmpty()) {
-            actual.setOpciones(
-                    opciones.stream()
-                            .map(Opcion::new)
-                            .toList());
+    public OpcionRespuesta actualizar(String descripcion, OpcionRespuesta actual, List<opcionDto> opciones) {
+        if (descripcion != null) {
+            actual.setDescripcion(descripcion);
         }
-          return actual;}
+
+        if (opciones != null && !opciones.isEmpty() && actual.getOpciones() != null) {
+            Map<Short, opcionDto> modPorFila = opciones.stream()
+                    .collect(Collectors.toMap(opcionDto::fila, Function.identity()));
+
+            for (Opcion existente : actual.getOpciones()) {
+                opcionDto mod = modPorFila.get(existente.getFila());
+                if (mod != null) {
+                    existente.setOrden(mod.orden());
+                    existente.setDescripcion(mod.descripcion());
+                }
+            }
+        }
+
+        return actual;
+    }
+//        public OpcionRespuesta actualizar(String descripcion, OpcionRespuesta actual,List<opcionDto> opciones) {
+//
+//        if(descripcion!=null){
+//        actual.setDescripcion(descripcion);}
+//
+//        if (!opciones.isEmpty()) {
+//            actual.setOpciones(
+//                    opciones.stream()
+//                            .map(Opcion::new)
+//                            .toList());
+//        }
+//          return actual;}
 
     public List<OpcionRespuesta> obtenerTodos() {
         return repository.findAll();

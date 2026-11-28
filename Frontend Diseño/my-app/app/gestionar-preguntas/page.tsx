@@ -4,9 +4,11 @@ import Boton from "../../componentes/boton";
 import Input from "../../componentes/input";
 import Input2 from "../../componentes/input2";
 import Tabla from "../../componentes/tabla";
+import FeedbackMessage from "@/componentes/feedback-message";
 import Link from "next/dist/client/link";
 import {
   backendRequest,
+  DEFAULT_DELETE_CONSULTOR_ID,
   getErrorMessage,
   isPositiveLongIdentifier,
   type PreguntaDto,
@@ -86,10 +88,8 @@ export default function EvaluarCandidato() {
     }
     const preguntaSeleccionada = preguntas[seleccionados[0]];
     if (!preguntaSeleccionada) return;
-    const idConsultor = window.prompt("Ingresá el ID del consultor responsable de la eliminación.");
-    if (!idConsultor?.trim()) return;
     const idPregunta = String(preguntaSeleccionada.id);
-    const idConsultorLimpio = idConsultor.trim();
+    const idConsultorLimpio = DEFAULT_DELETE_CONSULTOR_ID;
     if (
       !isPositiveLongIdentifier(idPregunta) ||
       !isPositiveLongIdentifier(idConsultorLimpio)
@@ -370,10 +370,14 @@ export default function EvaluarCandidato() {
 
         {mostrarTablas && cargando && <p role="status">Buscando preguntas...</p>}
         {mostrarTablas && errorBusqueda && (
-          <p role="alert">No se pudieron cargar las preguntas: {errorBusqueda}</p>
+          <FeedbackMessage variant="error">
+            No se pudieron cargar las preguntas: {errorBusqueda}
+          </FeedbackMessage>
         )}
         {mostrarTablas && !cargando && !errorBusqueda && preguntas.length === 0 && (
-          <p>No hay preguntas que coincidan con los filtros.</p>
+          <FeedbackMessage variant="warning">
+            No hay preguntas que coincidan con los filtros.
+          </FeedbackMessage>
         )}
       </div>
 
@@ -481,7 +485,7 @@ export default function EvaluarCandidato() {
                   />
                 </label>
               ))}
-              {errorEdicion && <p role="alert">{errorEdicion}</p>}
+              {errorEdicion && <FeedbackMessage variant="error">{errorEdicion}</FeedbackMessage>}
               <div style={{ display: "flex", justifyContent: "center", gap: "0.75rem", marginTop: "1rem" }}>
                 <Boton
                   texto={guardandoEdicion ? "Guardando..." : "Guardar cambios"}

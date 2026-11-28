@@ -4,8 +4,10 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import Boton from "../../componentes/boton";
 import Tabla from "../../componentes/tabla";
+import FeedbackMessage from "@/componentes/feedback-message";
 import {
   backendRequest,
+  DEFAULT_DELETE_CONSULTOR_ID,
   getErrorMessage,
   isPositiveLongIdentifier,
   type CompetenciaDtoSinFactores,
@@ -55,12 +57,22 @@ export default function GestionarFactores() {
   const [formulario, setFormulario] = useState(formularioVacio);
   const [idEdicion, setIdEdicion] = useState<number | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [cargando, setCargando] = useState(true);
+  const [cargando, setCargando] = useState(false);
+  const [cargandoCatalogo, setCargandoCatalogo] = useState(true);
+  const [consultaRealizada, setConsultaRealizada] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
 
   const consultar = async (filtroFactor = "", filtroCompetencia = "") => {
+    if (!filtroFactor && !filtroCompetencia) {
+      setFactores([]);
+      setSeleccionado(null);
+      setConsultaRealizada(false);
+      return;
+    }
+
+    setConsultaRealizada(true);
     setCargando(true);
     setError("");
     setMensaje("");
@@ -69,9 +81,7 @@ export default function GestionarFactores() {
       if (filtroFactor) parametros.set("factor", filtroFactor);
       if (filtroCompetencia) parametros.set("competencia", filtroCompetencia);
       const query = parametros.toString();
-      const resultado = await backendRequest<FactorDto[]>(
-        query ? `/factores/buscar?${query}` : "/factores/lista"
-      );
+      const resultado = await backendRequest<FactorDto[]>(`/factores/buscar?${query}`);
       setFactores(resultado);
       setSeleccionado(null);
     } catch (errorSolicitud: unknown) {
@@ -85,21 +95,15 @@ export default function GestionarFactores() {
 
   useEffect(() => {
     let activo = true;
-    Promise.all([
-      backendRequest<FactorDto[]>("/factores/lista"),
-      backendRequest<CompetenciaDtoSinFactores[]>("/gestionar-competencias/lista"),
-    ])
-      .then(([resultadoFactores, resultadoCompetencias]) => {
-        if (activo) {
-          setFactores(resultadoFactores);
-          setCompetencias(resultadoCompetencias);
-        }
+    backendRequest<CompetenciaDtoSinFactores[]>("/gestionar-competencias/lista")
+      .then((resultadoCompetencias) => {
+        if (activo) setCompetencias(resultadoCompetencias);
       })
       .catch((errorSolicitud: unknown) => {
         if (activo) setError(getErrorMessage(errorSolicitud));
       })
       .finally(() => {
-        if (activo) setCargando(false);
+        if (activo) setCargandoCatalogo(false);
       });
 
     return () => {
@@ -175,7 +179,13 @@ export default function GestionarFactores() {
         body: JSON.stringify(body),
       });
       setModalAbierto(false);
-      await consultar(busquedaFactor.trim(), busquedaCompetencia.trim());
+      if (busquedaFactor.trim() || busquedaCompetencia.trim()) {
+        await consultar(busquedaFactor.trim(), busquedaCompetencia.trim());
+      } else {
+        setFactores([]);
+        setSeleccionado(null);
+        setConsultaRealizada(false);
+      }
       setMensaje(
         idEdicion === null
           ? `Factor creado: ${resultado.nombre}.`
@@ -191,11 +201,7 @@ export default function GestionarFactores() {
   const eliminar = async () => {
     const factor = factores.find((item) => item.id === seleccionado);
     if (!factor) return;
-    const idConsultor = window.prompt(
-      "Ingresá el ID numérico del consultor responsable de la eliminación."
-    );
-    if (idConsultor === null) return;
-    const idConsultorLimpio = idConsultor.trim();
+    const idConsultorLimpio = DEFAULT_DELETE_CONSULTOR_ID;
     const idFactor = String(factor.id);
     if (
       !isPositiveLongIdentifier(idFactor) ||
@@ -213,7 +219,13 @@ export default function GestionarFactores() {
         `/factores/delete/${encodeURIComponent(idFactor)}/responsable/${encodeURIComponent(idConsultorLimpio)}`,
         { method: "DELETE" }
       );
-      await consultar(busquedaFactor.trim(), busquedaCompetencia.trim());
+      if (busquedaFactor.trim() || busquedaCompetencia.trim()) {
+        await consultar(busquedaFactor.trim(), busquedaCompetencia.trim());
+      } else {
+        setFactores([]);
+        setSeleccionado(null);
+        setConsultaRealizada(false);
+      }
       setMensaje(respuesta);
     } catch (errorSolicitud: unknown) {
       setError(getErrorMessage(errorSolicitud));
@@ -254,33 +266,55 @@ export default function GestionarFactores() {
               onClick={() => void consultar(busquedaFactor.trim(), busquedaCompetencia.trim())}
               disabled={cargando || (!busquedaFactor.trim() && !busquedaCompetencia.trim())}
             />
-            <Boton texto="Limpiar" onClick={() => { setBusquedaFactor(""); setBusquedaCompetencia(""); void consultar(); }} disabled={cargando} />
+            <Boton
+              texto="Limpiar"
+              onClick={() => {
+                setBusquedaFactor("");
+                setBusquedaCompetencia("");
+                setFactores([]);
+                setSeleccionado(null);
+                setConsultaRealizada(false);
+                setError("");
+                setMensaje("");
+              }}
+              disabled={cargando}
+            />
           </div>
         </div>
 
         {cargando && <p role="status">Consultando factores del backend...</p>}
-        {error && <p role="alert">{error}</p>}
-        {mensaje && <p role="status">{mensaje}</p>}
+        {cargandoCatalogo && <p role="status">Cargando competencias para los formularios...</p>}
+        {error && <FeedbackMessage variant="error">{error}</FeedbackMessage>}
+        {mensaje && <FeedbackMessage variant="success">{mensaje}</FeedbackMessage>}
 
-        <Tabla
-          columnas={["ID", "Código", "Factor", "Competencia", "Orden", "Descripción"]}
-          datos={factores.map((item) => [
-            item.id,
-            item.codigo,
-            item.nombre,
-            item.competencia.nombre,
-            item.orden,
-            item.descripcion,
-          ])}
-          onRowClick={(index) => setSeleccionado(factores[index]?.id ?? null)}
-          seleccionados={factores.flatMap((item, index) =>
-            item.id === seleccionado ? [index] : []
-          )}
-        />
-        {!cargando && !error && factores.length === 0 && <p>No hay factores para esos filtros.</p>}
+        {consultaRealizada && (
+          <Tabla
+            columnas={["ID", "Código", "Factor", "Competencia", "Orden", "Descripción"]}
+            datos={factores.map((item) => [
+              item.id,
+              item.codigo,
+              item.nombre,
+              item.competencia.nombre,
+              item.orden,
+              item.descripcion,
+            ])}
+            onRowClick={(index) => setSeleccionado(factores[index]?.id ?? null)}
+            seleccionados={factores.flatMap((item, index) =>
+              item.id === seleccionado ? [index] : []
+            )}
+          />
+        )}
+        {!consultaRealizada && (
+          <FeedbackMessage variant="warning">
+            Ingresá un filtro y seleccioná Buscar para ver factores.
+          </FeedbackMessage>
+        )}
+        {consultaRealizada && !cargando && !error && factores.length === 0 && (
+          <FeedbackMessage variant="warning">No hay factores para esos filtros.</FeedbackMessage>
+        )}
 
         <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "0.75rem", marginTop: "1rem" }}>
-          <Boton texto="Nuevo factor" onClick={abrirAlta} disabled={competencias.length === 0} />
+          <Boton texto="Nuevo factor" onClick={abrirAlta} disabled={cargandoCatalogo || competencias.length === 0} />
           <Boton texto="Modificar" onClick={abrirEdicion} disabled={seleccionado === null || cargando} />
           <Boton texto="Eliminar" onClick={() => void eliminar()} disabled={seleccionado === null || cargando} />
           <Link href="/">
@@ -296,39 +330,51 @@ export default function GestionarFactores() {
               {idEdicion === null ? "Nuevo factor" : "Modificar factor"}
             </h2>
             <form onSubmit={guardar}>
-              <label style={{ display: "block", margin: "0.75rem 0" }}>
-                Competencia
-                <select
-                  value={formulario.id_competencia}
-                  onChange={(event) => cambiarCampo("id_competencia", event.target.value)}
-                  required
-                  style={controlStyle}
-                >
-                  <option value="">Seleccionar competencia</option>
-                  {competencias.map((competencia) => (
-                    <option key={competencia.id} value={String(competencia.id)}>
-                      {competencia.codigo} — {competencia.nombre}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label style={{ display: "block", margin: "0.75rem 0" }}>
-                Código
-                <input value={formulario.codigo} onChange={(event) => cambiarCampo("codigo", event.target.value)} maxLength={30} required disabled={idEdicion !== null} style={controlStyle} />
-              </label>
-              <label style={{ display: "block", margin: "0.75rem 0" }}>
-                Nombre
-                <input value={formulario.nombre} onChange={(event) => cambiarCampo("nombre", event.target.value)} maxLength={50} required style={controlStyle} />
-              </label>
-              <label style={{ display: "block", margin: "0.75rem 0" }}>
-                Descripción
-                <textarea value={formulario.descripcion} onChange={(event) => cambiarCampo("descripcion", event.target.value)} minLength={30} maxLength={300} required rows={4} style={controlStyle} />
-              </label>
-              <label style={{ display: "block", margin: "0.75rem 0" }}>
-                Número de orden en la competencia
-                <input type="number" min={1} max={32767} step={1} value={formulario.nroOrden} onChange={(event) => cambiarCampo("nroOrden", event.target.value)} required style={controlStyle} />
-              </label>
-              {error && <p role="alert">{error}</p>}
+              <ul className="form-field-list">
+                <li>
+                  <label>
+                    Competencia
+                    <select
+                      value={formulario.id_competencia}
+                      onChange={(event) => cambiarCampo("id_competencia", event.target.value)}
+                      required
+                      style={controlStyle}
+                    >
+                      <option value="">Seleccionar competencia</option>
+                      {competencias.map((competencia) => (
+                        <option key={competencia.id} value={String(competencia.id)}>
+                          {competencia.codigo} — {competencia.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </li>
+                <li>
+                  <label>
+                    Código
+                    <input value={formulario.codigo} onChange={(event) => cambiarCampo("codigo", event.target.value)} maxLength={30} required disabled={idEdicion !== null} style={controlStyle} />
+                  </label>
+                </li>
+                <li>
+                  <label>
+                    Nombre
+                    <input value={formulario.nombre} onChange={(event) => cambiarCampo("nombre", event.target.value)} maxLength={50} required style={controlStyle} />
+                  </label>
+                </li>
+                <li>
+                  <label>
+                    Descripción
+                    <textarea value={formulario.descripcion} onChange={(event) => cambiarCampo("descripcion", event.target.value)} minLength={30} maxLength={300} required rows={4} style={controlStyle} />
+                  </label>
+                </li>
+                <li>
+                  <label>
+                    Número de orden en la competencia
+                    <input type="number" min={1} max={32767} step={1} value={formulario.nroOrden} onChange={(event) => cambiarCampo("nroOrden", event.target.value)} required style={controlStyle} />
+                  </label>
+                </li>
+              </ul>
+              {error && <FeedbackMessage variant="error">{error}</FeedbackMessage>}
               <div style={{ display: "flex", justifyContent: "center", gap: "0.75rem", marginTop: "1rem" }}>
                 <Boton texto={guardando ? "Guardando..." : "Guardar"} type="submit" disabled={guardando} />
                 <Boton texto="Cancelar" type="button" onClick={() => setModalAbierto(false)} disabled={guardando} />
